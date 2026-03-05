@@ -1,2 +1,2 @@
 # CPT202project 
-check check
+Hello, I am saohui, environment setup finished!
