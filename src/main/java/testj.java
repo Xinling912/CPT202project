@@ -1,2 +1,2 @@
-public class testj {check
+public class test {
 }
