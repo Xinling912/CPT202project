@@ -1,3 +1,60 @@
 # 默认忽略的文件
 /shelf/
 /workspace.xml
+# ==========================================
+# 1. Maven 编译生成的垃圾 (最重要的防爆仓配置)
+# ==========================================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# ==========================================
+# 2. IntelliJ IDEA 的私人配置 (防组员打架核心)
+# ==========================================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ==========================================
+# 3. Eclipse 的私人配置 (以防你们组有人不用 IDEA)
+# ==========================================
+.project
+.classpath
+.settings/
+bin/
+
+# ==========================================
+# 4. Java 运行日志与编译缓存
+# ==========================================
+*.class
+*.log
+*.ctxt
+.mtj.tmp/
+
+# 打包文件 (除非特别需要，一般不传到源码仓库)
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# ==========================================
+# 5. 操作系统自动生成的隐藏垃圾 (Mac 和 Win)
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
