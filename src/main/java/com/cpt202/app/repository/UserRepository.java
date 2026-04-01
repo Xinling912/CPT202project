@@ -1,4 +1,13 @@
 package com.cpt202.app.repository;
 
-public interface UserRepository {
+import com.cpt202.app.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    // 额外赠送一个：通过用户名查找用户，登录时必用
+    Optional<User> findByUsername(String username);
 }
