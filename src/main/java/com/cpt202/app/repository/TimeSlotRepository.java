@@ -10,5 +10,5 @@ import java.util.List;
 @Repository
 public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
     // 查找某个专家所有未被预约的时间段
-    List<TimeSlot> findBySpecialistAndIsBookedFalse(SpecialistProfile specialist);
+    List<TimeSlot> findBySpecialistIdAndIsBookedFalse(Long specialistId);
 }
