@@ -1,55 +1,105 @@
 package com.cpt202.app.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import com.cpt202.app.model.User;
+import com.cpt202.app.model.UserRole;
+import com.cpt202.app.service.UserService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(origins = "*")
 public class UserController {
+    private final UserService userService;
 
-    @Autowired(required = false)
-    private JavaMailSender mailSender;
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
-    @Autowired
-    private ApplicationContext context;
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        try {
+            User created = userService.register(
+                    request.username(),
+                    request.password(),
+                    request.email(),
+                    request.role(),
+                    request.verifyCode()
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "message", "注册成功",
+                    "userId", created.getId()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            User user = userService.login(request.usernameOrEmail(), request.password());
+            return ResponseEntity.ok(Map.of(
+                    "message", "登录成功",
+                    "userId", user.getId(),
+                    "username", user.getUsername(),
+                    "email", user.getEmail(),
+                    "role", user.getRole().name()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", e.getMessage()));
+        }
+    }
 
     @PostMapping("/verify-code")
-    public Map<String, String> verifyCode(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
-        Map<String, String> response = new HashMap<>();
-
-        // 尝试获取邮件发送器，如果 @Autowired 没拿到，我们从上下文里再试一次
-        JavaMailSender activeSender = (mailSender != null) ? mailSender :
-                (context.containsBean("javaMailSender") ? context.getBean(JavaMailSender.class) : null);
-
-        if (activeSender == null) {
-            response.put("message", "发送失败：邮件服务未就绪，请检查 application.properties 是否填写了正确的 mail 配置");
-            return response;
-        }
-
+    public ResponseEntity<?> sendVerifyCode(@RequestBody SendCodeRequest request) {
         try {
-            String code = String.valueOf((int)((Math.random() * 9 + 1) * 100000)); // 生成 6 位随机码
-            SimpleMailMessage message = new SimpleMailMessage();
-
-            // 注意：这里必须和你的 application.properties 里的 username 一致
-            message.setFrom("597918354@qq.com");
-            message.setTo(email);
-            message.setSubject("Group 13 - 验证码集成测试");
-            message.setText("少辉你好，你的 6 位验证码是：" + code + "。这封邮件证明了 Notification 模块集成成功！");
-
-            activeSender.send(message);
-            response.put("message", "验证码已发送到邮箱");
-
-        } catch (Exception e) {
-            response.put("message", "发送异常: " + e.getMessage());
-            e.printStackTrace();
+            userService.sendVerifyCode(request.email());
+            return ResponseEntity.ok(Map.of("message", "验证码已发送到邮箱"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
-        return response;
     }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request) {
+        try {
+            userService.changePassword(request.email(), request.oldPassword(), request.newPassword());
+            return ResponseEntity.ok(Map.of("message", "密码修改成功"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        try {
+            userService.forgotPassword(request.email(), request.verifyCode(), request.newPassword());
+            return ResponseEntity.ok(Map.of("message", "忘记密码重置成功"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    public record RegisterRequest(
+            String username,
+            String password,
+            String email,
+            UserRole role,
+            String verifyCode
+    ) {}
+
+    public record LoginRequest(String usernameOrEmail, String password) {}
+
+    public record SendCodeRequest(String email) {}
+
+    public record ForgotPasswordRequest(String email, String verifyCode, String newPassword) {}
+
+    public record ChangePasswordRequest(String email, String oldPassword, String newPassword) {}
 }
