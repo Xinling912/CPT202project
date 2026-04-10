@@ -1,5 +1,6 @@
 package com.cpt202.app.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,17 +14,20 @@ public class Booking {
     private Long id;
 
     // 谁买的？关联顾客 (User)
+    // 优化：在订单里，我们只需要顾客的 id 和 username，忽略掉他的注册时间、角色等不重要的信息
+    @JsonIgnoreProperties({"createdAt", "role", "password", "email"})
     @ManyToOne
     @JoinColumn(name = "customer_id", referencedColumnName = "id", nullable = false)
     private User customer;
 
-    // 买了哪个专家？关联专家名片 (保留这个冗余字段，以后查订单速度起飞)
+    // 买了哪个专家？关联专家名片
+    @JsonIgnoreProperties({"expertise", "hourlyFee"})
     @ManyToOne
     @JoinColumn(name = "specialist_id", referencedColumnName = "id", nullable = false)
     private SpecialistProfile specialist;
 
     // 买了哪个时间段？
-    // 🚀 核心防并发设计：用 @OneToOne 加上 unique = true
+    // 核心防并发设计：用 @OneToOne 加上 unique = true
     // 数据库在物理层面保证：同一个 TimeSlot 绝对不可能出现在两个订单里！
     @OneToOne
     @JoinColumn(name = "time_slot_id", referencedColumnName = "id", nullable = false, unique = true)
