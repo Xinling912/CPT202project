@@ -116,7 +116,7 @@ public class SpecialistController {
     @GetMapping("/{id}/schedules")
     public List<TimeSlot> getSchedules(@PathVariable("id") Long id) {
         // --- 真实数据库调用 ---
-        return timeSlotRepository.findBySpecialistIdAndIsBookedFalse(id);
+        return timeSlotRepository.findBySpecialistIdAndStatus(id, TimeSlotStatus.AVAILABLE);
         //---------------------- */
 
 //        List<TimeSlot> schedules = new ArrayList<>();
