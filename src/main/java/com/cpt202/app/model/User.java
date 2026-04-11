@@ -1,5 +1,6 @@
 package com.cpt202.app.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -26,6 +27,7 @@ public class User {
     @Column(length = 20, nullable = false)
     private UserRole role; // ADMIN, CUSTOMER, SPECIALIST
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

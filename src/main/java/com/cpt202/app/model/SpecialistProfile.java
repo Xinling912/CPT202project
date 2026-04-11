@@ -25,7 +25,7 @@ public class SpecialistProfile {
     @Column(length = 50, nullable = false)
     private SpecialistLevel level; // JUNIOR, SENIOR, EXPERT
 
-    // 💡 CTO小贴士：在 Java 里算钱，绝对不能用 Double，必须用 BigDecimal 防止精度丢失！
+    // 注：在 Java 里算钱，绝对不能用 Double，必须用 BigDecimal 防止精度丢失！
     @Column(name = "hourly_fee", precision = 10, scale = 2, nullable = false)
     private BigDecimal hourlyFee;
 
