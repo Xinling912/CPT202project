@@ -1,8 +1,11 @@
 package com.cpt202.app.model;
 
 import jakarta.persistence.*;
+
+
 import java.time.LocalDate;
 import java.time.LocalTime;
+
 
 @Entity
 @Table(name = "time_slot")
@@ -26,8 +29,11 @@ public class TimeSlot {
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime; // 结束时间：如 15:00
 
-    @Column(name = "is_booked", nullable = false)
-    private Boolean isBooked = false; // 默认是 false (未被预订)
+    //把timeslotstatus 从boolean改成enum
+    @Column(name = "status", nullable = false, length = 20)
+    private String status = "AVAILABLE";
+
+
 
     // TODO: 请生成 Getter 和 Setter
     public Long getId() {
@@ -70,11 +76,14 @@ public class TimeSlot {
         this.endTime = endTime;
     }
 
-    public Boolean getBooked() {
-        return isBooked;
+
+
+    //  这里的命名必须是 getStatus，BookingService
+    public String getStatus() {
+        return status;
     }
 
-    public void setBooked(Boolean booked) {
-        isBooked = booked;
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
