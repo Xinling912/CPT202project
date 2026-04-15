@@ -29,9 +29,9 @@ public class TimeSlot {
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime; // 结束时间：如 15:00
 
-    //把timeslotstatus 从boolean改成enum
+    @Enumerated(EnumType.STRING) // 必加：这样数据库里存的是 "BOOKED" 字符串而不是数字 1
     @Column(name = "status", nullable = false, length = 20)
-    private String status = "AVAILABLE";
+    private TimeSlotStatus status = TimeSlotStatus.AVAILABLE; // 默认值改为枚举常量
 
 
 
@@ -79,11 +79,11 @@ public class TimeSlot {
 
 
     //  这里的命名必须是 getStatus，BookingService
-    public String getStatus() {
+    public TimeSlotStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(TimeSlotStatus status) {
         this.status = status;
     }
 }

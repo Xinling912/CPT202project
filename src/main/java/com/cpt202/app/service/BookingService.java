@@ -2,12 +2,13 @@ package com.cpt202.app.service;
 import com.cpt202.app.model.*;
 import com.cpt202.app.repository.BookingRepository;
 import com.cpt202.app.repository.TimeSlotRepository;
+import com.cpt202.app.model.TimeSlotStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
+
 import java.math.BigDecimal;
 
 @Service
@@ -36,14 +37,13 @@ public class BookingService {
         TimeSlot slot = timeSlotRepository.findById(slotId)
                 .orElseThrow(() -> new IllegalArgumentException("ERROR_SLOT_NOT_FOUND"));
 
-        // 2. 状态预检：只有 AVAILABLE 的时间段才能被预约
-        if (!"AVAILABLE".equals(slot.getStatus())) {
-            // 对应 Task 4.4: 返回特定错误码，供前端 AJAX 判断并提示“该时段已被抢占”
+
+        // 只有当状态 不等于 AVAILABLE 时，才说明被抢占了
+        if (slot.getStatus() != TimeSlotStatus.AVAILABLE) {
             throw new IllegalStateException("ERROR_SLOT_TAKEN");
         }
 
         // 3. 业务逻辑校验：检查该客户当月违约次数
-        // 对应 PBI 1.2: 软约束规则，防止恶意占位
         long cancelCount = countMonthlyCancellations(customer.getId());
         if (cancelCount >= 3) {
             throw new IllegalStateException("ERROR_MONTHLY_LIMIT_REACHED");
@@ -51,7 +51,7 @@ public class BookingService {
 
         // 4. 执行状态同步更新 (关键：先改状态，后建订单)
         // 将状态设为 LOCKED，专家在 PBI 5 中确认后会变为 CONFIRMED
-        slot.setStatus("LOCKED");
+        slot.setStatus(TimeSlotStatus.BOOKED);
         timeSlotRepository.save(slot);
 
         // 5. 构造订单实体 (Task 4.1)
@@ -63,7 +63,6 @@ public class BookingService {
         booking.setNotes(notes);
 
         // 自动计算费用：从专家配置中获取
-
         booking.setTotalAmount(specialist.getHourlyFee());
 
         // 6. 持久化到数据库
@@ -92,7 +91,7 @@ public class BookingService {
         // 释放资源：将对应的时间段重新设为“可用”
         TimeSlot slot = booking.getTimeSlot();
         if (slot != null) {
-            slot.setStatus("AVAILABLE");
+            slot.setStatus(TimeSlotStatus.AVAILABLE);
             timeSlotRepository.save(slot);
         }
 
