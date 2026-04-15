@@ -1,26 +1,27 @@
 package com.cpt202.app.controller;
 
 import com.cpt202.app.model.*;
+import com.cpt202.app.repository.BookingRepository;
 import com.cpt202.app.repository.SpecialistProfileRepository;
 import com.cpt202.app.repository.TimeSlotRepository;
+import com.cpt202.app.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/specialists")
-@CrossOrigin
+@CrossOrigin(origins = "*")
 public class SpecialistController {
 
     @Autowired(required = false) // 暂时设为 false 方便你跑 Mock 测试
@@ -28,6 +29,9 @@ public class SpecialistController {
 
     @Autowired(required = false)
     private TimeSlotRepository timeSlotRepository;
+
+    @Autowired
+    private BookingService bookingService;
 
     // ==========================================
     // 接口 1: 分页获取专家大厅列表
@@ -39,43 +43,12 @@ public class SpecialistController {
 
         Map<String, Object> response = new HashMap<>();
 
-        // --- 真实数据库调用 (连上数据库后解开) ---
         Pageable pageable = PageRequest.of(page, size);
         Page<SpecialistProfile> specialistPage = specialistRepository.findByStatus(SpecialistStatus.ACTIVE, pageable);
         response.put("content", specialistPage.getContent());
         response.put("totalElements", specialistPage.getTotalElements());
         response.put("totalPages", specialistPage.getTotalPages());
         return response;
-        //--------------------------------------- */
-
-//        // --- 基于新 Entity 的 Mock 数据 ---
-//        List<SpecialistProfile> content = new ArrayList<>();
-//
-//        SpecialistProfile p = new SpecialistProfile();
-//        p.setId(1L);
-//        p.setLevel(SpecialistLevel.EXPERT);
-//        p.setHourlyFee(new BigDecimal("500.00"));
-//        p.setStatus(SpecialistStatus.ACTIVE);
-//
-//        // 关联 User (对应 User.java)
-//        User u = new User();
-//        u.setId(101L);
-//        u.setUsername("张教授");
-//        u.setEmail("zhang@xjtlu.edu.cn");
-//        u.setRole(UserRole.SPECIALIST);
-//        u.setCreatedAt(LocalDateTime.now());
-//        p.setUser(u);
-//
-//        // 关联 ExpertiseCategory (对应 ExpertiseCategory.java)
-//        ExpertiseCategory cat = new ExpertiseCategory();
-//        cat.setId(10L);
-//        cat.setName("人工智能");
-//        p.setExpertise(cat);
-//
-//        content.add(p);
-//        response.put("content", content);
-//        response.put("totalElements", 1);
-//        return response;
     }
 
     // ==========================================
@@ -83,31 +56,8 @@ public class SpecialistController {
     // ==========================================
     @GetMapping("/{id}")
     public SpecialistProfile getSpecialistDetail(@PathVariable("id") Long id) {
-        // --- 真实数据库调用 ---
         return specialistRepository.findById(id).orElseThrow();
-        //---------------------- */
 
-//        // --- 严格匹配你实体类结构的 Mock 数据 ---
-//        SpecialistProfile p = new SpecialistProfile();
-//        p.setId(id);
-//        p.setLevel(SpecialistLevel.SENIOR);
-//        p.setHourlyFee(new BigDecimal("300.00"));
-//        p.setStatus(SpecialistStatus.ACTIVE);
-//
-//        // 填充关联的 User 信息 (来自 User.java)
-//        User u = new User();
-//        u.setUsername("李博士");
-//        u.setEmail("li@test.com");
-//        p.setUser(u);
-//
-//        // 填充关联的专业分类 (来自 ExpertiseCategory.java)
-//        ExpertiseCategory cat = new ExpertiseCategory();
-//        cat.setName("前端工程化");
-//        cat.setId(10L);
-//        cat.setDescription("精通深度学习与计算机视觉");
-//        p.setExpertise(cat);
-//
-//        return p;
     }
 
     // ==========================================
@@ -115,18 +65,26 @@ public class SpecialistController {
     // ==========================================
     @GetMapping("/{id}/schedules")
     public List<TimeSlot> getSchedules(@PathVariable("id") Long id) {
-        // --- 真实数据库调用 ---
         return timeSlotRepository.findBySpecialistIdAndStatus(id, TimeSlotStatus.AVAILABLE);
-        //---------------------- */
 
-//        List<TimeSlot> schedules = new ArrayList<>();
-//        TimeSlot t = new TimeSlot();
-//        t.setId(501L);
-//        t.setSlotDate(LocalDate.of(2026, 4, 20));
-//        t.setStartTime(LocalTime.of(14, 0));
-//        t.setEndTime(LocalTime.of(15, 0));
-//        t.setBooked(false);
-//        schedules.add(t);
-//        return schedules;
+    }
+
+    // ==========================================
+    // 接口 4: 专家查看自己的已预约课表
+    // ==========================================
+    @GetMapping("/{id}/booked-schedules")
+    public ResponseEntity<?> getBookedSchedules(@PathVariable("id") Long specialistId) {
+        try {
+            // 使用 Service 里的内部 Record
+            List<BookingService.BookedScheduleResponse> schedules = bookingService.getBookedSchedulesForSpecialist(specialistId);
+
+            if (schedules.isEmpty()) {
+                return ResponseEntity.ok(Map.of("message", "当前没有被预约的时间段", "data", schedules));
+            }
+
+            return ResponseEntity.ok(schedules);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 }

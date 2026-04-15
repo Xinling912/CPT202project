@@ -87,6 +87,14 @@ public class UserController {
         }
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        // 后端不需要做任何实质性的清理工作
+        // 只要前端调用了这个接口，我们就告诉他“注销成功”
+        // 真正的注销动作是前端在收到这个 200 OK 后，去清空浏览器的 localStorage 里的 Token
+        return ResponseEntity.ok("退出登录成功");
+    }
+
     public record RegisterRequest(
             String username,
             String password,
