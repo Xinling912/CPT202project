@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class BookingService {
@@ -34,7 +36,7 @@ public class BookingService {
 
         // 1. 获取时间段 (建议使用 findByIdForUpdate 悲观锁锁定此行，防止并发抢单)
         // 对应 Task 4.2: Concurrency conflict prevention
-        TimeSlot slot = timeSlotRepository.findById(slotId)
+        TimeSlot slot = timeSlotRepository.findByIdWithLock(slotId)
                 .orElseThrow(() -> new IllegalArgumentException("ERROR_SLOT_NOT_FOUND"));
 
 
@@ -47,6 +49,15 @@ public class BookingService {
         long cancelCount = countMonthlyCancellations(customer.getId());
         if (cancelCount >= 3) {
             throw new IllegalStateException("ERROR_MONTHLY_LIMIT_REACHED");
+        }
+
+        // 重复预约检查
+        List<BookingStatus> activeStatuses = Arrays.asList(BookingStatus.PENDING, BookingStatus.CONFIRMED);
+        boolean alreadyBooked = bookingRepository.existsByCustomerIdAndTimeSlotIdAndStatusIn(
+                customer.getId(), slotId, activeStatuses);
+
+        if (alreadyBooked) {
+            throw new IllegalStateException("ERROR_DUPLICATE_BOOKING_AT_SAME_TIME");
         }
 
         // 4. 执行状态同步更新 (关键：先改状态，后建订单)
@@ -99,8 +110,8 @@ public class BookingService {
     }
 
     /**
-     * 【内部辅助：查询优化】
-     * 对应 Task 5.1: 通过数据库聚合查询替代 Java 内存过滤，提升系统响应速度
+     内部辅助：查询优化】
+     * 对应 Task 5.1: 通过数据库聚合查询替代 Java 内存过滤，提升系统响应速度   * 【
      */
     private long countMonthlyCancellations(Long customerId) {
         LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1)
