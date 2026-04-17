@@ -8,6 +8,7 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,21 +25,24 @@ import java.util.regex.Pattern;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final JavaMailSender mailSender;
     private final Map<String, VerifyCodeInfo> verifyCodeStore = new ConcurrentHashMap<>();
     private final Random random = new Random();
     private static final int EXPIRE_MINUTES = 5;
     private final String fromAddress;
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
-    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[A-Za-z0-9_]{4,20}$");
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[\\w\\u4e00-\\u9fa5]{1,10}$");
     private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d).{8,32}$");
 
     public UserService(
             UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
             JavaMailSender mailSender,
             @Value("${app.mail.from}") String fromAddress
     ) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
         this.mailSender = mailSender;
         this.fromAddress = fromAddress;
     }
@@ -62,7 +66,7 @@ public class UserService {
 
         User user = new User();
         user.setUsername(normalizedUsername);
-        user.setPassword(encodePassword(rawPassword));
+        user.setPassword(passwordEncoder.encode(rawPassword));
         user.setEmail(normalizedEmail);
         user.setRole(role == null ? UserRole.CUSTOMER : role);
         user.setCreatedAt(LocalDateTime.now());
@@ -71,21 +75,42 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User login(String usernameOrEmail, String rawPassword) {
-        if (isBlank(usernameOrEmail) || isBlank(rawPassword)) {
-            throw new IllegalArgumentException("账号和密码不能为空");
-        }
-        String key = usernameOrEmail.trim();
-        Optional<User> maybeUser = key.contains("@")
-                ? userRepository.findByEmail(key.toLowerCase())
-                : userRepository.findByUsername(key);
+    //旧login逻辑，现已遗弃，使用Spring Security 无状态认证
+    /* 1. 拦截接管：登录请求已交由 Controller 层的 AuthenticationManager.authenticate() 接管。
+     * 2. 自动查档：底层会自动调用我们自定义的 CustomUserDetailsService 去数据库查询用户信息（含 BCrypt 密文）。
+     * 3. 自动比对：底层会自动调用 BCryptPasswordEncoder.matches() 完成明文与密文的安全比对。*/
+//    public User login(String usernameOrEmail, String rawPassword) {
+//        if (isBlank(usernameOrEmail) || isBlank(rawPassword)) {
+//            throw new IllegalArgumentException("账号和密码不能为空");
+//        }
+//        String key = usernameOrEmail.trim();
+//        Optional<User> maybeUser = key.contains("@")
+//                ? userRepository.findByEmail(key.toLowerCase())
+//                : userRepository.findByUsername(key);
+//
+//        User user = maybeUser.orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+//        if (!user.getPassword().equals(encodePassword(rawPassword))) {
+//            throw new IllegalArgumentException("密码错误");
+//        }
+//        return user;
+//    }
 
-        User user = maybeUser.orElseThrow(() -> new IllegalArgumentException("用户不存在"));
-        if (!user.getPassword().equals(encodePassword(rawPassword))) {
-            throw new IllegalArgumentException("密码错误");
+    public User getByUsername(String username) {
+        if (isBlank(username)) {
+            throw new IllegalArgumentException("用户名不能为空");
         }
-        return user;
+        return userRepository.findByUsername(username.trim())
+                .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
     }
+
+    public User getByEmail(String email) {
+        if (isBlank(email)) {
+            throw new IllegalArgumentException("邮箱不能为空");
+        }
+        return userRepository.findByEmail(email.trim().toLowerCase())
+                .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+    }
+
 
     public void sendVerifyCode(String email) {
         if (isBlank(email)) {
@@ -110,22 +135,24 @@ public class UserService {
     }
 
     @Transactional
-    public void changePassword(String email, String oldPassword, String newPassword) {
-        if (isBlank(email) || isBlank(oldPassword) || isBlank(newPassword)) {
-            throw new IllegalArgumentException("邮箱、旧密码和新密码不能为空");
+    public void changePassword(String currentUsername, String oldPassword, String newPassword) {
+        // 1. 基础校验
+        if (isBlank(currentUsername) || isBlank(oldPassword) || isBlank(newPassword)) {
+            throw new IllegalArgumentException("参数不能为空");
         }
-        String normalizedEmail = email.trim().toLowerCase();
-        validateEmailFormat(normalizedEmail);
         validatePasswordFormat(newPassword);
 
-        User user = userRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+        // 2. 直接根据系统上下文中获取的用户名查出用户
+        User user = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new IllegalArgumentException("用户状态异常，请重新登录"));
 
-        if (!user.getPassword().equals(encodePassword(oldPassword))) {
+        // 3. 安全比对旧密码
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new IllegalArgumentException("旧密码错误");
         }
 
-        user.setPassword(encodePassword(newPassword));
+        // 4. 加密并保存新密码
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
 
@@ -142,7 +169,7 @@ public class UserService {
         User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
 
-        user.setPassword(encodePassword(newPassword));
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         verifyCodeStore.remove(normalizedEmail);
     }
@@ -169,20 +196,20 @@ public class UserService {
             throw new IllegalArgumentException("验证码错误");
         }
     }
-
-    private String encodePassword(String rawPassword) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(rawPassword.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder();
-            for (byte b : hash) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("密码加密失败", e);
-        }
-    }
+// 旧加密方式SHA-256，现已经遗弃，使用Security中的BCrypt加密
+//    private String encodePassword(String rawPassword) {
+//        try {
+//            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+//            byte[] hash = digest.digest(rawPassword.getBytes(StandardCharsets.UTF_8));
+//            StringBuilder sb = new StringBuilder();
+//            for (byte b : hash) {
+//                sb.append(String.format("%02x", b));
+//            }
+//            return sb.toString();
+//        } catch (NoSuchAlgorithmException e) {
+//            throw new IllegalStateException("密码加密失败", e);
+//        }
+//    }
 
     private boolean isBlank(String text) {
         return text == null || text.trim().isEmpty();
@@ -195,8 +222,14 @@ public class UserService {
     }
 
     private void validateUsernameFormat(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("用户名不能为空");
+        }
+        if (username.length() > 10) {
+            throw new IllegalArgumentException("用户名不能超过10个字符");
+        }
         if (!USERNAME_PATTERN.matcher(username).matches()) {
-            throw new IllegalArgumentException("用户名格式不合法：需为4-20位字母/数字/下划线");
+            throw new IllegalArgumentException("用户名格式不合法：只能包含中英文、数字、下划线");
         }
     }
 

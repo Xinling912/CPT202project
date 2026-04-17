@@ -1,132 +1,135 @@
 package com.cpt202.app.controller;
 
 import com.cpt202.app.model.*;
+import com.cpt202.app.repository.ExpertiseCategoryRepository;
 import com.cpt202.app.repository.SpecialistProfileRepository;
 import com.cpt202.app.repository.TimeSlotRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/specialists")
 @CrossOrigin
 public class SpecialistController {
 
-    @Autowired(required = false) // 暂时设为 false 方便你跑 Mock 测试
-    private SpecialistProfileRepository specialistRepository;
+    private final SpecialistProfileRepository specialistRepository;
+    private final TimeSlotRepository timeSlotRepository;
+    private final ExpertiseCategoryRepository expertiseCategoryRepository;
 
-    @Autowired(required = false)
-    private TimeSlotRepository timeSlotRepository;
+    public SpecialistController(
+            SpecialistProfileRepository specialistRepository,
+            TimeSlotRepository timeSlotRepository,
+            ExpertiseCategoryRepository expertiseCategoryRepository
+    ) {
+        this.specialistRepository = specialistRepository;
+        this.timeSlotRepository = timeSlotRepository;
+        this.expertiseCategoryRepository = expertiseCategoryRepository;
+    }
 
-    // ==========================================
-    // 接口 1: 分页获取专家大厅列表
-    // ==========================================
+    /**
+     * 专家大厅列表接口（支持搜索 + 筛选 + 分页）
+     * 功能：
+     * 1) keyword：按专家用户名模糊搜索（如 lisa -> 名字包含 lisa 的专家）
+     * 2) expertiseId：按专业筛选
+     * 3) level：按等级筛选（JUNIOR/SENIOR/EXPERT）
+     * 4) date：按日期筛选“当天仍有 AVAILABLE 时段”的专家
+     * 5) 多筛选条件可叠加，最终结果是“同时满足所有条件”的交集
+     */
     @GetMapping
     public Map<String, Object> getSpecialists(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long expertiseId,
+            @RequestParam(required = false) SpecialistLevel level,
+            @RequestParam(required = false) String date) {
 
         Map<String, Object> response = new HashMap<>();
-
-        // --- 真实数据库调用 (连上数据库后解开) ---
         Pageable pageable = PageRequest.of(page, size);
-        Page<SpecialistProfile> specialistPage = specialistRepository.findByStatus(SpecialistStatus.ACTIVE, pageable);
+        LocalDate targetDate = (date == null || date.isBlank()) ? null : LocalDate.parse(date);
+
+        // 基础条件：只显示 ACTIVE 的专家
+        Specification<SpecialistProfile> spec = (root, query, cb) -> cb.equal(root.get("status"), SpecialistStatus.ACTIVE);
+
+        if (keyword != null && !keyword.isBlank()) {
+            String likePattern = "%" + keyword.trim().toLowerCase() + "%";
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.join("user").get("username")), likePattern));
+        }
+        if (expertiseId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.join("expertise").get("id"), expertiseId));
+        }
+        if (level != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("level"), level));
+        }
+        if (targetDate != null) {
+            // availability 条件：子查询 time_slot 表，要求该专家在指定日期有可预约时段
+            spec = spec.and((root, query, cb) -> {
+                var subquery = query.subquery(Long.class);
+                var timeSlotRoot = subquery.from(TimeSlot.class);
+                subquery.select(cb.literal(1L));
+                subquery.where(
+                        cb.equal(timeSlotRoot.get("specialist"), root),
+                        cb.equal(timeSlotRoot.get("status"), TimeSlotStatus.AVAILABLE),
+                        cb.equal(timeSlotRoot.get("slotDate"), targetDate)
+                );
+                return cb.exists(subquery);
+            });
+        }
+
+        Page<SpecialistProfile> specialistPage = specialistRepository.findAll(spec, pageable);
         response.put("content", specialistPage.getContent());
         response.put("totalElements", specialistPage.getTotalElements());
         response.put("totalPages", specialistPage.getTotalPages());
+        response.put("page", specialistPage.getNumber());
+        response.put("size", specialistPage.getSize());
         return response;
-        //--------------------------------------- */
-
-//        // --- 基于新 Entity 的 Mock 数据 ---
-//        List<SpecialistProfile> content = new ArrayList<>();
-//
-//        SpecialistProfile p = new SpecialistProfile();
-//        p.setId(1L);
-//        p.setLevel(SpecialistLevel.EXPERT);
-//        p.setHourlyFee(new BigDecimal("500.00"));
-//        p.setStatus(SpecialistStatus.ACTIVE);
-//
-//        // 关联 User (对应 User.java)
-//        User u = new User();
-//        u.setId(101L);
-//        u.setUsername("张教授");
-//        u.setEmail("zhang@xjtlu.edu.cn");
-//        u.setRole(UserRole.SPECIALIST);
-//        u.setCreatedAt(LocalDateTime.now());
-//        p.setUser(u);
-//
-//        // 关联 ExpertiseCategory (对应 ExpertiseCategory.java)
-//        ExpertiseCategory cat = new ExpertiseCategory();
-//        cat.setId(10L);
-//        cat.setName("人工智能");
-//        p.setExpertise(cat);
-//
-//        content.add(p);
-//        response.put("content", content);
-//        response.put("totalElements", 1);
-//        return response;
     }
 
-    // ==========================================
-    // 接口 2: 获取专家详细信息
-    // ==========================================
+    /**
+     * 获取单个专家详情
+     * 功能：前端点击某个专家卡片后，进入详情页时拉取该专家完整资料。
+     */
     @GetMapping("/{id}")
     public SpecialistProfile getSpecialistDetail(@PathVariable("id") Long id) {
-        // --- 真实数据库调用 ---
-        return specialistRepository.findById(id).orElseThrow();
-        //---------------------- */
-
-//        // --- 严格匹配你实体类结构的 Mock 数据 ---
-//        SpecialistProfile p = new SpecialistProfile();
-//        p.setId(id);
-//        p.setLevel(SpecialistLevel.SENIOR);
-//        p.setHourlyFee(new BigDecimal("300.00"));
-//        p.setStatus(SpecialistStatus.ACTIVE);
-//
-//        // 填充关联的 User 信息 (来自 User.java)
-//        User u = new User();
-//        u.setUsername("李博士");
-//        u.setEmail("li@test.com");
-//        p.setUser(u);
-//
-//        // 填充关联的专业分类 (来自 ExpertiseCategory.java)
-//        ExpertiseCategory cat = new ExpertiseCategory();
-//        cat.setName("前端工程化");
-//        cat.setId(10L);
-//        cat.setDescription("精通深度学习与计算机视觉");
-//        p.setExpertise(cat);
-//
-//        return p;
+        return specialistRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "ID为 " + id + " 的专家档案不存在"
+                ));
     }
 
-    // ==========================================
-    // 接口 3: 获取专家的可用排班
-    // ==========================================
-    @GetMapping("/{id}/schedules")
-    public List<TimeSlot> getSchedules(@PathVariable("id") Long id) {
-        // --- 真实数据库调用 ---
-        return timeSlotRepository.findBySpecialistIdAndStatus(id, TimeSlotStatus.AVAILABLE);
-        //---------------------- */
+    /**
+     * 获取筛选项字典
+     * 功能：给前端 filter 下拉框提供“专业列表 + 等级列表”。
+     */
+    @GetMapping("/filters")
+    public Map<String, Object> getFilterOptions() {
+        Map<String, Object> response = new HashMap<>();
 
-//        List<TimeSlot> schedules = new ArrayList<>();
-//        TimeSlot t = new TimeSlot();
-//        t.setId(501L);
-//        t.setSlotDate(LocalDate.of(2026, 4, 20));
-//        t.setStartTime(LocalTime.of(14, 0));
-//        t.setEndTime(LocalTime.of(15, 0));
-//        t.setBooked(false);
-//        schedules.add(t);
-//        return schedules;
+        List<Map<String, Object>> expertises = expertiseCategoryRepository.findAll().stream()
+                .map(item -> Map.<String, Object>of(
+                        "id", item.getId(),
+                        "name", item.getName()
+                ))
+                .collect(Collectors.toList());
+
+        List<String> levels = List.of(SpecialistLevel.values()).stream()
+                .map(Enum::name)
+                .collect(Collectors.toList());
+
+        response.put("expertises", expertises);
+        response.put("levels", levels);
+        return response;
     }
 }
