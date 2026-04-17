@@ -84,7 +84,7 @@ public class Booking {
     //当调用 bookingRepository.save(booking)时，框架在生成 SQL 的前一毫秒，自动帮你执行 onCreate() 方法
     // 把当前的精准时间“悄悄”塞进 createdAt 属性里
     @PrePersist
-    protected void onCreate() {
+        protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
