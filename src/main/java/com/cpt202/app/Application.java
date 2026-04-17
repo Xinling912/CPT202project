@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-// 这个注解是灵魂，它告诉程序：“我是一个 Spring Boot 应用！”
+// SpringBootApplication注解告诉程序：“我是一个 Spring Boot 应用！”
 //http://localhost:8080/...
 @SpringBootApplication
 @EnableScheduling
