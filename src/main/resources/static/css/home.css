@@ -1,0 +1,213 @@
+
+/* ==========================================
+   页面基础重置 & 全局样式
+   ========================================== */
+body {
+    font-family: 'Inter', sans-serif;
+    /* 还原设计图淡淡的蓝白渐变背景 */
+    background: linear-gradient(135deg, #e0f0ff 0%, #f4f9ff 100%);
+    color: #1f2937;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* === 渐显动画 === */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out forwards;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================
+   顶部导航栏 (Header)
+   ========================================== */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 3rem;
+    flex-wrap: wrap;
+}
+
+/* 左侧：用户信息 */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 33.33%;
+}
+.user-xiaodu {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.user-email {
+    color: #2563eb;
+    font-weight: 700;
+    font-size: 0.875rem;
+    margin: 0;
+}
+.user-role {
+    color: #9ca3af;
+    font-size: 0.75rem;
+    margin: 0;
+}
+
+/* 中间：Logo大标题 */
+.logo-container {
+    width: 33.33%;
+    text-align: center;
+}
+.logo-title {
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    color: #1f2937;
+    margin: 0;
+}
+.logo-subtitle {
+    font-size: 1.125rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin: 0.5rem 0 0 0;
+}
+
+/* 右侧：操作按钮 */
+.header-actions {
+    width: 33.33%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+.btn-join {
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    color: #4b5563;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.btn-join:hover { background-color: #f9fafb; }
+
+.btn-logout {
+    background-color: #dc2626;
+    border: none;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.2);
+}
+.btn-logout:hover { background-color: #b91c1c; }
+
+/* ==========================================
+   主体内容区 & 卡片网格 (Main Grid)
+   ========================================== */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6rem 2rem; /* 垂直间距设为 6rem 是为了给头上冒出来的立绘留空间 */
+    max-width: 1400px;
+    margin: 6rem auto 4rem auto;
+    padding: 0 2rem;
+}
+
+/* 单个卡片容器 */
+.character-card {
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 24px;
+    padding: 7rem 1.5rem 1.5rem 1.5rem; /* 顶部留出 7rem 空间给图片 */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.character-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* 突破边框的立绘图片 */
+.character-img {
+    position: absolute;
+    top: -5.5rem; /* 向上偏移出卡片 */
+    left: 50%;
+    transform: translateX(-50%);
+    height: 220px;
+    object-fit: contain;
+    filter: drop-shadow(0 15px 15px rgba(0, 0, 0, 0.2));
+    transition: transform 0.3s ease;
+    z-index: 10;
+}
+/* 卡片悬停时，图片微微上浮放大 */
+.character-card:hover .character-img {
+    transform: translate(-50%, -10px) scale(1.05);
+}
+
+/* 卡片内文字描述 */
+.card-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+.card-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0.25rem 0 1rem 0;
+}
+.card-desc {
+    font-size: 0.875rem;
+    color: #6b7280;
+    line-height: 1.6;
+    flex-grow: 1; /* 让描述部分自动撑开，保证底部按钮对齐 */
+    margin: 0;
+}
+
+/* 详情按钮 */
+.btn-details {
+    margin-top: 1.5rem;
+    width: 100%;
+    background-color: #5ba4ff;
+    color: white;
+    border: none;
+    padding: 0.875rem 0;
+    border-radius: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    box-shadow: 0 4px 6px rgba(91, 164, 255, 0.3);
+}
+.btn-details:hover {
+    background-color: #3b82f6;
+}
+
+/* ==========================================
+   📱 移动端适配
+   ========================================== */
+@media (max-width: 1024px) {
+    .card-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+    .header { flex-direction: column; text-align: center; gap: 1.5rem; }
+    .user-info, .logo-container, .header-actions { width: 100%; justify-content: center; }
+    .card-grid { grid-template-columns: 1fr; margin-top: 8rem; }
+}

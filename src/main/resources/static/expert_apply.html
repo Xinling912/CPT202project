@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expert Booking System - Expert Apply</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        /* 针对专家页面的特定样式 */
+        .expert-page-wrapper {
+            width: 100%;
+            max-width: 650px; /* 专家页面更宽 */
+            padding: 2rem 1rem;
+            position: relative;
+            z-index: 20;
+        }
+        .expert-bg-frame {
+            position: fixed;
+            top: 2rem; right: 2rem; bottom: 2rem; left: 2rem;
+            border: 1px solid #bfdbfe;
+            box-shadow: inset 0 0 100px rgba(100,180,255,0.2);
+            background: linear-gradient(to bottom, #ffffff, #ffffff, #cce4ff);
+            z-index: 0;
+            pointer-events: none;
+        }
+        .back-btn {
+            background: white;
+            border: 1px solid #e5e7eb;
+            color: #4b5563;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            display: inline-flex;
+            align-items: center;
+        }
+        .back-btn:hover { background: #f9fafb; }
+        
+        .expert-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #f3f4f6;
+            padding: 2rem;
+        }
+        /* 专家页面的 Label 靠左对齐 */
+        .form-label-left {
+            text-align: left;
+            display: block;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+        .req-star { color: #ef4444; }
+        
+        .upload-box {
+            border: 1px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            background-color: rgba(249, 250, 251, 0.5);
+            margin-top: 0.25rem;
+        }
+        .upload-box:hover { border-color: #54a0ff; background-color: #f0f7ff; }
+    </style>
+</head>
+<body style="background: white;">
+
+    <div id="app">
+        <div class="expert-bg-frame"></div>
+
+        <div class="expert-page-wrapper fade-in">
+            <button id="go-back" class="back-btn"><span style="margin-right: 4px;">←</span> Back</button>
+            
+            <div class="expert-card">
+                <h2 style="font-size: 1.25rem; font-weight: bold; color: #1f2937; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6;">Entry of specialist information</h2>
+                
+                <form id="expertForm">
+                    <div class="form-group">
+                        <label class="form-label-left">Name <span class="req-star">*</span></label>
+                        <input type="text" id="exp-name" class="figma-input" placeholder="Please enter the name of the specialist." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label-left">Profession field <span class="req-star">*</span></label>
+                        <select id="exp-domain" class="figma-input" style="color: #6b7280; background: white;" required>
+                            <option value="" disabled selected>Please select your professional field.</option>
+                            <option value="it" style="color: #1f2937;">IT / Internet</option>
+                            <option value="finance" style="color: #1f2937;">Finance / Investment</option>
+                            <option value="law" style="color: #1f2937;">Law / Consulting</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label-left">Experience/Level <span class="req-star">*</span></label>
+                        <input type="text" id="exp-level" class="figma-input" placeholder="Please enter the specialist's qualification/level(such as: chief physician, professor)" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label-left">Consulting fee (yuan/hour) <span class="req-star">*</span></label>
+                        <input type="number" id="exp-fee" class="figma-input" placeholder="Please enter the consultation fee." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label-left">Individual resume <span class="req-star">*</span></label>
+                        <textarea id="exp-resume" rows="4" class="figma-input" style="resize: none;" placeholder="Please provide the personal profile of the expert (including years of experience, areas of expertise, etc.)" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label-left">Upload qualification certificates <span class="req-star">*</span></label>
+                        <div class="upload-box">
+                            <span style="font-size: 1.875rem; margin-bottom: 0.5rem; filter: grayscale(100%); opacity: 0.7;">📁</span>
+                            <p style="font-size: 11px; color: #6b7280;">Click to upload your qualification certificate (in PDF, JPG or PNG format)</p>
+                            <p style="font-size: 10px; color: #9ca3af; margin-top: 0.25rem;">Each file should be no larger than 5MB and multiple file uploads are supported.</p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: center; padding-top: 1.5rem;">
+                        <button type="submit" id="applyBtn" class="submit-btn" style="width: auto; padding: 0.5rem 2rem;">
+                            Come up for review
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="js/expert_apply.js"></script>
+</body>
+</html>
