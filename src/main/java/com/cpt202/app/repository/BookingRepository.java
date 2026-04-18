@@ -10,12 +10,9 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
-
 @Repository
 //JpaRepository<Booking, Long>：第一个参数实体类名，第二个参数主键的数据类型
 public interface BookingRepository extends JpaRepository<Booking, Long> {
-
     // 查找某个顾客的所有订单
     List<Booking> findByCustomer(User customer);
 
@@ -41,8 +38,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             BookingStatus status,
             LocalDateTime date);
 
-
-
+    // 进阶魔法：查专家ID，并且订单状态必须在我们给定的集合(In)里面
+    List<Booking> findByTimeSlot_Specialist_IdAndStatusIn(Long specialistId, List<BookingStatus> statuses);
+    // 根据专家的 ID 和 订单状态 查询所有有效订单
+    List<Booking> findBySpecialistIdAndStatusIn(Long specialistId, List<BookingStatus> statuses);
 
 }
-

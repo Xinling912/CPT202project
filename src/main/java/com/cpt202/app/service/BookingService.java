@@ -1,9 +1,9 @@
 package com.cpt202.app.service;
+
 import com.cpt202.app.model.*;
 import com.cpt202.app.repository.BookingRepository;
 import com.cpt202.app.repository.SpecialistProfileRepository;
 import com.cpt202.app.repository.TimeSlotRepository;
-import com.cpt202.app.model.TimeSlotStatus;
 import com.cpt202.app.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
