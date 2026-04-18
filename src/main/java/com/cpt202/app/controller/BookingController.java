@@ -122,7 +122,7 @@ public class BookingController {
     }
 
     /**
-     * 【查询: 我的预约列表】
+     * 【查询: 顾客的预约列表】
      */
     @GetMapping("/myOrders")
     public ResponseEntity<?> getMyOrders(Principal principal) {

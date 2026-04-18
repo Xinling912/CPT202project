@@ -1,7 +1,7 @@
 package com.cpt202.app.repository;
 
 import com.cpt202.app.model.SpecialistProfile;
-import com.cpt202.app.model.ExpertiseCategory;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import com.cpt202.app.model.SpecialistStatus;
 import com.cpt202.app.model.User;
 import org.springframework.data.domain.Page;

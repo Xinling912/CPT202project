@@ -1,11 +1,11 @@
 package com.cpt202.app.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-
-
 import java.time.LocalDate;
 import java.time.LocalTime;
-
 
 @Entity
 @Table(name = "time_slot")
@@ -16,6 +16,7 @@ public class TimeSlot {
     private Long id;
 
     // 谁的排班？关联到专家名片
+    @JsonIgnoreProperties({"user", "expertise", "level"}) // 建议加上，防止返回数据太臃肿
     @ManyToOne
     @JoinColumn(name = "specialist_id", referencedColumnName = "id", nullable = false)
     private SpecialistProfile specialist;
@@ -76,9 +77,6 @@ public class TimeSlot {
         this.endTime = endTime;
     }
 
-
-
-    //  这里的命名必须是 getStatus，BookingService
     public TimeSlotStatus getStatus() {
         return status;
     }
