@@ -1,21 +1,31 @@
--- 1. 无脑塞入一个专业分类 (ID=1)，防止缺失
-INSERT IGNORE INTO expertise_category (id, name, description) VALUES (1, 'General', 'General Specialist');
-
--- 2. 🌟 【新增】给组员预留的管理员/专家账号！
-
-DELETE FROM user WHERE id = 1;
-
--- 2. 再把全新的 Wanfeng 塞进去！
-INSERT INTO user (id, username, email, password, role)
-VALUES (1, 'Wanfeng', 'expert@expert.com', '$2a$10$0dD3K0i', 'SPECIALIST');
--- 3. 无脑发一张专家执照给这个账号 (ID=1, 绑定上面的用户和分类)
-INSERT IGNORE INTO specialist_profile (id, user_id, expertise_id, hourly_fee, status)
-VALUES (1, 1, 1, 100.00, 'ACTIVE');
-
 -- ==========================================
--- 4. 下面是排班代码，每次执行先清空旧数据，防止重复
+-- 第一步：按顺序清理旧数据（防外键报错）  $2a$10$PUKIponqAJqaZCWN/kBoIOJT3pf/aRBs5N1Eg9M4F/aGRQw/3bacq
 -- ==========================================
 DELETE FROM time_slot WHERE specialist_id = 1;
+DELETE FROM specialist_profile WHERE user_id = 1;
+DELETE FROM user WHERE id IN (1, 2);
+
+-- ==========================================
+-- 第二步：初始化基础数据
+-- ==========================================
+INSERT IGNORE INTO expertise_category (id, name, description) VALUES (1, 'General', 'General Specialist');
+
+-- ==========================================
+-- 第三步：塞入测试账号 (加入了必填的 created_at 字段)
+-- 密码我重置成了标准加密串，两个账号的明文密码现在都是：123456
+-- ==========================================
+
+INSERT INTO user (id, username, email, password, role, created_at)
+VALUES (1, 'Wanfeng', 'expert@qq.com', '$2a$10$PUKIponqAJqaZCWN/kBoIOJT3pf/aRBs5N1Eg9M4F/aGRQw/3bacq', 'SPECIALIST', NOW());
+
+INSERT INTO user (id, username, email, password, role, created_at)
+VALUES (2, 'Carrot', 'carrot@qq.com', '$2a$10$PUKIponqAJqaZCWN/kBoIOJT3pf/aRBs5N1Eg9M4F/aGRQw/3bacq', 'CUSTOMER', NOW());
+
+-- ==========================================
+-- 第四步：给专家发执照并排班
+-- ==========================================
+INSERT INTO specialist_profile (id, user_id, expertise_id, hourly_fee, status)
+VALUES (1, 1, 1, 100.00, 'ACTIVE');
 
 INSERT INTO time_slot (specialist_id, slot_date, start_time, end_time, is_booked, status) VALUES
                                                                                               (1, '2026-04-12', '2026-04-12 09:00:00', '2026-04-12 10:00:00', 0, 'AVAILABLE'),
