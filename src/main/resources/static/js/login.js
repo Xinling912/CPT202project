@@ -3,20 +3,18 @@ $(document).ready(function() {
         e.preventDefault(); 
         
         const btn = $('#loginBtn');
-        const inputAccount = $('#log-email').val(); // 现在这个框既能填邮箱，也能填用户名
+        const inputAccount = $('#log-email').val(); 
         const inputPwd = $('#log-password').val();
         
         btn.text('Verifying...')
            .prop('disabled', true)
            .addClass('opacity-70 cursor-not-allowed');
 
-        // 严格按照杜姐的 LoginRequest 要求来写字段名
         const loginData = {
             usernameOrEmail: inputAccount, 
             password: inputPwd
         };
 
-        // 呼叫杜姐的新版登录接口
         fetch('http://localhost:8080/api/users/login', {
             method: 'POST',
             headers: {
@@ -25,25 +23,51 @@ $(document).ready(function() {
             body: JSON.stringify(loginData)
         })
         .then(async response => {
-            const data = await response.json(); // 现在后端返回的是规范的 JSON 啦！
+            const data = await response.json(); 
+
+            console.log("【调试】后端返回的完整数据：", data); 
 
             if (response.ok) {
-                // ==========================================
-                // 🌟 核心高光时刻：拿到并戴上 Token 手环！
-                // ==========================================
-                // 假设杜姐的返回值里带有 token 字段 (如果没有，你得提醒杜姐在返回值里加上 token 字段)
-                if(data.token) {
-                    localStorage.setItem('token', data.token); 
+                const actualToken = data.token;
+                
+                if (actualToken) {
+                    localStorage.setItem('token', actualToken); 
+                    console.log("【调试】Token 成功存入浏览器：", actualToken);
+                } else {
+                    console.warn("⚠️ 警告：后端返回成功，但没有找到 Token 字段！");
+                    alert("登录成功，但未获取到 Token，请按 F12 查看控制台并联系后端！");
                 }
-                // 顺便把用户名也存下来，以后网页右上角能显示 "欢迎您，XXX"
-                localStorage.setItem('username', data.username); 
+                
+                const actualUsername = data.username || (data.data && data.data.username) || inputAccount;
+                localStorage.setItem('username', actualUsername); 
+localStorage.setItem('username', data.username || inputAccount);
+                // ==========================================
+                // 🌟 【新增核心代码】：保存身份牌，供后面的页面做权限隔离
+                // ==========================================
+                if (data.role) {
+                    localStorage.setItem('role', data.role); // 存入角色 (CUSTOMER 或 SPECIALIST)
+                    console.log("【调试】用户身份(Role)已存入：", data.role);
+                }
+                if (data.userId) {
+                    localStorage.setItem('userId', data.userId); // 存入用户ID，方便查询属于他的订单
+                    console.log("【调试】用户ID已存入：", data.userId);
+                }
+                // ==========================================
 
                 btn.text('Log In').prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
-                alert(data.message); // 弹出杜姐写的 "登录成功"
-                window.location.href = 'home.html'; // 丝滑跳转
+               alert(data.message || "登录成功！"); 
+
+// 🌟 终极分流口：不同身份进不同的门
+if (data.role === 'SPECIALIST') {
+    // 专家直接踢进后台页面！
+    // 因为咱们之前在 booking.js 做了门卫，他一进 booking.html 就会被自动拉到专属工作台
+    window.location.href = 'specialist.html'; 
+} else {
+    // 普通用户乖乖去大厅逛街
+    window.location.href = 'home.html'; 
+}
             } else {
-                // 登录失败 (密码错误、账号不存在等)
-                alert("Login Failed: " + data.message);
+                alert("Login Failed: " + (data.message || "未知错误，请检查账号密码"));
                 btn.text('Log In').prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
             }
         })
@@ -54,7 +78,6 @@ $(document).ready(function() {
         });
     });
 
-    // 页面跳转逻辑
     $('#go-to-register').on('click', function() {
         window.location.href = 'register.html';
     });

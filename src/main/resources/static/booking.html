@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpertConnect | Premium Multi-Terminal Portal</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/booking.css">
+</head>
+<body>
+
+<nav class="navbar sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-800" href="home.html"><i class="bi bi-intersect me-2 text-primary"></i>ExpertConnect</a>
+        <div class="d-flex gap-3">
+            <button class="btn btn-outline-dark btn-sm rounded-pill px-4" onclick="showPage('list-page')">User Portal</button>
+            <button class="btn btn-outline-primary btn-sm rounded-pill px-4" onclick="handleProtectedView('user-orders-page')">My Bookings</button>
+            <button class="btn btn-primary btn-sm rounded-pill px-4" onclick="handleProtectedView('specialist-dashboard', 1)">Specialist View</button>
+        </div>
+    </div>
+</nav>
+
+<div id="list-page" class="page-view page-active">
+    <div class="container">
+        <div class="row g-5">
+            <aside class="col-lg-3"><div class="p-4 bg-white rounded-5 border shadow-sm"><span class="fw-bold d-block mb-3">Quick Search</span><input type="text" class="form-control rounded-4 bg-light border-0 p-3 mb-4 shadow-none" placeholder="Keywords..."><button class="btn btn-primary w-100 rounded-pill py-3 fw-bold">Update</button></div></aside>
+            <main class="col-lg-9"><h1 class="fw-800 display-5 mb-5">Top Specialists</h1><div class="row g-4" id="expert-grid"></div></main>
+        </div>
+    </div>
+</div>
+
+<div id="profile-page" class="page-view">
+    <div class="container">
+        <button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('list-page')"><i class="bi bi-arrow-left"></i> Back</button>
+        <div class="profile-hero bg-white shadow-sm">
+            <img id="pAvatar" src="" class="profile-avatar-top-right">
+            <div class="bio-content"><span class="card-level-tag mb-3" id="pLevel">--</span><h1 class="display-3 fw-800 mb-2" id="pName">--</h1><h4 class="text-primary fw-bold mb-5" id="pExpertise">--</h4><button class="btn btn-dark rounded-pill px-5 py-3 fw-bold" onclick="goToCalendar()">Secure Booking</button></div>
+        </div>
+    </div>
+</div>
+
+<div id="calendar-page" class="page-view">
+    <div class="container"><button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('profile-page')"><i class="bi bi-arrow-left"></i> Back to Bio</button><div class="calendar-card shadow-sm"><h4 class="fw-800 mb-4">Select Consultation Date</h4><div class="calendar-grid" id="calendar-body"></div></div></div>
+</div>
+
+<div id="timeslot-page" class="page-view">
+    <div class="container text-center"><button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('calendar-page')"><i class="bi bi-arrow-left"></i> Back to Calendar</button><h2 class="fw-800 mb-5">Slots for <span id="display-date" class="text-primary">--</span></h2><div class="time-grid" id="slot-list"></div><button class="btn btn-dark rounded-pill px-5 py-3 mt-5 fw-bold" id="confirm-btn" style="display:none;" onclick="alert('Confirmed!')">Confirm Reservation</button></div>
+</div>
+
+<div id="user-orders-page" class="page-view">
+    <div class="container">
+        <h2 class="fw-800 mb-5">My Booking History</h2>
+        <div id="orders-list">
+            <div class="order-card d-flex justify-content-between align-items-center" onclick="showOrderDetail('XingjianWu', '2026-04-18', '09:00', 'Confirmed')"><div><h4 class="fw-800 mb-1">Architecture Review</h4><p class="text-muted mb-0">Specialist: XingjianWu | April 18, 2026</p></div><span class="badge bg-primary rounded-pill px-3 py-2">CONFIRMED</span></div>
+        </div>
+    </div>
+</div>
+
+<div id="specialist-dashboard" class="page-view">
+    <div class="container-fluid px-5">
+        <h2 class="fw-800 mb-4">Specialist Weekly Dashboard</h2>
+        <div class="calendar-container shadow-sm">
+            <table class="calendar-table">
+                <thead><tr><th class="time-col">Time</th><th class="day-header">MON</th><th class="day-header">TUE</th><th class="day-header">WED</th><th class="day-header">THU</th><th class="day-header">FRI</th><th class="day-header">SAT</th><th class="day-header">SUN</th></tr></thead>
+                <tbody id="specialist-calendar-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="orderModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-5 border-0" style="border-radius: 32px;"><h2 class="fw-800 mb-4">Booking Info</h2><div class="mb-3 d-flex justify-content-between"><span>Expert:</span><strong id="mEx"></strong></div><div class="mb-4 d-flex justify-content-between"><span>Status:</span><span id="mSt" class="badge bg-primary"></span></div><button class="btn btn-dark w-100 py-3 rounded-pill" data-bs-dismiss="modal">Close</button></div></div></div>
+<div class="modal fade" id="decisionModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-4 border-0" style="border-radius: 24px;"><h3 class="fw-800 mb-4">Manage Slot</h3><div class="d-flex justify-content-center gap-3"><button class="btn btn-primary rounded-pill px-5 py-2 fw-bold" onclick="alert('Confirmed')">Confirm</button><button class="btn btn-danger rounded-pill px-5 py-2 fw-bold" onclick="alert('Canceled')">Cancel</button></div></div></div></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/booking.js"></script>
+</body>
+</html>

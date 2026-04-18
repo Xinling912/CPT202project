@@ -11,12 +11,11 @@ public class SpecialistProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 与 User 的一对一关系：保证一个账号只能有一张名片
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
     private User user;
 
-    // 与专业分类的多对一关系：多个专家可以属于同一个专业
+
     @ManyToOne
     @JoinColumn(name = "expertise_id", referencedColumnName = "id", nullable = false)
     private ExpertiseCategory expertise;
@@ -25,7 +24,7 @@ public class SpecialistProfile {
     @Column(length = 50, nullable = false)
     private SpecialistLevel level; // JUNIOR, SENIOR, EXPERT
 
-    // 注：在 Java 里算钱，绝对不能用 Double，必须用 BigDecimal 防止精度丢失！
+
     @Column(name = "hourly_fee", precision = 10, scale = 2, nullable = false)
     private BigDecimal hourlyFee;
 
