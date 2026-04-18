@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpertConnect | Premium Multi-Terminal Portal</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        :root { --brand: #0062ff; --dark: #09090b; --slate: #71717a; --bg: #fafafa; --success: #10b981; --warning: #f59e0b; }
+        body { background-color: var(--bg); font-family: 'Plus Jakarta Sans', sans-serif; color: var(--dark); }
+        .navbar { background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); border-bottom: 1px solid #e4e4e7; padding: 1.2rem 0; sticky: top; z-index: 1000; }
+        .page-view { display: none; min-height: 90vh; padding: 40px 0; animation: slideIn 0.3s ease-out; }
+        .page-active { display: block; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 原有样式保持不动 */
+        .expert-card { background: white; border-radius: 32px; border: 1px solid #e4e4e7; padding: 35px; transition: 0.4s; cursor: pointer; height: 100%; display: flex; flex-direction: column; }
+        .expert-card:hover { transform: translateY(-8px); border-color: var(--brand); box-shadow: 0 24px 48px rgba(0,0,0,0.06); }
+        .card-level-tag { background: #f0f7ff; color: var(--brand); font-size: 0.7rem; font-weight: 800; padding: 6px 14px; border-radius: 100px; margin-bottom: 20px; display: inline-block; width: fit-content; }
+        .price-info { background: #f8fafc; border-radius: 16px; padding: 12px 20px; margin-top: auto; }
+        .profile-hero { background: white; border-radius: 40px; border: 1px solid #e4e4e7; padding: 60px; position: relative; overflow: hidden; }
+        .profile-avatar-top-right { position: absolute; top: 50px; right: 60px; width: 180px; height: 180px; border-radius: 40px; object-fit: cover; border: 8px solid white; box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
+        .calendar-card { background: white; border-radius: 32px; border: 1px solid #e4e4e7; padding: 30px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
+        .cal-date { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 700; border-radius: 15px; margin: 4px; position: relative; }
+        .cal-date.has-data::after { content: ''; position: absolute; bottom: 8px; width: 4px; height: 4px; background: var(--brand); border-radius: 50%; }
+        .cal-date.active { background: var(--brand); color: white; }
+        .time-btn { background: white; border: 2px solid #f1f5f9; border-radius: 20px; padding: 25px; font-weight: 800; text-align: center; cursor: pointer; }
+
+        .calendar-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: auto; }
+        .calendar-table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 900px; }
+        .calendar-table th, .calendar-table td { border: 1px solid #f1f5f9; height: 45px; text-align: center; vertical-align: middle; position: relative; }
+        .time-col { width: 70px; font-size: 0.7rem; font-weight: 700; color: #64748b; background: #fcfcfc; }
+        .day-header { background: #f8fafc; font-weight: 800; font-size: 0.8rem; padding: 8px 0; }
+        
+        .booking-block { position: absolute; left: 3px; right: 3px; border-radius: 6px; padding: 5px; color: white; font-size: 0.65rem; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; justify-content: center; z-index: 10; }
+        .status-Confirmed { background-color: #60a5fa; border: 1px solid #3b82f6; }
+        .status-Pending { background-color: #3b82f6; border: 1px solid #2563eb; }
+        .status-Canceled { background-color: #fb923c; border: 1px solid #ea580c; }
+        .status-Available { background-color: #f8fafc; color: #94a3b8; border: 1.5px dashed #cbd5e1; cursor: default; }
+
+        .order-card { background: white; border-radius: 24px; border: 1px solid #e4e4e7; padding: 25px; margin-bottom: 20px; transition: 0.3s; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-800" href="javascript:location.reload()"><i class="bi bi-intersect me-2 text-primary"></i>ExpertConnect</a>
+        <div class="d-flex gap-3">
+            <button class="btn btn-outline-dark btn-sm rounded-pill px-4" onclick="showPage('list-page')">User Portal</button>
+            <button class="btn btn-outline-primary btn-sm rounded-pill px-4" onclick="handleProtectedView('user-orders-page')">My Bookings</button>
+            <button class="btn btn-primary btn-sm rounded-pill px-4" onclick="handleProtectedView('specialist-dashboard', 1)">Specialist View</button>
+        </div>
+    </div>
+</nav>
+
+<div id="list-page" class="page-view page-active">
+    <div class="container">
+        <div class="row g-5">
+            <aside class="col-lg-3"><div class="p-4 bg-white rounded-5 border shadow-sm"><span class="fw-bold d-block mb-3">Quick Search</span><input type="text" class="form-control rounded-4 bg-light border-0 p-3 mb-4 shadow-none" placeholder="Keywords..."><button class="btn btn-primary w-100 rounded-pill py-3 fw-bold">Update</button></div></aside>
+            <main class="col-lg-9"><h1 class="fw-800 display-5 mb-5">Top Specialists</h1><div class="row g-4" id="expert-grid"></div></main>
+        </div>
+    </div>
+</div>
+
+<div id="profile-page" class="page-view">
+    <div class="container">
+        <button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('list-page')"><i class="bi bi-arrow-left"></i> Back</button>
+        <div class="profile-hero bg-white shadow-sm">
+            <img id="pAvatar" src="" class="profile-avatar-top-right">
+            <div class="bio-content"><span class="card-level-tag mb-3" id="pLevel">--</span><h1 class="display-3 fw-800 mb-2" id="pName">--</h1><h4 class="text-primary fw-bold mb-5" id="pExpertise">--</h4><button class="btn btn-dark rounded-pill px-5 py-3 fw-bold" onclick="goToCalendar()">Secure Booking</button></div>
+        </div>
+    </div>
+</div>
+
+<div id="calendar-page" class="page-view">
+    <div class="container"><button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('profile-page')"><i class="bi bi-arrow-left"></i> Back to Bio</button><div class="calendar-card shadow-sm"><h4 class="fw-800 mb-4">Select Consultation Date</h4><div class="calendar-grid" id="calendar-body"></div></div></div>
+</div>
+
+<div id="timeslot-page" class="page-view">
+    <div class="container text-center"><button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('calendar-page')"><i class="bi bi-arrow-left"></i> Back to Calendar</button><h2 class="fw-800 mb-5">Slots for <span id="display-date" class="text-primary">--</span></h2><div class="time-grid" id="slot-list"></div><button class="btn btn-dark rounded-pill px-5 py-3 mt-5 fw-bold" id="confirm-btn" style="display:none;" onclick="alert('Confirmed!')">Confirm Reservation</button></div>
+</div>
+
+<div id="user-orders-page" class="page-view">
+    <div class="container">
+        <h2 class="fw-800 mb-5">My Booking History</h2>
+        <div id="orders-list">
+            <div class="order-card d-flex justify-content-between align-items-center" onclick="showOrderDetail('XingjianWu', '2026-04-18', '09:00', 'Confirmed')"><div><h4 class="fw-800 mb-1">Architecture Review</h4><p class="text-muted mb-0">Specialist: XingjianWu | April 18, 2026</p></div><span class="badge bg-primary rounded-pill px-3 py-2">CONFIRMED</span></div>
+        </div>
+    </div>
+</div>
+
+<div id="specialist-dashboard" class="page-view">
+    <div class="container-fluid px-5">
+        <h2 class="fw-800 mb-4">Specialist Weekly Dashboard</h2>
+        <div class="calendar-container shadow-sm">
+            <table class="calendar-table">
+                <thead><tr><th class="time-col">Time</th><th class="day-header">MON</th><th class="day-header">TUE</th><th class="day-header">WED</th><th class="day-header">THU</th><th class="day-header">FRI</th><th class="day-header">SAT</th><th class="day-header">SUN</th></tr></thead>
+                <tbody id="specialist-calendar-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="orderModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-5 border-0" style="border-radius: 32px;"><h2 class="fw-800 mb-4">Booking Info</h2><div class="mb-3 d-flex justify-content-between"><span>Expert:</span><strong id="mEx"></strong></div><div class="mb-4 d-flex justify-content-between"><span>Status:</span><span id="mSt" class="badge bg-primary"></span></div><button class="btn btn-dark w-100 py-3 rounded-pill" data-bs-dismiss="modal">Close</button></div></div></div>
+<div class="modal fade" id="decisionModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-4 border-0" style="border-radius: 24px;"><h3 class="fw-800 mb-4">Manage Slot</h3><div class="d-flex justify-content-center gap-3"><button class="btn btn-primary rounded-pill px-5 py-2 fw-bold" onclick="alert('Confirmed')">Confirm</button><button class="btn btn-danger rounded-pill px-5 py-2 fw-bold" onclick="alert('Canceled')">Cancel</button></div></div></div></div>
+
+<script>
+    const API_BASE = "http://localhost:8080";
+    let selectedExpertId = null;
+    let allSlots = [];
+
+    // ==========================================
+    // 🌟 JWT Token 拦截器配置 (根据小组成员代码同步)
+    // ==========================================
+    $.ajaxSetup({
+        beforeSend: function(xhr) {
+            const token = localStorage.getItem('token');
+            if (token) {
+                xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+            }
+        }
+    });
+
+    // 辅助函数：检查登录状态
+    function checkLogin() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert("Please log in first!");
+            // 这里根据你们项目的登录页面文件名修改，比如 login.html
+            window.location.href = 'login.html'; 
+            return false;
+        }
+        return true;
+    }
+
+    // 处理需要登录才能查看的页面
+    function handleProtectedView(pageId, specialistId = null) {
+        if (checkLogin()) {
+            if (pageId === 'specialist-dashboard') {
+                loadSpecialistDashboard(specialistId);
+            } else {
+                showPage(pageId);
+            }
+        }
+    }
+
+    $(document).ready(() => initList());
+
+    function initList() {
+        $.get(`${API_BASE}/api/specialists`, (res) => {
+            const grid = $('#expert-grid').empty();
+            res.content.forEach(item => {
+                grid.append(`<div class="col-md-6"><div class="expert-card" onclick="goToProfile(${item.id},'${item.user.username}','${item.expertise.name}','${item.hourlyFee}','${item.level}')"><span class="card-level-tag">${item.level}</span><div class="d-flex align-items-center gap-3 mb-4"><img src="https://api.dicebear.com/7.x/initials/svg?seed=${item.user.username}" style="width:60px; border-radius:50%"><div><h3 class="fw-800 mb-0">${item.user.username}</h3><div class="text-muted small">${item.expertise.name}</div></div></div><div class="price-info d-flex justify-content-between align-items-center"><span class="fw-800">$${item.hourlyFee}/hr</span><span class="text-primary fw-bold">View Profile &raquo;</span></div></div></div>`);
+            });
+        });
+    }
+
+    function goToProfile(id, name, exp, rate, lvl) { selectedExpertId = id; $('#pName').text(name); $('#pExpertise').text(exp); $('#pRate').text('$'+rate); $('#pLevel').text(lvl); $('#pAvatar').attr('src', `https://api.dicebear.com/7.x/initials/svg?seed=${name}`); showPage('profile-page'); }
+
+    function goToCalendar() {
+        $.get(`${API_BASE}/api/specialists/${selectedExpertId}/schedules`, (data) => {
+            allSlots = data; renderUserCalendar(); showPage('calendar-page');
+        });
+    }
+
+    function renderUserCalendar() {
+        const body = $('#calendar-body').empty();
+        const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+        days.forEach(d => body.append(`<div class="p-2 fw-800 small text-muted">${d}</div>`));
+        for(let i=0; i<3; i++) body.append('<div></div>');
+        for(let i=1; i<=30; i++) {
+            const dateStr = `2026-04-${i.toString().padStart(2, '0')}`;
+            const hasData = allSlots.some(s => s.slotDate === dateStr && !s.booked);
+            body.append(`<div class="cal-date ${hasData ? 'has-data' : ''}" onclick="showSlots('${dateStr}')">${i}</div>`);
+        }
+    }
+
+    function showSlots(dateStr) {
+        $('#display-date').text(dateStr);
+        const list = $('#slot-list').empty(); $('#confirm-btn').hide();
+        const todaySlots = allSlots.filter(s => s.slotDate === dateStr && !s.booked);
+        todaySlots.forEach(s => {
+            let timeStr = s.startTime.split(' ').pop().substring(0, 5);
+            list.append(`<div class="time-btn" onclick="$(this).addClass('selected');$('#confirm-btn').fadeIn()">${timeStr}</div>`);
+        });
+        showPage('timeslot-page');
+    }
+
+    function showOrderDetail(ex, ti, st, stat) { $('#mEx').text(ex); $('#mSt').text(stat); new bootstrap.Modal('#orderModal').show(); }
+
+    function loadSpecialistDashboard(id) {
+        showPage('specialist-dashboard');
+        const body = $('#specialist-calendar-body').empty();
+        for (let h = 8; h < 22; h++) {
+            body.append(`<tr id="row-${h}"><td class="time-col">${h}:00</td><td data-day="MON"></td><td data-day="TUE"></td><td data-day="WED"></td><td data-day="THU"></td><td data-day="FRI"></td><td data-day="SAT"></td><td data-day="SUN"></td></tr>`);
+        }
+
+        setTimeout(() => {
+            renderBlock("MON", 8, 3, "XingjianWu", "Confirmed", "08:00 - 11:00");
+            renderBlock("MON", 14, 2, "Vacant", "Available", "14:00 - 16:00");
+            renderBlock("TUE", 9, 2, "Vacant", "Available", "09:00 - 11:00");
+            renderBlock("TUE", 15, 3, "ShaohuiShen", "Pending", "15:00 - 18:00");
+            renderBlock("WED", 10, 4, "Vacant", "Available", "10:00 - 14:00");
+            renderBlock("THU", 11, 2, "LeweiZhou", "Canceled", "11:00 - 13:00");
+            renderBlock("THU", 15, 2, "Vacant", "Available", "15:00 - 17:00");
+            renderBlock("FRI", 13, 3, "XingjianWu", "Confirmed", "13:00 - 16:00");
+        }, 100);
+    }
+
+    function renderBlock(day, start, dur, user, status, range) {
+        const cell = $(`#row-${start} td[data-day="${day}"]`);
+        const block = $(`
+            <div class="booking-block status-${status}" style="height:${dur*45-6}px" 
+                 onclick="${status !== 'Available' ? 'new bootstrap.Modal(\'#decisionModal\').show()' : ''}">
+                <div>${user}</div>
+                <div style="font-size:0.55rem">${range}</div>
+                <div class="mt-auto" style="font-size:0.5rem">${status}</div>
+            </div>
+        `);
+        cell.append(block);
+    }
+
+    function showPage(id) { $('.page-view').removeClass('page-active'); $(`#${id}`).addClass('page-active'); window.scrollTo(0,0); }
+</script>
+</body>
+</html>
