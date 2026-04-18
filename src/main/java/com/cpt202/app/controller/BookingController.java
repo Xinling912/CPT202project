@@ -6,6 +6,7 @@ import com.cpt202.app.model.SpecialistProfile;
 import com.cpt202.app.model.UserRole;
 import com.cpt202.app.service.BookingService;
 import com.cpt202.app.repository.UserRepository;
+import com.cpt202.app.repository.BookingRepository;
 import com.cpt202.app.repository.SpecialistProfileRepository;
 
 import org.springframework.http.HttpStatus;
@@ -25,14 +26,17 @@ public class BookingController {
     private final BookingService bookingService;
     private final UserRepository userRepository;
     private final SpecialistProfileRepository specialistRepository;
+    private final BookingRepository bookingRepository;
 
     // 采用构造器注入，保证依赖清晰
     public BookingController(BookingService bookingService,
                              UserRepository userRepository,
-                             SpecialistProfileRepository specialistRepository) {
+                             SpecialistProfileRepository specialistRepository,
+                             BookingRepository bookingRepository) {
         this.bookingService = bookingService;
         this.userRepository = userRepository;
         this.specialistRepository = specialistRepository;
+        this.bookingRepository = bookingRepository;
     }
 
 
@@ -43,23 +47,14 @@ public class BookingController {
     @PostMapping("/create")
     public ResponseEntity<?> createBooking(
             @RequestBody BookingRequest request,
-            Principal principal // ✨ 从安全上下文中注入当前用户
+            Principal principal
     ) {
         try {
-            // 1. 安全校验：从 Principal 获取当前登录者的唯一标识（如 Email 或 Username）
-
-            //String identifier = principal.getName();
-            User customer = userRepository.findByEmail(principal.getName())
-                    .orElseThrow(() -> new IllegalArgumentException("ERROR_USER_NOT_FOUND"));
-
-            // 2. 找到专家对象
-            SpecialistProfile specialist = specialistRepository.findById(request.specialistId())
-                    .orElseThrow(() -> new IllegalArgumentException("ERROR_SPECIALIST_NOT_FOUND"));
-
-            // 3. 调用 Service 执行业务（包含并发检测和月取消次数校验）
+            // Controller 不再查找 User 或 SpecialistProfile
+            // 只负责提取请求参数和当前用户标识(Email)
             Booking newOrder = bookingService.createBooking(
-                    customer,
-                    specialist,
+                    principal.getName(), // 传入 Email
+                    request.specialistId(),
                     request.slotId(),
                     request.notes()
             );
@@ -67,12 +62,9 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.CREATED).body(newOrder);
 
         } catch (IllegalStateException e) {
-            // 统一使用 Map.of
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "An unexpected error occurred: " + e.getMessage()));
@@ -84,37 +76,48 @@ public class BookingController {
      * 【PBI 5: 用户/专家取消订单】
      */
     @PostMapping("/cancel/{orderId}")
-    public ResponseEntity<?> cancelOrder(@PathVariable Long orderId, @RequestParam(required = false) String reason) {
+    public ResponseEntity<?> cancelOrder(
+            @PathVariable Long orderId,
+            @RequestParam String reason,
+            Principal principal
+    ) {
         try {
-            bookingService.cancelBooking(orderId, reason != null ? reason : "Cancelled by user");
-            return ResponseEntity.ok(Map.of("message", "Cancellation successful"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
-    }
-    /**
-     * 【PBI 5: 专家确认订单】
-     */
-    @PostMapping("/confirm/{orderId}")
-    public ResponseEntity<?> confirmOrder(@PathVariable Long orderId) {
-        try {
-            bookingService.confirmOrder(orderId);
-            return ResponseEntity.ok(Map.of("message", "Order confirmed successfully"));
+            // 直接调用 Service，所有权限和业务规则都在 Service 内部校验
+            bookingService.cancelBooking(orderId, reason, principal.getName());
+
+            return ResponseEntity.ok(Map.of("message", "Order cancelled successfully"));
+        } catch (IllegalStateException e) {
+            // 区分是鉴权失败(403)还是业务规则失败(409)
+            if (e.getMessage().contains("AUTHORIZED")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
+            }
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
     /**
-     * 【PBI 5: 完成订单】
+     * 【PBI 5: 专家确认订单】简化后只需一行
      */
-    @PostMapping("/complete/{orderId}")
-    public ResponseEntity<?> completeOrder(@PathVariable Long orderId) {
+    @PostMapping("/confirm/{orderId}")
+    public ResponseEntity<?> confirmOrder(@PathVariable Long orderId, Principal principal) {
         try {
-            bookingService.completeOrder(orderId);
+            // 直接把 identifier (email) 传给 Service，让 Service 去处理 profile 查询
+            bookingService.confirmOrder(orderId, principal.getName());
+            return ResponseEntity.ok(Map.of("message", "Order confirmed successfully"));
+        } catch (Exception e) {
+            return handleException(e);
+        }
+    }
+
+    @PostMapping("/complete/{orderId}")
+    public ResponseEntity<?> completeOrder(@PathVariable Long orderId, Principal principal) {
+        try {
+            bookingService.completeOrder(orderId, principal.getName());
             return ResponseEntity.ok(Map.of("message", "Order marked as completed"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return handleException(e);
         }
     }
 
@@ -171,6 +174,16 @@ public class BookingController {
                     .body(Map.of("message", e.getMessage()));
         }
     }
+
+
+    // 统一的异常处理器，减少每个方法里的 catch 块冗余
+    private ResponseEntity<?> handleException(Exception e) {
+        if (e instanceof IllegalStateException) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
+        }
+        return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+    }
+
 
     /**
      * DTO：不再需要 customerId
