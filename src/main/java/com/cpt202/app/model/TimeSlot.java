@@ -36,7 +36,7 @@ public class TimeSlot {
 
 
 
-    // TODO: 请生成 Getter 和 Setter
+
     public Long getId() {
         return id;
     }
