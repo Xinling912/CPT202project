@@ -39,7 +39,7 @@ public class TimeSlot {
     @Column(length = 20, nullable = false)
     private TimeSlotStatus status = TimeSlotStatus.AVAILABLE;
 
-    // TODO: 请生成 Getter 和 Setter
+
     public Long getId() {
         return id;
     }

@@ -16,7 +16,7 @@ public class ExpertiseCategory {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    // TODO: 请生成 Getter 和 Setter 方法
+
     public Long getId() {
         return id;
     }

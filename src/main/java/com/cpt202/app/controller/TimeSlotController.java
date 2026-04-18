@@ -10,11 +10,14 @@ import com.cpt202.app.model.UserRole;
 import com.cpt202.app.repository.BookingRepository;
 import com.cpt202.app.repository.SpecialistProfileRepository;
 import com.cpt202.app.service.TimeSlotService;
+import com.cpt202.app.service.TimeSlotService.TimeSlotBatchRequest;
 import com.cpt202.app.service.TimeSlotService.TimeSlotWithBookingDTO;
 import com.cpt202.app.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -183,7 +186,41 @@ public class TimeSlotController {
 
         return response;
     }
+    /**
+     * 【需求三：专家视角】
+     * 5. 专家发布/增加排班 (支持批量，也支持单条增加)
+     * 接口路径: POST /api/timeslots/publish
+     */
+    @PostMapping("/publish")
+    @PreAuthorize("hasRole('SPECIALIST')")
+    public ResponseEntity<?> publishSchedule(@RequestBody TimeSlotBatchRequest request, Authentication auth) {
+        try {
+            timeSlotService.batchCreateSlots(auth.getName(), request);
+            return ResponseEntity.ok(Map.of("message", "排班发布成功！"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "发布失败：" + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "服务器发生错误，请稍后再试"));
+        }
+    }
 
+    /**
+     * 【需求三：专家视角】
+     * 6. 专家删除未预约的时间段
+     * 接口路径: DELETE /api/timeslots/{slotId}
+     */
+    @DeleteMapping("/{slotId}")
+    @PreAuthorize("hasRole('SPECIALIST')")
+    public ResponseEntity<?> deleteTimeSlot(@PathVariable Long slotId, Authentication auth) {
+        try {
+            timeSlotService.deleteTimeSlot(auth.getName(), slotId);
+            return ResponseEntity.ok(Map.of("message", "时间段已成功删除！"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "删除失败：" + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "服务器发生错误，请稍后再试"));
+        }
+    }
     /**
      * 内部核心安全方法：从 JWT 中提取身份，校验专家角色，并查出真实的 Profile ID
      */

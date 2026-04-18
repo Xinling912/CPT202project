@@ -1,5 +1,8 @@
 package com.cpt202.app.controller;
 
+import com.cpt202.app.service.SpecialistService;
+import com.cpt202.app.service.SpecialistService.SpecialistApplyRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.cpt202.app.model.*;
 import com.cpt202.app.repository.ExpertiseCategoryRepository;
 import com.cpt202.app.repository.SpecialistProfileRepository;
@@ -8,9 +11,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -22,6 +28,9 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/specialists")
 @CrossOrigin
 public class SpecialistController {
+
+    @Autowired
+    private SpecialistService specialistService;
 
     private final SpecialistProfileRepository specialistRepository;
     private final TimeSlotRepository timeSlotRepository;
@@ -47,7 +56,7 @@ public class SpecialistController {
      * 5) 多筛选条件可叠加，最终结果是“同时满足所有条件”的交集
      */
     @GetMapping
-    public Map<String, Object> getSpecialists(
+    public ResponseEntity<?> getSpecialists(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
@@ -57,9 +66,19 @@ public class SpecialistController {
 
         Map<String, Object> response = new HashMap<>();
         Pageable pageable = PageRequest.of(page, size);
-        LocalDate targetDate = (date == null || date.isBlank()) ? null : LocalDate.parse(date);
+        LocalDate parsedDate = null;
+        try {
+            if (date != null && !date.isBlank()) {
+                parsedDate = LocalDate.parse(date);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "日期格式不正确，请输入 yyyy-MM-dd"));
+        }
 
-        // 基础条件：只显示 ACTIVE 的专家
+        // 定义一个 final 变量给 Lambda 使用
+        final LocalDate finalTargetDate = parsedDate;
+
+        // 只显示 ACTIVE 的专家
         Specification<SpecialistProfile> spec = (root, query, cb) -> cb.equal(root.get("status"), SpecialistStatus.ACTIVE);
 
         if (keyword != null && !keyword.isBlank()) {
@@ -73,7 +92,7 @@ public class SpecialistController {
         if (level != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("level"), level));
         }
-        if (targetDate != null) {
+        if (finalTargetDate != null) {
             // availability 条件：子查询 time_slot 表，要求该专家在指定日期有可预约时段
             spec = spec.and((root, query, cb) -> {
                 var subquery = query.subquery(Long.class);
@@ -82,19 +101,21 @@ public class SpecialistController {
                 subquery.where(
                         cb.equal(timeSlotRoot.get("specialist"), root),
                         cb.equal(timeSlotRoot.get("status"), TimeSlotStatus.AVAILABLE),
-                        cb.equal(timeSlotRoot.get("slotDate"), targetDate)
+                        cb.equal(timeSlotRoot.get("slotDate"), finalTargetDate)
                 );
                 return cb.exists(subquery);
             });
         }
 
         Page<SpecialistProfile> specialistPage = specialistRepository.findAll(spec, pageable);
+        // 组装返回数据...
         response.put("content", specialistPage.getContent());
         response.put("totalElements", specialistPage.getTotalElements());
         response.put("totalPages", specialistPage.getTotalPages());
         response.put("page", specialistPage.getNumber());
         response.put("size", specialistPage.getSize());
-        return response;
+
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -131,5 +152,23 @@ public class SpecialistController {
         response.put("expertises", expertises);
         response.put("levels", levels);
         return response;
+    }
+
+    @PostMapping("/apply")
+    public ResponseEntity<?> submitProfile(@RequestBody SpecialistApplyRequest request, Authentication auth) {
+        try {
+            // 校验一下真实姓名不能为空
+            if (request.realName() == null || request.realName().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "真实姓名不能为空"));
+            }
+
+            specialistService.submitProfileApplication(auth.getName(), request);
+
+            // 返回 JSON 格式
+            return ResponseEntity.ok(Map.of("message", "个人信息已成功提交，请等待管理员审核。"));
+        } catch (Exception e) {
+            // 返回 JSON 格式的错误信息
+            return ResponseEntity.badRequest().body(Map.of("error", "提交失败: " + e.getMessage()));
+        }
     }
 }
