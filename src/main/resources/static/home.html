@@ -1,104 +1,92 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAS - Specialist Appointment System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/home.css">
-</head>
-<body>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SAS - Specialist Appointment System</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="css/home.css">
+    </head>
+    <body>
 
-    <header class="header fade-in">
-        <div class="user-info">
-            <img src="images/Xiaodu.png" alt="Xiaodu" class="user-xiaodu" onerror="this.src='https://via.placeholder.com/150'">
-            <div>
-                <p id="user-email" class="user-email">Loading...</p>
-                <p class="user-role">Registered User</p>
+        <header class="header fade-in">
+            <div class="user-info">
+                <img src="images/Xiaodu.png" alt="Avatar" class="user-xiaodu" onerror="this.src='https://via.placeholder.com/150'">
+                <div>
+                    <p id="user-email" class="user-email">@</p>
+                    <p class="user-role">Registered User</p>
+                </div>
             </div>
-        </div>
 
-        <div class="logo-container">
-            <h1 class="logo-title">S A S</h1>
-            <h2 class="logo-subtitle">Specialist Appointment System</h2>
-        </div>
+            <div class="logo-container">
+                <h1 class="logo-title">S A S</h1>
+                <h2 class="logo-subtitle">Specialist Appointment System</h2>
+            </div>
 
         <div class="header-actions">
-          <button id="joinUsBtn" class="btn-join">Join us</button>
-            <button id="logoutBtn" class="btn-logout">Logout</button>
-        </div>
-    </header>
+                <button id="searchMoreTopBtn" class="btn-search-top">Search More Specialist</button>
+                
+                <button id="joinUsBtn" class="btn-join">Join us</button>
+                <button id="logoutBtn" class="btn-logout">Logout</button>
+            </div>
+        </header>
 
-    <main class="card-grid">
-        
-        <div class="character-card fade-in" style="animation-delay: 0.1s;">
-            <img src="images/Ares.png" alt="Ares" class="character-img" onerror="this.src='https://via.placeholder.com/200x250?text=Ares'">
-            <h3 class="card-name">Ares</h3>
-            <p class="card-title">God of War</p>
-            <p class="card-desc">
-                A symbol of violence, cruelty and impulsiveness, representing pure war and primal desires, handsome yet bloodthirsty and warlike.
-            </p>
-            <button class="btn-details">Details interface</button>
-        </div>
+        <main class="card-grid">
+            
+            <div class="character-card fade-in" style="animation-delay: 0.1s;">
+                <img src="images/Ares.png" alt="Ares" class="character-img" onerror="this.src='https://via.placeholder.com/200x250?text=Ares'">
+                <h3 class="card-name">Ares</h3>
+                <p class="card-title">God of War</p>
+                <p class="card-desc">
+                    A symbol of violence, cruelty and impulsiveness, representing pure war and primal desires, handsome yet bloodthirsty and warlike.
+                </p>
+                <button class="btn-details">Details interface</button>
+            </div>
 
-        <div class="character-card fade-in" style="animation-delay: 0.2s;">
-            <img src="images/Poseidon.png" alt="Poseidon" class="character-img" onerror="this.src='https://via.placeholder.com/200x250?text=Poseidon'">
-            <h3 class="card-name">Poseidon</h3>
-            <p class="card-title">Crazy Waves</p>
-            <p class="card-desc">
-                It can easily create huge waves that cause storms and tsunamis, causing the continent to sink and the heavens and earth to split apart.
-            </p>
-            <button class="btn-details">Details interface</button>
-        </div>
+            <div class="character-card fade-in" style="animation-delay: 0.2s;">
+                <img src="images/Poseidon.png" alt="Poseidon" class="character-img" onerror="this.src='https://via.placeholder.com/200x250?text=Poseidon'">
+                <h3 class="card-name">Poseidon</h3>
+                <p class="card-title">Crazy Waves</p>
+                <p class="card-desc">
+                    It can easily create huge waves that cause storms and tsunamis, causing the continent to sink and the heavens and earth to split apart.
+                </p>
+                <button class="btn-details">Details interface</button>
+            </div>
 
-        <div class="character-card fade-in" style="animation-delay: 0.3s;">
-            <img src="images/Melinoe.png" alt="Melinoe" class="character-img" onerror="this.src='https://via.placeholder.com/200x250?text=Melinoe'">
-            <h3 class="card-name">Melinoe</h3>
-            <p class="card-title">Daughter of Hades</p>
-            <p class="card-desc">
-                Not only was she a participant in the soul judgment in the myths, but also an important symbol of the Orpheus ritual system.
-            </p>
-            <button class="btn-details">Details interface</button>
-        </div>
+            <div class="character-card fade-in" style="animation-delay: 0.3s;">
+                <img src="images/Melinoe.png" alt="Melinoe" class="character-img" onerror="this.src='https://via.placeholder.com/200x250?text=Melinoe'">
+                <h3 class="card-name">Melinoe</h3>
+                <p class="card-title">Daughter of Hades</p>
+                <p class="card-desc">
+                    Not only was she a participant in the soul judgment in the myths, but also an important symbol of the Orpheus ritual system.
+                </p>
+                <button class="btn-details">Details interface</button>
+            </div>
 
-        <div class="character-card fade-in" style="animation-delay: 0.4s;">
-            <img src="images/Somebody.gif" alt="Somebody" class="character-img" onerror="this.src='https://via.placeholder.com/150x200?text=Somebody'" style="height: 180px; top: -4.5rem;">
-            <h3 class="card-name">Somebody</h3>
-            <p class="card-title">In some way</p>
-            <p class="card-desc">The character has not been unlocked.</p>
-            <button class="btn-details">Details interface</button>
-        </div>
+            <div class="character-card fade-in" style="animation-delay: 0.4s;">
+                <img src="images/Somebody.gif" alt="Somebody" class="character-img" onerror="this.src='https://via.placeholder.com/150x200?text=Somebody'" style="height: 180px; top: -4.5rem;">
+                <h3 class="card-name">Somebody</h3>
+                <p class="card-title">In some way</p>
+                <p class="card-desc">The character has not been unlocked.</p>
+                <button class="btn-details">Details interface</button>
+            </div>
 
-        <div class="character-card fade-in" style="animation-delay: 0.5s;">
-            <img src="images/Somebody.gif" alt="Somebody" class="character-img" onerror="this.src='https://via.placeholder.com/150x200?text=Somebody'" style="height: 180px; top: -4.5rem;">
-            <h3 class="card-name">Somebody</h3>
-            <p class="card-title">In some way</p>
-            <p class="card-desc">The character has not been unlocked.</p>
-            <button class="btn-details">Details interface</button>
-        </div>
+            <div class="character-card fade-in" style="animation-delay: 0.5s;">
+                <img src="images/Somebody.gif" alt="Somebody" class="character-img" onerror="this.src='https://via.placeholder.com/150x200?text=Somebody'" style="height: 180px; top: -4.5rem;">
+                <h3 class="card-name">Somebody</h3>
+                <p class="card-title">In some way</p>
+                <p class="card-desc">The character has not been unlocked.</p>
+                <button class="btn-details">Details interface</button>
+            </div>
+    
 
-    </main>
+        </main>
+    <div class="bottom-actions fade-in">
+            <button id="searchMoreBottomBtn" class="btn-search-bottom">Search More</button>
+        </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-     $(document).ready(function() {
-            // 从 localStorage 获取登录时的账号信息
-            const savedEmail = localStorage.getItem('userEmail');
-            if (savedEmail) {
-                $('#user-email').text(savedEmail);
-            }
-
-            // 【新增】点击 Join us 跳转到专家申请页面
-            $('#joinUsBtn').on('click', function() {
-                window.location.href = 'expert_apply.html'; 
-            });
-
-            // 登出按钮逻辑
-            $('#logoutBtn').on('click', function() {
-                localStorage.removeItem('userEmail'); // 清除本地缓存
-                window.location.href = 'login.html';  // 返回登录页
-            });
-        });
-    </script>
-</body>
-</html>
+        
+        <script src="js/home.js"></script>
+    </body>
+    </html>

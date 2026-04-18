@@ -110,6 +110,7 @@ public class UserController {
             userService.sendVerifyCode(request.email());
             return ResponseEntity.ok(Map.of("message", "验证码已发送到邮箱"));
         } catch (IllegalStateException e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", e.getMessage()));
         } catch (IllegalArgumentException e) {
