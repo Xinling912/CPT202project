@@ -31,8 +31,7 @@ public class User {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    // TODO: 请使用 IDE 生成所有属性的 Getter 和 Setter 方法
-    // (如果你在 pom.xml 里引入了 Lombok，可以直接在类名上方打上 @Data 注解，就不用手写 Getter/Setter 了)
+
     public Long getId() {
         return id;
     }
