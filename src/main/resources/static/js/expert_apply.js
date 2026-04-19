@@ -1,89 +1,83 @@
 $(document).ready(function() {
-    // ==========================================
-    // 1. 新增：专业领域“其他”选项的显隐控制
-    // ==========================================
-    $('#exp-domain').change(function() {
+    // 1. Utility to get the latest Authorization header
+    // This ensures that even if the token changes, we always grab the current one
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert("Please log in first!");
+            window.location.href = 'login.html';
+            return {};
+        }
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        };
+    };
+
+    // 2. Logic to control the "Other" input field visibility
+    $('#exp-domain-select').change(function() {
         if ($(this).val() === 'other') {
-            // 如果选择了 other，显示输入框并设为必填
-            $('#exp-domain-other').show().attr('required', true);
+            $('#exp-domain-input').show().attr('required', true);
         } else {
-            // 否则隐藏输入框并取消必填
-            $('#exp-domain-other').hide().attr('required', false);
+            $('#exp-domain-input').hide().attr('required', false).val('');
         }
     });
 
-    // ==========================================
-    // 2. 表单提交逻辑
-    // ==========================================
+    // 3. Form Submission Logic
     $('#expertForm').on('submit', function(e) {
         e.preventDefault();
 
         const btn = $('#applyBtn');
-        btn.text('Submitting...')
-           .prop('disabled', true)
-           .addClass('opacity-70 cursor-not-allowed');
+        btn.text('Submitting...').prop('disabled', true);
 
-        // 从浏览器的记事本里，把登录时存的手环拿出来
-        const token = localStorage.getItem('token');
-
-        // 如果连手环都没有，说明根本没登录，直接赶去登录页
-        if (!token) {
-            alert("Please log in first!");
-            window.location.href = 'login.html';
-            return;
-        }
-
-        // --- 数据提取逻辑开始 ---
-        // 处理“其他”专业领域的值
-        let finalDomain = $('#exp-domain').val();
-        if (finalDomain === 'other') {
-            finalDomain = $('#exp-domain-other').val();
-        }
+        // --- Data Extraction with Type Casting ---
+        const isOther = $('#exp-domain-select').val() === 'other';
 
         const expertData = {
-            name: $('#exp-name').val(),
-            domain: finalDomain,
-            level: $('#exp-level').val(), // 对应 HTML 中的 JUNIOR, SENIOR, EXPERT
-            fee: $('#exp-fee').val(),
-            resume: $('#exp-resume').val()
-            // 注意：此处已根据你的需求去掉了 qualification certificates
-        };
-        // --- 数据提取逻辑结束 ---
+            // Field mapping strictly aligned with Specialist API
+            realName: $('#exp-name').val(),                      // String
+            level: $('#exp-level').val(),                        // Enum: JUNIOR, SENIOR, EXPERT
+            hourlyFee: Number($('#exp-fee').val()),              // Must be Number for Decimal(10,2)
+            resume: $('#exp-resume').val(),                      // String
 
-        // 发送真实请求去申请专家
-        fetch('http://localhost:8080/api/experts/apply', {
+            // Mutually exclusive logic for Professional Field [cite: 124]
+            // If selecting existing: provide expertiseId (Number)
+            expertiseId: isOther ? null : Number($('#exp-domain-select').val()),
+
+            // If selecting other: provide newExpertiseName (String)
+            // This is the field Admin will see in the review list [cite: 123, 155]
+            newExpertiseName: isOther ? $('#exp-domain-input').val() : null
+        };
+
+        // 4. Send Request to Backend
+        fetch('http://localhost:8080/api/specialists/apply', { // Using corrected path [cite: 120]
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // 🌟 核心高光时刻：向保安亮出手环！
-                'Authorization': `Bearer ${token}`
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify(expertData)
         })
         .then(async response => {
-            if(response.ok) {
-                alert("Application submitted successfully for review!");
-                window.location.href = 'home.html'; // 提交成功回主页
+            if (response.ok) {
+                // Success: Information stored in PENDING status for Admin review [cite: 135, 153]
+                alert("Application submitted! Please wait for admin review.");
+                window.location.href = 'home.html';
+            } else if (response.status === 401) {
+                alert("Session expired. Please log in again.");
+                window.location.href = 'login.html';
             } else {
-                alert("Submission failed. Please try again later.");
+                const errorData = await response.text();
+                alert("Submission failed: " + errorData);
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            // 这里保留你以前的模拟逻辑，万一后端没开，至少前端还能弹个框展示一下
-            setTimeout(() => {
-                alert("Application submitted successfully for review! (Simulated)");
-                window.location.href = 'home.html';
-            }, 1000);
+            console.error('Connection Error:', error);
+            alert("Could not connect to the server. Please ensure the backend is running.");
         })
         .finally(() => {
-            btn.text('Come up for review')
-               .prop('disabled', false)
-               .removeClass('opacity-70 cursor-not-allowed');
+            btn.text('Come up for review').prop('disabled', false);
         });
     });
 
-    // 返回按钮逻辑
+    // Back button logic
     $('#go-back').on('click', function() {
         window.location.href = 'home.html';
     });
