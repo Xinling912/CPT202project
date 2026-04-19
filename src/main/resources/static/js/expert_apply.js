@@ -1,7 +1,23 @@
 $(document).ready(function() {
+    // ==========================================
+    // 1. 新增：专业领域“其他”选项的显隐控制
+    // ==========================================
+    $('#exp-domain').change(function() {
+        if ($(this).val() === 'other') {
+            // 如果选择了 other，显示输入框并设为必填
+            $('#exp-domain-other').show().attr('required', true);
+        } else {
+            // 否则隐藏输入框并取消必填
+            $('#exp-domain-other').hide().attr('required', false);
+        }
+    });
+
+    // ==========================================
+    // 2. 表单提交逻辑
+    // ==========================================
     $('#expertForm').on('submit', function(e) {
         e.preventDefault();
-        
+
         const btn = $('#applyBtn');
         btn.text('Submitting...')
            .prop('disabled', true)
@@ -17,27 +33,34 @@ $(document).ready(function() {
             return;
         }
 
-        // 假设你要提交的数据
+        // --- 数据提取逻辑开始 ---
+        // 处理“其他”专业领域的值
+        let finalDomain = $('#exp-domain').val();
+        if (finalDomain === 'other') {
+            finalDomain = $('#exp-domain-other').val();
+        }
+
         const expertData = {
-            // 这里填入你们专家表单里提取出来的数据
-            // name: $('#expert-name').val(),
-            // field: $('#expert-field').val()
+            name: $('#exp-name').val(),
+            domain: finalDomain,
+            level: $('#exp-level').val(), // 对应 HTML 中的 JUNIOR, SENIOR, EXPERT
+            fee: $('#exp-fee').val(),
+            resume: $('#exp-resume').val()
+            // 注意：此处已根据你的需求去掉了 qualification certificates
         };
+        // --- 数据提取逻辑结束 ---
 
         // 发送真实请求去申请专家
-        fetch('http://localhost:8080/api/experts/apply', { // 注意：等后端写好后，改成真实的接口地址
+        fetch('http://localhost:8080/api/experts/apply', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // ==========================================
                 // 🌟 核心高光时刻：向保安亮出手环！
-                // ==========================================
-                'Authorization': `Bearer ${token}` 
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(expertData)
         })
         .then(async response => {
-            // 这里为了防止后端还没写好接口报错，先做个兼容处理
             if(response.ok) {
                 alert("Application submitted successfully for review!");
                 window.location.href = 'home.html'; // 提交成功回主页

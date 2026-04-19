@@ -82,7 +82,7 @@
             
             <div class="expert-card">
                 <h2 style="font-size: 1.25rem; font-weight: bold; color: #1f2937; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6;">Entry of specialist information</h2>
-                
+
                 <form id="expertForm">
                     <div class="form-group">
                         <label class="form-label-left">Name <span class="req-star">*</span></label>
@@ -96,12 +96,19 @@
                             <option value="it" style="color: #1f2937;">IT / Internet</option>
                             <option value="finance" style="color: #1f2937;">Finance / Investment</option>
                             <option value="law" style="color: #1f2937;">Law / Consulting</option>
+                            <option value="other" style="color: #1f2937;">Other...</option>
                         </select>
+                        <input type="text" id="exp-domain-other" class="figma-input" style="display: none; margin-top: 0.5rem;" placeholder="Please specify your profession field">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label-left">Experience/Level <span class="req-star">*</span></label>
-                        <input type="text" id="exp-level" class="figma-input" placeholder="Please enter the specialist's qualification/level(such as: chief physician, professor)" required>
+                        <select id="exp-level" class="figma-input" style="color: #6b7280; background: white;" required>
+                            <option value="" disabled selected>Please select your level.</option>
+                            <option value="JUNIOR" style="color: #1f2937;">JUNIOR</option>
+                            <option value="SENIOR" style="color: #1f2937;">SENIOR</option>
+                            <option value="EXPERT" style="color: #1f2937;">EXPERT</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
@@ -111,16 +118,7 @@
 
                     <div class="form-group">
                         <label class="form-label-left">Individual resume <span class="req-star">*</span></label>
-                        <textarea id="exp-resume" rows="4" class="figma-input" style="resize: none;" placeholder="Please provide the personal profile of the expert (including years of experience, areas of expertise, etc.)" required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label-left">Upload qualification certificates <span class="req-star">*</span></label>
-                        <div class="upload-box">
-                            <span style="font-size: 1.875rem; margin-bottom: 0.5rem; filter: grayscale(100%); opacity: 0.7;">📁</span>
-                            <p style="font-size: 11px; color: #6b7280;">Click to upload your qualification certificate (in PDF, JPG or PNG format)</p>
-                            <p style="font-size: 10px; color: #9ca3af; margin-top: 0.25rem;">Each file should be no larger than 5MB and multiple file uploads are supported.</p>
-                        </div>
+                        <textarea id="exp-resume" rows="4" class="figma-input" style="resize: none;" placeholder="Please provide the personal profile of the expert..." required></textarea>
                     </div>
 
                     <div style="display: flex; justify-content: center; padding-top: 1.5rem;">
