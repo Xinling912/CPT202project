@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expert Booking System - Register</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+
+    <div id="app">
+        <div id="auth-bg">
+            <div class="welcome-container">
+                <h1 class="welcome-text uppercase">welcome</h1>
+            </div>
+            <div class="circle ring-large"></div>
+            <div class="circle ring-medium"></div>
+            <div class="circle ring-small"></div>
+        </div>
+
+        <div id="view-container">
+            <div class="login-card fade-in">
+                <h2 class="card-title">Register</h2>
+                
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="reg-email" class="figma-input" placeholder="Please enter your email address" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">User Name</label>
+                        <input type="text" id="reg-username" class="figma-input" placeholder="Please enter your User Name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="reg-password" class="figma-input mb-3" placeholder="Please enter your password" minlength="6" required>
+                        <input type="password" id="reg-confirm" class="figma-input" placeholder="Enter your password again!" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Verification Code</label>
+                        <div class="verify-row">
+                            <input type="text" id="reg-code" class="figma-input" placeholder="Please enter the verification code" required>
+                            <button type="button" id="sendCodeBtn" class="submit-btn send-btn">Send</button>
+                        </div>
+                        <p id="code-error" style="color: #ef4444; font-size: 12px; margin-top: 5px; display: none; text-align: center; font-weight: 500;">Verification code error. Please re-enter.</p>
+                    </div>
+
+                    <button type="submit" id="registerBtn" class="submit-btn" style="margin-top: 1rem;">
+                        Register Account
+                    </button>
+                </form>
+
+                <div class="footer-links">
+                    <p class="text-xs font-medium" style="color: #6b7280; margin-bottom: 0.5rem;">Create your account to continue</p>
+                    <p class="link-blue" id="go-to-login">Already have an account? Log in now!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="js/register.js"></script>
+</body>
+</html>

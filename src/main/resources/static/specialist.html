@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Specialist Workspace | ExpertConnect</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/specialist.css">
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+    <button id="toggle-sidebar" class="btn-toggle-custom" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+    <div class="mb-5 px-2 logo-area">
+        <h4 class="fw-800 text-primary mb-0 logo-text">
+            <i class="bi bi-intersect me-2"></i><span>ExpertConnect</span>
+        </h4>
+    </div>
+    <nav class="nav flex-column gap-1">
+        <button class="nav-link active" onclick="switchTab('workbench', this)"><i class="bi bi-cpu"></i><span>Workbench</span></button>
+        <button class="nav-link" onclick="switchTab('schedule', this)"><i class="bi bi-calendar3"></i><span>My Schedule</span></button>
+        <button class="nav-link" onclick="switchTab('profile', this)"><i class="bi bi-person-vcard"></i><span>Professional Profile</span></button>
+        <button class="nav-link" onclick="switchTab('earnings', this)"><i class="bi bi-wallet2"></i><span>Earnings</span></button>
+    </nav>
+</aside>
+
+<main class="main-content">
+    <header class="top-header">
+        <div class="header-left">
+            <h2 class="fw-800 mb-1">Hello, <span id="header-user-name">XinlingDu</span>!</h2>
+            <p class="text-muted small mb-0">Manage your professional services and performance.</p>
+        </div>
+
+        <div class="user-menu-wrapper">
+            <div class="d-flex align-items-center gap-3 cursor-pointer">
+                <div class="text-end d-none d-sm-block">
+                    <div class="fw-bold mb-0" id="nav-user-name">Wanfeng</div>
+                    <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1" style="font-size: 0.65rem;">Verified Specialist</span>
+                </div>
+
+                <img id="header-avatar" src="images/beauty.png" class="rounded-circle shadow-sm" width="48" height="48" style="object-fit: cover;">
+            </div>
+            ...
+        </div>
+            
+            <!-- 🌟 升级版悬浮下拉菜单 -->
+            <div class="custom-dropdown-menu">
+                <a class="dropdown-item" onclick="switchTab('profile')">
+                    <i class="bi bi-person me-3 fs-5"></i>Personal Profile
+                </a>
+                <a class="dropdown-item" onclick="switchTab('security')">
+                    <i class="bi bi-shield-lock me-3 fs-5"></i>Security Settings
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item text-danger" onclick="logout()">
+                    <i class="bi bi-box-arrow-right me-3 fs-5"></i>Logout
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section id="workbench" class="tab-content active-tab">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-800 mb-1">Specialist Weekly Dashboard</h4>
+                    <p class="text-muted small mb-0">Manage your appointments and availability.</p>
+                </div>
+                <div class="btn-group p-1 bg-light rounded-pill">
+                    <button class="btn btn-sm btn-primary text-white rounded-pill px-4">This Week</button>
+                    <button class="btn btn-sm rounded-pill px-4">Next Week</button>
+                </div>
+            </div>
+
+            <div class="workbench-calendar border rounded-4 overflow-hidden">
+                <div class="calendar-header bg-light d-flex border-bottom text-center fw-800 text-muted small py-3">
+                    <div class="time-col">Time</div>
+                    <div class="day-col">MON</div><div class="day-col">TUE</div><div class="day-col">WED</div>
+                    <div class="day-col">THU</div><div class="day-col">FRI</div><div class="day-col">SAT</div><div class="day-col">SUN</div>
+                </div>
+                <div class="calendar-body d-flex position-relative">
+                    <div class="time-axis bg-light text-center text-muted small fw-bold" id="wb-time-axis"></div>
+                    <div class="day-columns-container d-flex flex-grow-1 position-relative" id="wb-day-columns"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="schedule" class="tab-content">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-800 mb-0">My Schedule</h4>
+                <div class="btn-group p-1 bg-light rounded-pill" id="week-selector">
+                    <button class="btn btn-sm rounded-pill px-4 active" data-week="this">This Week</button>
+                    <button class="btn btn-sm rounded-pill px-4" data-week="next">Next Week</button>
+                </div>
+            </div>
+
+            <div class="editor-box p-4 rounded-4 mb-3" id="edit-panel" style="background: #fdfdfd; border: 2px solid #e2e8f0;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="fw-700 text-muted small text-uppercase">Editing: <span id="current-day-label" class="text-primary">MONDAY</span></div>
+                        <span id="save-status" class="badge rounded-pill bg-secondary" style="font-size: 0.55rem;">LOCKED</span>
+                    </div>
+                    <button class="btn btn-outline-secondary rounded-pill btn-sm px-3 shadow-sm" id="edit-mode-btn">
+                        <i class="bi bi-pencil-square me-1"></i>Enter Edit Mode
+                    </button>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mb-3" id="day-selector">
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3 active" data-day="MON">Monday</button>
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-day="TUE">Tuesday</button>
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-day="WED">Wednesday</button>
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-day="THU">Thursday</button>
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-day="FRI">Friday</button>
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-day="SAT">Saturday</button>
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-day="SUN">Sunday</button>
+                </div>
+                <div class="time-slot-grid disabled-grid" id="slot-editor-container"></div>
+            </div>
+
+            <h5 class="fw-800 mt-4 mb-3">Weekly Dashboard Preview</h5>
+            <div class="table-responsive rounded-4 border">
+                <table class="table table-bordered mb-0 text-center align-middle calendar-table">
+                    <thead><tr class="bg-light">
+                        <th style="width: 80px;">Time</th>
+                        <th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th><th>SUN</th>
+                    </tr></thead>
+                    <tbody id="preview-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="profile" class="tab-content">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="stat-card">
+                    <h4 class="fw-800 mb-4">Professional Profile</h4>
+                    <p class="text-muted small mb-4">Update your personal brand, expertise, and pricing.</p>
+
+                    <form id="profile-form">
+                        <div class="d-flex align-items-center gap-4 mb-4 pb-4 border-bottom">
+                            <div class="position-relative profile-photo-wrapper cursor-pointer shadow-sm" id="profile-photo-btn">
+                                <img src="https://api.dicebear.com/7.x/initials/svg?seed=Ares" id="profile-photo-preview" alt="Profile">
+                                <div class="photo-overlay"><i class="bi bi-camera-fill fs-3"></i></div>
+                                <input type="file" id="profile-photo-input" class="d-none" accept="image/*">
+                            </div>
+                            <div>
+                                <h6 class="fw-800 mb-1">Profile Photo</h6>
+                                <p class="text-muted small mb-0">Upload a professional headshot.<br>JPG or PNG, max 2MB.</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-700">Profession / Title</label>
+                                <input type="text" class="form-control" id="prof-field" placeholder="e.g. God of War">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-700">Experience / Level</label>
+                                <input type="text" class="form-control" id="exp-field" placeholder="e.g. Minister of Olympian Wars">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-700">Consulting Fee</label>
+                            <div class="input-group w-75">
+                                <span class="input-group-text bg-light border-end-0 fw-bold text-primary">💰</span>
+                                <input type="number" class="form-control border-start-0 ps-0" id="hourly-rate" placeholder="12000" min="0">
+                                <span class="input-group-text bg-light text-muted small">/ Hour</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-700">Description / Biography</label>
+                            <textarea class="form-control" id="bio-desc" rows="5" placeholder="Describe your expertise, background, and what clients can expect..."></textarea>
+                            <div class="form-text text-end" id="bio-counter">0 / 500 characters</div>
+                        </div>
+
+                        <div class="mb-5">
+                            <label class="form-label fw-700">Qualification Certificates</label>
+                            <div class="upload-area border border-2 border-dashed rounded-4 p-5 text-center cursor-pointer" id="cert-upload-box">
+                                <input type="file" id="cert-input" class="d-none" multiple accept="image/*,.pdf">
+                                <div class="upload-icon mb-3">
+                                    <i class="bi bi-file-earmark-arrow-up text-primary" style="font-size: 2.5rem;"></i>
+                                </div>
+                                <h6 class="fw-bold mb-1">Click to upload documents</h6>
+                                <p class="text-muted small mb-0">SVG, PNG, JPG or PDF (Max. 5MB per file)</p>
+                                <div id="file-list" class="mt-3 text-start small text-primary fw-600"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3 border-top pt-4">
+                            <button type="button" class="btn btn-primary rounded-pill px-5 fw-bold" id="save-profile-btn">Save Profile</button>
+                            <span id="profile-save-status" class="text-success fw-bold small d-none">
+                                <i class="bi bi-check-circle-fill me-1"></i>Saved successfully!
+                            </span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="stat-card bg-light border-0">
+                    <h6 class="fw-800 mb-3"><i class="bi bi-lightbulb-fill text-warning me-2"></i>Profile Tips</h6>
+                    <ul class="text-muted small ps-3 mb-0" style="line-height: 1.8;">
+                        <li><strong>Photo:</strong> A clear photo builds trust.</li>
+                        <li><strong>Title & Exp:</strong> Be concise. Let users know exactly what domain you rule (literally!).</li>
+                        <li><strong>Pricing:</strong> Set a competitive rate.</li>
+                        <li><strong>Verification:</strong> Uploading official certificates increases booking rates significantly.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 🌟 新增的 Security Settings 面板 -->
+    <section id="security" class="tab-content">
+        <div class="stat-card" style="max-width: 600px;">
+            <h4 class="fw-800 mb-4"><i class="bi bi-shield-lock text-primary me-2"></i>Security Settings</h4>
+            <p class="text-muted small mb-4">Manage your account password and security preferences here.</p>
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold">Current Password</label>
+                <input type="password" class="form-control rounded-pill p-3" placeholder="Enter current password">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">New Password</label>
+                <input type="password" class="form-control rounded-pill p-3" placeholder="Enter new password">
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-bold">Confirm New Password</label>
+                <input type="password" class="form-control rounded-pill p-3" placeholder="Type new password again">
+            </div>
+            <button class="btn btn-dark rounded-pill px-4 py-2 fw-bold" onclick="alert('Password update mock!')">Update Password</button>
+        </div>
+    </section>
+
+    <section id="earnings" class="tab-content">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="stat-card bg-primary text-white h-100 d-flex flex-column justify-content-center border-0" style="background: linear-gradient(135deg, #0062ff 0%, #003ebd 100%);">
+                    <h6 class="opacity-75 mb-3 fw-bold"><i class="bi bi-wallet2 me-2"></i>Available Balance</h6>
+                    <h1 class="fw-900 mb-1">12,000</h1>
+                    <p class="opacity-75 mb-4 small text-uppercase tracking-wider">Charon Coins</p>
+                    <button class="btn btn-light rounded-pill fw-bold w-100 py-2 mt-auto text-primary shadow-sm" onclick="alert('Withdraw request submitted!')">
+                        Withdraw Funds
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="stat-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-800 mb-0">Linked Payment Methods</h5>
+                        <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold" id="show-add-card-btn">
+                            <i class="bi bi-plus-lg me-1"></i>Add New Card
+                        </button>
+                    </div>
+
+                    <div id="linked-cards-list">
+                        <div class="d-flex align-items-center p-3 border rounded-4 mb-3 transition-hover" style="background: #f8fafc;">
+                            <div class="bg-white p-2 rounded shadow-sm me-3 border d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                <i class="bi bi-credit-card-2-front-fill text-primary fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-1">Underworld Bank **** 4242</h6>
+                                <p class="text-muted small mb-0">Primary Payout Method</p>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger border-0" title="Remove Card"><i class="bi bi-trash3"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> 
+    </section>
+    
+</main>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/specialist.js"></script>
+</body>
+</html>
