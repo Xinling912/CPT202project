@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ExpertConnect | Premium Multi-Terminal Portal</title>
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
+
     <link rel="stylesheet" href="css/booking.css">
 </head>
 <body>
@@ -19,7 +19,6 @@
         <div class="d-flex gap-3">
             <button class="btn btn-outline-dark btn-sm rounded-pill px-4" onclick="showPage('list-page')">User Portal</button>
             <button class="btn btn-outline-primary btn-sm rounded-pill px-4" onclick="handleProtectedView('user-orders-page')">My Bookings</button>
-            <button class="btn btn-primary btn-sm rounded-pill px-4" onclick="handleProtectedView('specialist-dashboard', 1)">Specialist View</button>
         </div>
     </div>
 </nav>
@@ -27,18 +26,71 @@
 <div id="list-page" class="page-view page-active">
     <div class="container">
         <div class="row g-5">
-            <aside class="col-lg-3"><div class="p-4 bg-white rounded-5 border shadow-sm"><span class="fw-bold d-block mb-3">Quick Search</span><input type="text" class="form-control rounded-4 bg-light border-0 p-3 mb-4 shadow-none" placeholder="Keywords..."><button class="btn btn-primary w-100 rounded-pill py-3 fw-bold">Update</button></div></aside>
-            <main class="col-lg-9"><h1 class="fw-800 display-5 mb-5">Top Specialists</h1><div class="row g-4" id="expert-grid"></div></main>
+            <aside class="col-lg-3">
+                <div class="p-4 bg-white rounded-5 border shadow-sm">
+                    <span class="fw-bold d-block mb-3">Quick Search</span>
+                    <input type="text" id="search-input" class="form-control rounded-4 bg-light border-0 p-3 mb-4 shadow-none" placeholder="Search by name..." onkeypress="if(event.keyCode==13) handleSearch()">
+                    <button class="btn btn-primary w-100 rounded-pill py-3 fw-bold" onclick="handleSearch()">Search</button>
+                </div>
+            </aside>
+            <main class="col-lg-9">
+                <h1 class="fw-800 display-5 mb-5">Top Specialists</h1>
+                <div class="row g-4" id="expert-grid"></div>
+            </main>
         </div>
     </div>
 </div>
 
 <div id="profile-page" class="page-view">
     <div class="container">
-        <button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('list-page')"><i class="bi bi-arrow-left"></i> Back</button>
-        <div class="profile-hero bg-white shadow-sm">
-            <img id="pAvatar" src="" class="profile-avatar-top-right">
-            <div class="bio-content"><span class="card-level-tag mb-3" id="pLevel">--</span><h1 class="display-3 fw-800 mb-2" id="pName">--</h1><h4 class="text-primary fw-bold mb-5" id="pExpertise">--</h4><button class="btn btn-dark rounded-pill px-5 py-3 fw-bold" onclick="goToCalendar()">Secure Booking</button></div>
+        <button class="btn btn-light rounded-pill mb-4 px-4 shadow-sm" onclick="showPage('list-page')">
+            <i class="bi bi-arrow-left"></i> Back to Search
+        </button>
+
+        <div class="row g-5">
+            <div class="col-lg-8">
+                <div class="bg-white p-5 rounded-5 border shadow-sm mb-4">
+                    <div class="d-flex align-items-center gap-4 mb-4">
+                        <img id="pAvatar" src="https://api.dicebear.com/7.x/initials/svg?seed=WA" class="rounded-circle shadow-sm" width="120" height="120" style="object-fit: cover; border: 4px solid #f8f9fa;">
+                        <div>
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 mb-2 fw-bold" id="pLevel">--</span>
+                            <h1 class="fw-800 display-5 mb-1" id="pName">--</h1>
+                            <h4 class="text-muted fw-bold mb-0" id="pExpertise">--</h4>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h4 class="fw-800 mb-3">About Me</h4>
+                    <p class="text-muted mb-4" style="line-height: 1.8; font-size: 1.1rem;" id="pBio">加载中...</p>
+
+                    <h4 class="fw-800 mb-3">Expertise & Skills</h4>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">Platform Verified</span>
+                        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">1-on-1 Consultation</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="bg-white p-4 rounded-5 border shadow-sm position-sticky" style="top: 100px;">
+                    <h4 class="fw-800 mb-2">Consultation Fee</h4>
+                    <div class="d-flex align-items-baseline mb-4">
+                        <h2 class="fw-900 text-primary mb-0 me-1" id="pRate">$0</h2>
+                        <span class="text-muted fw-bold">/ hr</span>
+                    </div>
+
+                    <ul class="list-unstyled mb-4 text-muted small">
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> 1-on-1 Video Consultation</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Actionable Technical Feedback</li>
+                        <li class="mb-2"><i class="bi bi-shield-fill-check text-primary me-2"></i> Platform Verified Expert</li>
+                    </ul>
+
+                    <button class="btn btn-dark w-100 rounded-pill py-3 fw-bold fs-5 shadow-sm" onclick="goToCalendar()">
+                        Secure Booking
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -48,7 +100,7 @@
 </div>
 
 <div id="timeslot-page" class="page-view">
-    <div class="container text-center"><button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('calendar-page')"><i class="bi bi-arrow-left"></i> Back to Calendar</button><h2 class="fw-800 mb-5">Slots for <span id="display-date" class="text-primary">--</span></h2><div class="time-grid" id="slot-list"></div><button class="btn btn-dark rounded-pill px-5 py-3 mt-5 fw-bold" id="confirm-btn" style="display:none;" onclick="alert('Confirmed!')">Confirm Reservation</button></div>
+    <div class="container text-center"><button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('calendar-page')"><i class="bi bi-arrow-left"></i> Back to Calendar</button><h2 class="fw-800 mb-5">Slots for <span id="display-date" class="text-primary">--</span></h2><div class="time-grid" id="slot-list"></div><button class="btn btn-dark rounded-pill px-5 py-3 mt-5 fw-bold" id="confirm-btn" style="display:none;" onclick="alert('Booking Request Sent!')">Confirm Reservation</button></div>
 </div>
 
 <div id="user-orders-page" class="page-view">
@@ -60,23 +112,11 @@
     </div>
 </div>
 
-<div id="specialist-dashboard" class="page-view">
-    <div class="container-fluid px-5">
-        <h2 class="fw-800 mb-4">Specialist Weekly Dashboard</h2>
-        <div class="calendar-container shadow-sm">
-            <table class="calendar-table">
-                <thead><tr><th class="time-col">Time</th><th class="day-header">MON</th><th class="day-header">TUE</th><th class="day-header">WED</th><th class="day-header">THU</th><th class="day-header">FRI</th><th class="day-header">SAT</th><th class="day-header">SUN</th></tr></thead>
-                <tbody id="specialist-calendar-body"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
 <div class="modal fade" id="orderModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-5 border-0" style="border-radius: 32px;"><h2 class="fw-800 mb-4">Booking Info</h2><div class="mb-3 d-flex justify-content-between"><span>Expert:</span><strong id="mEx"></strong></div><div class="mb-4 d-flex justify-content-between"><span>Status:</span><span id="mSt" class="badge bg-primary"></span></div><button class="btn btn-dark w-100 py-3 rounded-pill" data-bs-dismiss="modal">Close</button></div></div></div>
-<div class="modal fade" id="decisionModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-4 border-0" style="border-radius: 24px;"><h3 class="fw-800 mb-4">Manage Slot</h3><div class="d-flex justify-content-center gap-3"><button class="btn btn-primary rounded-pill px-5 py-2 fw-bold" onclick="alert('Confirmed')">Confirm</button><button class="btn btn-danger rounded-pill px-5 py-2 fw-bold" onclick="alert('Canceled')">Cancel</button></div></div></div></div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/booking.js"></script>
+
 </body>
 </html>

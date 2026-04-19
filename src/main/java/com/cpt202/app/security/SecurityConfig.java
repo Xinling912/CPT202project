@@ -14,9 +14,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.config.Customizer;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
@@ -34,14 +31,19 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults()) // 允许跨域请求通过 Security 防火墙
+                .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/users/login",
-                                "/api/users/register",
-                                "/api/users/verify-code",
-                                "/api/users/forgot-password",
+                                "/",
+                                "/*.html",             // 放行根目录所有 html 页面
+                                "/favicon.ico",
+                                "/images/**",
+                                "/css/**",
+                                "/js/**",
+                                "/api/users/**",       // 彻底放行登录、注册、验证码等 API
+                                "/api/specialists/**",
+                                "/api/timeslots/**",
                                 "/error"
                         ).permitAll()
                         .anyRequest().authenticated()
@@ -62,7 +64,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // 直接使用 Spring 自带的最高级加密器
+        return new BCryptPasswordEncoder();
     }
 
     @Bean

@@ -8,6 +8,20 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/specialist.css">
+    <style>
+        /* 🌟 专属拖拽排班样式，使用了独立的 class 名称，绝对不会影响你的 specialist.css */
+        .drag-col { min-height: 500px; position: relative; border-right: 1px solid #eee; flex: 1; }
+        .drag-slot { height: 45px; border-bottom: 1px solid #f1f5f9; position: relative; cursor: crosshair; }
+        .drag-slot.selecting { background-color: rgba(0, 98, 255, 0.1) !important; }
+        .drag-block {
+            position: absolute; left: 2px; right: 2px; top: 2px; z-index: 10;
+            border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-direction: column;
+            font-size: 0.65rem; text-align: center; background: #f8fafc; border: 1px dashed #0062ff; color: #0062ff;
+        }
+        .drag-del-btn { position: absolute; top: 2px; right: 2px; cursor: pointer; color: #dc3545; display: none; font-size: 0.8rem; }
+        .drag-block:hover .drag-del-btn { display: block; }
+        .drag-block:hover { background: #f0f7ff; }
+    </style>
 </head>
 <body>
 
@@ -44,10 +58,7 @@
 
                 <img id="header-avatar" src="images/beauty.png" class="rounded-circle shadow-sm" width="48" height="48" style="object-fit: cover;">
             </div>
-            ...
-        </div>
-            
-            <!-- 🌟 升级版悬浮下拉菜单 -->
+
             <div class="custom-dropdown-menu">
                 <a class="dropdown-item" onclick="switchTab('profile')">
                     <i class="bi bi-person me-3 fs-5"></i>Personal Profile
@@ -68,28 +79,59 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h4 class="fw-800 mb-1">Specialist Weekly Dashboard</h4>
-                    <p class="text-muted small mb-0">Manage your appointments and availability.</p>
+                    <p class="text-muted small mb-0" id="wb-status">Manage your appointments and availability.</p>
                 </div>
-                <div class="btn-group p-1 bg-light rounded-pill">
-                    <button class="btn btn-sm btn-primary text-white rounded-pill px-4">This Week</button>
-                    <button class="btn btn-sm rounded-pill px-4">Next Week</button>
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="btn-group p-1 bg-light rounded-pill" id="wb-week-toggle">
+                        <button class="btn btn-sm btn-primary text-white rounded-pill px-4">This Week</button>
+                        <button class="btn btn-sm rounded-pill px-4">Next Week</button>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold ms-2" id="start-manage">Manage Schedule</button>
+                    <button class="btn btn-primary btn-sm rounded-pill px-4 fw-bold d-none" id="save-all">Save Changes</button>
+                    <button class="btn btn-light btn-sm rounded-pill px-4 border d-none" id="cancel-manage">Cancel</button>
                 </div>
             </div>
 
-            <div class="workbench-calendar border rounded-4 overflow-hidden">
+            <div class="workbench-calendar border rounded-4 overflow-hidden" id="wb-calendar-root">
                 <div class="calendar-header bg-light d-flex border-bottom text-center fw-800 text-muted small py-3">
-                    <div class="time-col">Time</div>
-                    <div class="day-col">MON</div><div class="day-col">TUE</div><div class="day-col">WED</div>
-                    <div class="day-col">THU</div><div class="day-col">FRI</div><div class="day-col">SAT</div><div class="day-col">SUN</div>
+                    <div style="width: 70px;">Time</div>
+                    <div class="flex-grow-1">MON</div><div class="flex-grow-1">TUE</div><div class="flex-grow-1">WED</div>
+                    <div class="flex-grow-1">THU</div><div class="flex-grow-1">FRI</div><div class="flex-grow-1">SAT</div><div class="flex-grow-1">SUN</div>
                 </div>
                 <div class="calendar-body d-flex position-relative">
-                    <div class="time-axis bg-light text-center text-muted small fw-bold" id="wb-time-axis"></div>
-                    <div class="day-columns-container d-flex flex-grow-1 position-relative" id="wb-day-columns"></div>
+                    <div class="time-axis bg-light text-center text-muted small fw-bold" style="width: 70px;" id="wb-time-axis"></div>
+                    <div class="day-columns-container d-flex flex-grow-1 position-relative" id="wb-day-columns">
+                        <div class="day-column" data-day="mon"></div>
+                        <div class="day-column" data-day="tue"></div>
+                        <div class="day-column" data-day="wed"></div>
+                        <div class="day-column" data-day="thu"></div>
+                        <div class="day-column" data-day="fri"></div>
+                        <div class="day-column" data-day="sat"></div>
+                        <div class="day-column" data-day="sun"></div>
+                    </div>
                 </div>
             </div>
+
+            <div class="workbench-calendar border rounded-4 overflow-hidden d-none" id="drag-calendar-root">
+                <div class="calendar-header bg-light d-flex border-bottom text-center fw-800 text-muted small py-3">
+                    <div style="width: 70px;">Time</div>
+                    <div class="flex-grow-1">MON</div><div class="flex-grow-1">TUE</div><div class="flex-grow-1">WED</div>
+                    <div class="flex-grow-1">THU</div><div class="flex-grow-1">FRI</div><div class="flex-grow-1">SAT</div><div class="flex-grow-1">SUN</div>
+                </div>
+                <div class="calendar-body d-flex position-relative">
+                    <div class="time-axis bg-light text-center text-muted small fw-bold" style="width: 70px;" id="drag-time-axis"></div>
+                    <div class="day-columns-container d-flex flex-grow-1 position-relative" id="drag-day-columns">
+                        <div class="drag-col" data-day="mon"></div><div class="drag-col" data-day="tue"></div>
+                        <div class="drag-col" data-day="wed"></div><div class="drag-col" data-day="thu"></div>
+                        <div class="drag-col" data-day="fri"></div><div class="drag-col" data-day="sat"></div>
+                        <div class="drag-col" data-day="sun"></div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </section>
-    
+
     <section id="schedule" class="tab-content">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -217,13 +259,12 @@
             </div>
         </div>
     </section>
-    
-    <!-- 🌟 新增的 Security Settings 面板 -->
+
     <section id="security" class="tab-content">
         <div class="stat-card" style="max-width: 600px;">
             <h4 class="fw-800 mb-4"><i class="bi bi-shield-lock text-primary me-2"></i>Security Settings</h4>
             <p class="text-muted small mb-4">Manage your account password and security preferences here.</p>
-            
+
             <div class="mb-3">
                 <label class="form-label fw-bold">Current Password</label>
                 <input type="password" class="form-control rounded-pill p-3" placeholder="Enter current password">
@@ -276,13 +317,126 @@
                     </div>
                 </div>
             </div>
-        </div> 
+        </div>
     </section>
-    
+
 </main>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/specialist.js"></script>
+
+<script>
+    let isDrag = false, startH = null, curDay = null;
+    let cacheData = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+
+    $(document).ready(function() {
+        // 1. 生成专用的拖拽网格
+        for(let h=8; h<22; h++) {
+            $('#drag-time-axis').append(`<div style="height:45px; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #eee;">${h}:00</div>`);
+            $('.drag-col').append(`<div class="drag-slot" data-hour="${h}"></div>`);
+        }
+
+        // 2. 切换模式：隐藏原日历，显示拖拽日历（安全设计）
+        $('#start-manage').click(function() {
+            $(this).addClass('d-none');
+            $('#wb-week-toggle').addClass('d-none');
+            $('#save-all, #cancel-manage').removeClass('d-none');
+
+            $('#wb-calendar-root').addClass('d-none');     // 隐藏 specialist.js 控制的日历
+            $('#drag-calendar-root').removeClass('d-none'); // 显示拖拽专用日历
+            $('#wb-status').text('Manage Mode: DRAG to set available slots. Click X to remove.');
+        });
+
+        // 3. 取消：还原状态
+        $('#cancel-manage').click(function() {
+            $('#save-all, #cancel-manage').addClass('d-none');
+            $('#start-manage').removeClass('d-none');
+            $('#wb-week-toggle').removeClass('d-none');
+
+            $('#drag-calendar-root').addClass('d-none');
+            $('#wb-calendar-root').removeClass('d-none');
+            $('#wb-status').text('Manage your appointments and availability.');
+
+            // 清空拖拽缓存
+            cacheData = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+            renderBlocks();
+        });
+
+        $('#save-all').click(function() {
+            alert("Atomizing schedule and syncing with backend...");
+            // 这里以后可以加发给 Selene 后端的 AJAX 请求
+            $('#cancel-manage').click(); // 保存后切回正常视图
+        });
+
+        // 4. 拖拽防重叠逻辑
+        $(document).on('mousedown', '#drag-calendar-root .drag-slot', function(e) {
+            if ($(e.target).closest('.drag-block').length > 0) return; // 点已有块不拖拽
+            isDrag = true;
+            startH = parseInt($(this).data('hour'));
+            curDay = $(this).closest('.drag-col').data('day');
+            $(this).addClass('selecting');
+        });
+
+        $(document).on('mouseover', '#drag-calendar-root .drag-slot', function() {
+            if(!isDrag) return;
+            const col = $(this).closest('.drag-col');
+            if(col.data('day') !== curDay) return;
+
+            const endH = parseInt($(this).data('hour'));
+            const [min, max] = [Math.min(startH, endH), Math.max(startH, endH)];
+
+            col.find('.drag-slot').removeClass('selecting');
+            for(let i=min; i<=max; i++) {
+                const targetSlot = col.find(`[data-hour="${i}"]`);
+                if (targetSlot.find('.drag-block').length === 0) {
+                    targetSlot.addClass('selecting');
+                }
+            }
+        });
+
+        $(document).on('mouseup', function() {
+            if(!isDrag) return;
+            isDrag = false;
+            const col = $(`.drag-col[data-day="${curDay}"]`);
+            const selected = col.find('.drag-slot.selecting');
+
+            if(selected.length > 0) {
+                const hours = selected.map((i,el) => $(el).data('hour')).get();
+                const min = Math.min(...hours);
+                const max = Math.max(...hours) + 1;
+
+                // 确保不与之前的块重叠
+                if (!cacheData[curDay].some(b => (min < b.e && max > b.s))) {
+                    cacheData[curDay].push({s: min, e: max});
+                    renderBlocks();
+                }
+            }
+            $('.drag-slot').removeClass('selecting');
+        });
+    });
+
+    // 5. 渲染与删除
+    function renderBlocks() {
+        $('.drag-block').remove();
+        for(let d in cacheData) {
+            cacheData[d].forEach((b, i) => {
+                const col = $(`.drag-col[data-day="${d}"]`);
+                const h = (b.e - b.s) * 45;
+                col.find(`[data-hour="${b.s}"]`).append(`
+                    <div class="drag-block" style="height:${h-4}px">
+                        Vacant ${b.s}:00-${b.e}:00
+                        <i class="bi bi-x-circle-fill drag-del-btn" onclick="removeB(event, '${d}', ${i})"></i>
+                    </div>`);
+            });
+        }
+    }
+
+    window.removeB = function(e, d, i) {
+        e.stopPropagation();
+        cacheData[d].splice(i, 1);
+        renderBlocks();
+    };
+</script>
 </body>
 </html>

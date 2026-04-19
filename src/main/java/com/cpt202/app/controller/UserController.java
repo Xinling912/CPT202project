@@ -1,5 +1,5 @@
 package com.cpt202.app.controller;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.cpt202.app.model.User;
 import com.cpt202.app.model.UserRole;
 import com.cpt202.app.security.JwtUtils;
@@ -156,7 +156,10 @@ public class UserController {
             String verifyCode
     ) {}
 
-    public record LoginRequest(String usernameOrEmail, String password) {}
+    public record LoginRequest(
+            @JsonProperty("usernameOrEmail") String usernameOrEmail,
+            @JsonProperty("password") String password
+    ) {}
 
     public record SendCodeRequest(String email) {}
 

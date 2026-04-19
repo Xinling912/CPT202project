@@ -15,24 +15,26 @@ public class SpecialistProfile {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
     private User user;
 
-
     @ManyToOne
     @JoinColumn(name = "expertise_id", referencedColumnName = "id", nullable = false)
     private ExpertiseCategory expertise;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 50, nullable = false)
-    private SpecialistLevel level; // JUNIOR, SENIOR, EXPERT
-
+    private SpecialistLevel level;
 
     @Column(name = "hourly_fee", precision = 10, scale = 2, nullable = false)
     private BigDecimal hourlyFee;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private SpecialistStatus status; // ACTIVE (接单中), INACTIVE (休息中)
+    private SpecialistStatus status;
 
-    // TODO: 请使用 IDE 生成 Getter 和 Setter (或添加 Lombok 的 @Data 注解)
+    // --- 核心修复：添加 resume 字段 ---
+    @Column(columnDefinition = "TEXT") // 指定为 TEXT 类型，匹配数据库
+    private String resume;
+    // ------------------------------
+
     public Long getId() {
         return id;
     }
@@ -79,5 +81,14 @@ public class SpecialistProfile {
 
     public void setStatus(SpecialistStatus status) {
         this.status = status;
+    }
+
+    // --- 核心修复：添加 resume 的 Getter 和 Setter ---
+    public String getResume() {
+        return resume;
+    }
+
+    public void setResume(String resume) {
+        this.resume = resume;
     }
 }
