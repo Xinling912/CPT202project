@@ -2,28 +2,14 @@
  * Master Logic for Specialist Workspace
  */
 
-let scheduleData = {
-    this: { MON: [], TUE: [], WED: [], THU: [], FRI: [], SAT: [], SUN: [] },
-    next: { MON: [], TUE: [], WED: [], THU: [], FRI: [], SAT: [], SUN: [] }
-};
-
-let currentWeek = 'this';
-let currentDay = 'MON';
-let isEditMode = false;
-
 // 1. Sidebar Toggle
 $('#toggle-sidebar').on('click', function() {
     $('#sidebar').toggleClass('collapsed');
     $('.main-content').toggleClass('expanded');
 });
 
-// 2. 🌟 Tab Switching Logic (支持侧边栏和下拉菜单)
+// 2. Tab Switching Logic
 function switchTab(tabId, btn = null) {
-    if (isEditMode) {
-        alert("⚠️ Please exit 'Edit Mode' (Save & Exit) before leaving this page.");
-        return;
-    }
-
     $('.tab-content').removeClass('active-tab');
     $('.nav-link').removeClass('active');
 
@@ -35,7 +21,6 @@ function switchTab(tabId, btn = null) {
     if (btn) {
         $(btn).addClass('active');
     } else {
-        // 如果是点击右上角下拉菜单进来的，自动高亮侧边栏对应的按钮
         const matchingLink = $(`.nav-link[onclick*="'${tabId}'"]`);
         if(matchingLink.length > 0) {
             matchingLink.addClass('active');
@@ -45,104 +30,15 @@ function switchTab(tabId, btn = null) {
     window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
-// ==========================================
-// 🌟 Logout Logic
-// ==========================================
+// 3. Logout Logic
 function logout() {
     if(confirm("Are you sure you want to log out?")) {
         localStorage.clear();
-        window.location.href = 'login.html'; // 踢回登录页
+        window.location.href = 'login.html';
     }
 }
 
-// 3. Init Schedule Grid
-function initSchedule() {
-    const editor = $('#slot-editor-container').empty();
-    for (let h = 8; h <= 18; h++) {
-        editor.append(`<div class="slot-btn" data-time="${h}:00">${h}:00</div>`);
-    }
-
-    const tableBody = $('#preview-table-body').empty();
-    for (let h = 8; h <= 18; h++) {
-        let row = `<tr data-time="${h}:00"><td class="fw-bold text-muted small">${h}:00</td>`;
-        ['MON','TUE','WED','THU','FRI','SAT','SUN'].forEach(day => {
-            row += `<td data-day="${day}"></td>`;
-        });
-        row += `</tr>`;
-        tableBody.append(row);
-    }
-}
-
-// 4. Edit Mode Controller
-$('#edit-mode-btn').on('click', function() {
-    isEditMode = !isEditMode;
-    if (isEditMode) {
-        $(this).html('<i class="bi bi-check-lg"></i> Exit & Save').addClass('btn-danger').removeClass('btn-outline-secondary');
-        $('#edit-panel').addClass('editing-active');
-        $('#slot-editor-container').removeClass('disabled-grid');
-        $('#save-status').text('UNSAVED').removeClass('bg-secondary').addClass('bg-warning text-dark');
-    } else {
-        $(this).html('<i class="bi bi-pencil-square"></i> Enter Edit Mode').addClass('btn-outline-secondary').removeClass('btn-danger');
-        $('#edit-panel').removeClass('editing-active');
-        $('#slot-editor-container').addClass('disabled-grid');
-        $('#save-status').text('SAVED').removeClass('bg-warning text-dark').addClass('bg-success');
-        setTimeout(() => $('#save-status').text('LOCKED').removeClass('bg-success').addClass('bg-secondary'), 2000);
-    }
-});
-
-// 5. Selection Logic
-$(document).on('click', '.slot-btn', function() {
-    const time = $(this).data('time');
-    const dayData = scheduleData[currentWeek][currentDay];
-    if ($(this).hasClass('selected')) {
-        $(this).removeClass('selected');
-        const index = dayData.indexOf(time);
-        if (index > -1) dayData.splice(index, 1);
-    } else {
-        $(this).addClass('selected');
-        dayData.push(time);
-    }
-    updatePreviewTable();
-});
-
-function updatePreviewTable() {
-    $('#preview-table-body td[data-day]').removeClass('preview-active');
-    const weekData = scheduleData[currentWeek];
-    for (let day in weekData) {
-        weekData[day].forEach(time => {
-            $(`#preview-table-body tr[data-time="${time}"] td[data-day="${day}"]`).addClass('preview-active');
-        });
-    }
-}
-
-function refreshEditorButtons() {
-    $('.slot-btn').removeClass('selected');
-    const activeSlots = scheduleData[currentWeek][currentDay];
-    activeSlots.forEach(time => $(`.slot-btn[data-time="${time}"]`).addClass('selected'));
-    $('#current-day-label').text(currentDay);
-}
-
-// 6. 🌟 Week Switcher
-$('#week-selector button').on('click', function() {
-    if (isEditMode) {
-        alert("⚠️ Please Exit Edit Mode before switching weeks to avoid data loss.");
-        return;
-    }
-    $('#week-selector button').removeClass('active');
-    $(this).addClass('active');
-    currentWeek = $(this).data('week');
-    refreshEditorButtons();
-    updatePreviewTable();
-});
-
-$('#day-selector button').on('click', function() {
-    $(this).addClass('active').siblings().removeClass('active');
-    currentDay = $(this).data('day');
-    refreshEditorButtons();
-});
-
-
-// --- 🌟 Workbench Calendar Logic ---
+// --- Workbench Calendar Initial Logic ---
 const mockAppointments = [
     { id: 1, title: 'XingJianWu', day: 'MON', start: 8, end: 11, status: 'Confirmed', type: 'card-confirmed' },
     { id: 2, title: 'Vacant', day: 'MON', start: 14, end: 16, status: 'Available', type: 'card-vacant' },
@@ -160,12 +56,8 @@ function initWorkbench() {
         timeAxis.append(`<div class="time-slot-label">${h}:00</div>`);
     }
 
-    const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-    const colsContainer = $('#wb-day-columns').empty();
-    days.forEach(day => { colsContainer.append(`<div class="wb-day-col" id="col-${day}"></div>`); });
-
-    const HOUR_HEIGHT = 80; 
-    const START_HOUR = 8;   
+    const HOUR_HEIGHT = 80;
+    const START_HOUR = 8;
 
     mockAppointments.forEach(apt => {
         const topPx = (apt.start - START_HOUR) * HOUR_HEIGHT;
@@ -177,43 +69,138 @@ function initWorkbench() {
                 <div class="apt-status">${apt.status}</div>
             </div>
         `;
-        $(`#col-${apt.day}`).append(cardHtml);
+        $(`.day-column[data-day="${apt.day.toLowerCase()}"]`).append(cardHtml);
     });
 }
 
 function openAptDetails(id) {
     const apt = mockAppointments.find(a => a.id === id);
     if(apt.status === 'Pending') {
-        alert(`You clicked ${apt.title}. In the next step, we will pop up the Confirm/Cancel modal for this!`);
+        alert(`You clicked ${apt.title}. Time to Confirm or Cancel!`);
     } else {
         alert(`Viewing details for ${apt.title} (${apt.status})`);
     }
 }
 
-// --- 🌟 DOM Ready ---
+// --- 小徐的拖拽排班逻辑 (移植并清理) ---
+let isDrag = false, startH = null, curDay = null;
+let cacheData = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+
+function renderBlocks() {
+    $('.drag-block').remove();
+    for(let d in cacheData) {
+        cacheData[d].forEach((b, i) => {
+            const col = $(`.drag-col[data-day="${d}"]`);
+            const h = (b.e - b.s) * 45;
+            col.find(`[data-hour="${b.s}"]`).append(`
+                <div class="drag-block" style="height:${h-4}px">
+                    Vacant ${b.s}:00-${b.e}:00
+                    <i class="bi bi-x-circle-fill drag-del-btn" onclick="removeB(event, '${d}', ${i})"></i>
+                </div>`);
+        });
+    }
+}
+
+window.removeB = function(e, d, i) {
+    e.stopPropagation();
+    cacheData[d].splice(i, 1);
+    renderBlocks();
+};
+
+// --- DOM Ready ---
 $(document).ready(() => {
-    initSchedule();
-    initWorkbench(); 
-    
-    // 动态显示用户名
-    $(document).ready(() => {
-        initSchedule();
-        initWorkbench();
+    initWorkbench();
 
-        // 🌟 1. 把默认名字改成 Wanfeng
-        const name = localStorage.getItem('username') || 'Wanfeng';
-        $('#header-user-name').text(name);
-        $('#nav-user-name').text(name);
-    });
-
+    // 加载用户名
+    const name = localStorage.getItem('username') || 'XinlingDu'; // 默认杜姐
     $('#header-user-name').text(name);
     $('#nav-user-name').text(name);
     if(!$('#header-avatar').attr('src')){
         $('#header-avatar').attr('src', `https://api.dicebear.com/7.x/initials/svg?seed=${name}`);
     }
+
+    // 初始化小徐的拖拽网格
+    for(let h=8; h<22; h++) {
+        $('#drag-time-axis').append(`<div style="height:45px; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #eee;">${h}:00</div>`);
+        $('.drag-col').append(`<div class="drag-slot" data-hour="${h}"></div>`);
+    }
+
+    // 拖拽模式切换按钮
+    $('#start-manage').click(function() {
+        $(this).addClass('d-none');
+        $('#wb-week-toggle').addClass('d-none');
+        $('#save-all, #cancel-manage').removeClass('d-none');
+
+        $('#wb-calendar-root').addClass('d-none');
+        $('#drag-calendar-root').removeClass('d-none');
+        $('#wb-status').text('Manage Mode: DRAG to set available slots. Click X to remove.');
+    });
+
+    $('#cancel-manage').click(function() {
+        $('#save-all, #cancel-manage').addClass('d-none');
+        $('#start-manage').removeClass('d-none');
+        $('#wb-week-toggle').removeClass('d-none');
+
+        $('#drag-calendar-root').addClass('d-none');
+        $('#wb-calendar-root').removeClass('d-none');
+        $('#wb-status').text('Manage your appointments and availability.');
+
+        cacheData = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+        renderBlocks();
+    });
+
+    $('#save-all').click(function() {
+        alert("Atomizing schedule and syncing with backend...");
+        $('#cancel-manage').click();
+    });
+
+    // 拖拽事件监听
+    $(document).on('mousedown', '#drag-calendar-root .drag-slot', function(e) {
+        if ($(e.target).closest('.drag-block').length > 0) return;
+        isDrag = true;
+        startH = parseInt($(this).data('hour'));
+        curDay = $(this).closest('.drag-col').data('day');
+        $(this).addClass('selecting');
+    });
+
+    $(document).on('mouseover', '#drag-calendar-root .drag-slot', function() {
+        if(!isDrag) return;
+        const col = $(this).closest('.drag-col');
+        if(col.data('day') !== curDay) return;
+
+        const endH = parseInt($(this).data('hour'));
+        const [min, max] = [Math.min(startH, endH), Math.max(startH, endH)];
+
+        col.find('.drag-slot').removeClass('selecting');
+        for(let i=min; i<=max; i++) {
+            const targetSlot = col.find(`[data-hour="${i}"]`);
+            if (targetSlot.find('.drag-block').length === 0) {
+                targetSlot.addClass('selecting');
+            }
+        }
+    });
+
+    $(document).on('mouseup', function() {
+        if(!isDrag) return;
+        isDrag = false;
+        const col = $(`.drag-col[data-day="${curDay}"]`);
+        const selected = col.find('.drag-slot.selecting');
+
+        if(selected.length > 0) {
+            const hours = selected.map((i,el) => $(el).data('hour')).get();
+            const min = Math.min(...hours);
+            const max = Math.max(...hours) + 1;
+
+            if (!cacheData[curDay].some(b => (min < b.e && max > b.s))) {
+                cacheData[curDay].push({s: min, e: max});
+                renderBlocks();
+            }
+        }
+        $('.drag-slot').removeClass('selecting');
+    });
 });
 
-// --- 🌟 Professional Profile Logic ---
+// --- Professional Profile Logic ---
 $('#profile-photo-btn').on('click', function() { $('#profile-photo-input').click(); });
 
 $('#profile-photo-input').on('change', function(e) {
@@ -229,7 +216,7 @@ $('#cert-upload-box').on('click', function(e) { if(e.target.id !== 'file-list') 
 
 $('#cert-input').on('change', function(e) {
     const files = e.target.files;
-    const fileList = $('#file-list').empty(); 
+    const fileList = $('#file-list').empty();
     if (files.length > 0) {
         let fileNames = [];
         for (let i = 0; i < files.length; i++) {

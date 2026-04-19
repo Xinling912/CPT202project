@@ -63,8 +63,7 @@ if (data.role === 'SPECIALIST') {
     // 因为咱们之前在 booking.js 做了门卫，他一进 booking.html 就会被自动拉到专属工作台
     window.location.href = 'specialist.html'; 
 } else {
-    // 普通用户乖乖去大厅逛街
-    window.location.href = 'home.html'; 
+    window.location.href = 'booking.html';
 }
             } else {
                 alert("Login Failed: " + (data.message || "未知错误，请检查账号密码"));
