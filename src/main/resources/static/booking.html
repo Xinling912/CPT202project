@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ExpertConnect | Premium Multi-Terminal Portal</title>
+    <title>ExpertConnect | Specialist Booking</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="css/booking.css">
 </head>
 <body>
 
 <nav class="navbar sticky-top">
     <div class="container">
-        <a class="navbar-brand fw-800" href="home.html"><i class="bi bi-intersect me-2 text-primary"></i>ExpertConnect</a>
+        <a class="navbar-brand fw-800" href="javascript:void(0)" onclick="showPage('list-page')">
+            <i class="bi bi-intersect me-2 text-primary"></i>ExpertConnect
+        </a>
         <div class="d-flex gap-3">
             <button class="btn btn-outline-dark btn-sm rounded-pill px-4" onclick="showPage('list-page')">User Portal</button>
             <button class="btn btn-outline-primary btn-sm rounded-pill px-4" onclick="handleProtectedView('user-orders-page')">My Bookings</button>
@@ -35,7 +36,8 @@
             </aside>
             <main class="col-lg-9">
                 <h1 class="fw-800 display-5 mb-5">Top Specialists</h1>
-                <div class="row g-4" id="expert-grid"></div>
+                <div class="row g-4" id="expert-grid">
+                </div>
             </main>
         </div>
     </div>
@@ -46,46 +48,29 @@
         <button class="btn btn-light rounded-pill mb-4 px-4 shadow-sm" onclick="showPage('list-page')">
             <i class="bi bi-arrow-left"></i> Back to Search
         </button>
-
         <div class="row g-5">
             <div class="col-lg-8">
                 <div class="bg-white p-5 rounded-5 border shadow-sm mb-4">
                     <div class="d-flex align-items-center gap-4 mb-4">
-                        <img id="pAvatar" src="https://api.dicebear.com/7.x/initials/svg?seed=WA" class="rounded-circle shadow-sm" width="120" height="120" style="object-fit: cover; border: 4px solid #f8f9fa;">
+                        <img id="pAvatar" src="" class="rounded-circle shadow-sm" width="120" height="120" style="object-fit: cover; border: 4px solid #f8f9fa;">
                         <div>
                             <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 mb-2 fw-bold" id="pLevel">--</span>
                             <h1 class="fw-800 display-5 mb-1" id="pName">--</h1>
                             <h4 class="text-muted fw-bold mb-0" id="pExpertise">--</h4>
                         </div>
                     </div>
-
                     <hr class="my-4">
-
                     <h4 class="fw-800 mb-3">About Me</h4>
                     <p class="text-muted mb-4" style="line-height: 1.8; font-size: 1.1rem;" id="pBio">加载中...</p>
-
-                    <h4 class="fw-800 mb-3">Expertise & Skills</h4>
-                    <div class="d-flex flex-wrap gap-2">
-                        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">Platform Verified</span>
-                        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">1-on-1 Consultation</span>
-                    </div>
                 </div>
             </div>
-
             <div class="col-lg-4">
                 <div class="bg-white p-4 rounded-5 border shadow-sm position-sticky" style="top: 100px;">
                     <h4 class="fw-800 mb-2">Consultation Fee</h4>
-                    <div class="d-flex align-items-baseline mb-4">
+                    <div class="d-flex align-baseline mb-4">
                         <h2 class="fw-900 text-primary mb-0 me-1" id="pRate">$0</h2>
                         <span class="text-muted fw-bold">/ hr</span>
                     </div>
-
-                    <ul class="list-unstyled mb-4 text-muted small">
-                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> 1-on-1 Video Consultation</li>
-                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Actionable Technical Feedback</li>
-                        <li class="mb-2"><i class="bi bi-shield-fill-check text-primary me-2"></i> Platform Verified Expert</li>
-                    </ul>
-
                     <button class="btn btn-dark w-100 rounded-pill py-3 fw-bold fs-5 shadow-sm" onclick="goToCalendar()">
                         Secure Booking
                     </button>
@@ -96,23 +81,32 @@
 </div>
 
 <div id="calendar-page" class="page-view">
-    <div class="container"><button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('profile-page')"><i class="bi bi-arrow-left"></i> Back to Bio</button><div class="calendar-card shadow-sm"><h4 class="fw-800 mb-4">Select Consultation Date</h4><div class="calendar-grid" id="calendar-body"></div></div></div>
+    <div class="container">
+        <button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('profile-page')"><i class="bi bi-arrow-left"></i> Back to Bio</button>
+        <div class="calendar-card shadow-sm p-4 bg-white rounded-5 border">
+            <h4 class="fw-800 mb-4 text-center">Select Date</h4>
+            <div class="calendar-grid" id="calendar-body"></div>
+        </div>
+    </div>
 </div>
 
 <div id="timeslot-page" class="page-view">
-    <div class="container text-center"><button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('calendar-page')"><i class="bi bi-arrow-left"></i> Back to Calendar</button><h2 class="fw-800 mb-5">Slots for <span id="display-date" class="text-primary">--</span></h2><div class="time-grid" id="slot-list"></div><button class="btn btn-dark rounded-pill px-5 py-3 mt-5 fw-bold" id="confirm-btn" style="display:none;" onclick="alert('Booking Request Sent!')">Confirm Reservation</button></div>
+    <div class="container text-center">
+        <button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('calendar-page')"><i class="bi bi-arrow-left"></i> Back to Calendar</button>
+        <h2 class="fw-800 mb-5">Slots for <span id="display-date" class="text-primary">--</span></h2>
+        <div class="time-grid" id="slot-list"></div>
+        <button class="btn btn-dark rounded-pill px-5 py-3 mt-5 fw-bold" id="confirm-btn" style="display:none;" onclick="alert('Booking Request Sent!')">Confirm Reservation</button>
+    </div>
 </div>
 
 <div id="user-orders-page" class="page-view">
     <div class="container">
         <h2 class="fw-800 mb-5">My Booking History</h2>
         <div id="orders-list">
-            <div class="order-card d-flex justify-content-between align-items-center" onclick="showOrderDetail('XingjianWu', '2026-04-18', '09:00', 'Confirmed')"><div><h4 class="fw-800 mb-1">Architecture Review</h4><p class="text-muted mb-0">Specialist: XingjianWu | April 18, 2026</p></div><span class="badge bg-primary rounded-pill px-3 py-2">CONFIRMED</span></div>
+            <p class="text-muted">No orders found.</p>
         </div>
     </div>
 </div>
-
-<div class="modal fade" id="orderModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-5 border-0" style="border-radius: 32px;"><h2 class="fw-800 mb-4">Booking Info</h2><div class="mb-3 d-flex justify-content-between"><span>Expert:</span><strong id="mEx"></strong></div><div class="mb-4 d-flex justify-content-between"><span>Status:</span><span id="mSt" class="badge bg-primary"></span></div><button class="btn btn-dark w-100 py-3 rounded-pill" data-bs-dismiss="modal">Close</button></div></div></div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
