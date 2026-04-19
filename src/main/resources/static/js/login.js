@@ -59,10 +59,15 @@ localStorage.setItem('username', data.username || inputAccount);
 
 // 🌟 终极分流口：不同身份进不同的门
 if (data.role === 'SPECIALIST') {
-    // 专家直接踢进后台页面！
-    // 因为咱们之前在 booking.js 做了门卫，他一进 booking.html 就会被自动拉到专属工作台
+
     window.location.href = 'specialist.html'; 
-} else {
+}
+else  if (data.role === 'ADMIN')
+
+{window.location.href = 'admin.html';}
+
+else
+{
     window.location.href = 'booking.html';
 }
             } else {

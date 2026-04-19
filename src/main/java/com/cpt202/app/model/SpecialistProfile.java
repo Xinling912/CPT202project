@@ -11,41 +11,56 @@ public class SpecialistProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 与 User 的一对一关系：保证一个账号只能有一张名片
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
     private User user;
 
-    // 专家的真实姓名
-    @Column(nullable = false, length = 50)
-    private String realName;
-
-    // 与专业分类的多对一关系：多个专家可以属于同一个专业
     @ManyToOne
-    @JoinColumn(name = "expertise_id", referencedColumnName = "id", nullable = true)
+    @JoinColumn(name = "expertise_id", referencedColumnName = "id", nullable = false)
     private ExpertiseCategory expertise;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 50, nullable = false)
-    private SpecialistLevel level; // JUNIOR, SENIOR, EXPERT
+    private SpecialistLevel level;
 
-    // 在 Java 里算钱，绝对不能用 Double，必须用 BigDecimal 防止精度丢失！
     @Column(name = "hourly_fee", precision = 10, scale = 2, nullable = false)
     private BigDecimal hourlyFee;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private SpecialistStatus status = SpecialistStatus.PENDING; // 默认是待审核;
-    // ACTIVE (接单中), INACTIVE (禁止接单中), PENDING (待审批)
+    private SpecialistStatus status;
 
-    // 个人简历介绍
-    @Column(columnDefinition = "TEXT")
+    // --- 核心修复：添加 resume 字段 ---
+    @Column(columnDefinition = "TEXT") // 指定为 TEXT 类型，匹配数据库
     private String resume;
+    // ------------------------------
 
-    // 存放用户填写的“其他”专业（审批通过前临时存放）
-    @Column(name = "proposed_expertise_name")
+    // --- 🌟 1. 补上真实姓名（SpecialistService 报错需要它） ---
+    @Column(name = "real_name", length = 100)
+    private String realName;
+
+    // --- 🌟 2. 补上申请时的建议专业名（AdminService 报错需要它） ---
+    @Column(name = "proposed_expertise_name", length = 100)
     private String proposedExpertiseName;
 
+
+// --- 🌟 补上对应的 Getter 和 Setter 方法 ---
+
+    public String getRealName() {
+        return realName;
+    }
+
+    public void setRealName(String realName) {
+        this.realName = realName;
+    }
+
+    public String getProposedExpertiseName() {
+        return proposedExpertiseName;
+    }
+
+    public void setProposedExpertiseName(String proposedExpertiseName) {
+        this.proposedExpertiseName = proposedExpertiseName;
+    }
     public Long getId() {
         return id;
     }
@@ -53,10 +68,6 @@ public class SpecialistProfile {
     public void setId(Long id) {
         this.id = id;
     }
-
-    public String getRealName() {return realName;}
-
-    public void setRealName(String realName) {this.realName = realName;}
 
     public User getUser() {
         return user;
@@ -98,11 +109,12 @@ public class SpecialistProfile {
         this.status = status;
     }
 
-    public String getResume() {return resume;}
+    // --- 核心修复：添加 resume 的 Getter 和 Setter ---
+    public String getResume() {
+        return resume;
+    }
 
-    public void setResume(String resume) {this.resume = resume;}
-
-    public String getProposedExpertiseName() {return proposedExpertiseName;}
-
-    public void setProposedExpertiseName(String proposedExpertiseName) {this.proposedExpertiseName = proposedExpertiseName;}
+    public void setResume(String resume) {
+        this.resume = resume;
+    }
 }

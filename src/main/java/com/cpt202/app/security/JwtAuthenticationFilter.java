@@ -74,8 +74,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             } else if (headerAuth == null) {
                 // 如果你希望没有 Token 时也报错，可以取消下面这行的注释
-                 sendErrorResponse(response, "缺少 Authorization Header (Missing Token)");
-                 return;
+                sendErrorResponse(response, "缺少 Authorization Header (Missing Token)");
+                return;
             }
         } catch (io.jsonwebtoken.ExpiredJwtException e) {
             sendErrorResponse(response, "Token 已过期 (Token Expired)");
