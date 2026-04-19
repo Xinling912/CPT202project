@@ -1,67 +1,101 @@
 $(document).ready(function() {
+
+    // ==========================================
+    // 1. 页面初始化检查
+    // ==========================================
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert("Please log in first!");
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // ==========================================
+    // 2. UI 交互逻辑
+    // ==========================================
+
+    // 处理专业领域下拉框变化
+    $('#exp-domain-select').on('change', function() {
+        const selectedValue = $(this).val();
+        const $otherInput = $('#exp-domain-input');
+
+        $(this).css('color', '#1f2937');
+
+        if (selectedValue === 'other') {
+            $otherInput.fadeIn().attr('required', true).focus();
+        } else {
+            $otherInput.hide().attr('required', false).val('');
+        }
+    });
+
+    // 处理 Level 下拉框颜色
+    $('#exp-level').on('change', function() {
+        $(this).css('color', '#1f2937');
+    });
+
+    // 返回按钮
+    $('#go-back').on('click', function() {
+        window.history.back();
+    });
+
+    // ==========================================
+    // 3. 表单提交逻辑
+    // ==========================================
     $('#expertForm').on('submit', function(e) {
         e.preventDefault();
-        
-        const btn = $('#applyBtn');
-        btn.text('Submitting...')
-           .prop('disabled', true)
-           .addClass('opacity-70 cursor-not-allowed');
 
-        // 从浏览器的记事本里，把登录时存的手环拿出来
-        const token = localStorage.getItem('token');
+        const $btn = $('#applyBtn');
+        const originalText = $btn.text();
+        $btn.prop('disabled', true).text('Submitting...').css('opacity', '0.7');
 
-        // 如果连手环都没有，说明根本没登录，直接赶去登录页
-        if (!token) {
-            alert("Please log in first!");
-            window.location.href = 'login.html';
-            return;
-        }
+        const domainSelectValue = $('#exp-domain-select').val();
+        const isOther = domainSelectValue === 'other';
 
-        // 假设你要提交的数据
+        // ========================================================
+        // 核心修复点：字段名必须严格对应后端 SpecialistApplyRequest Record 的属性名
+        // 这样后端 request.realName() 才不会为 null，从而通过校验并执行 save()
+        // ========================================================
         const expertData = {
-            // 这里填入你们专家表单里提取出来的数据
-            // name: $('#expert-name').val(),
-            // field: $('#expert-field').val()
+            realName: $('#exp-name').val().trim(),
+            level: $('#exp-level').val(),
+            hourlyFee: Number($('#exp-fee').val()),
+            resume: $('#exp-resume').val().trim(),
+            expertiseId: isOther ? null : Number(domainSelectValue),
+            newExpertiseName: isOther ? $('#exp-domain-input').val().trim() : null,
         };
 
-        // 发送真实请求去申请专家
-        fetch('http://localhost:8080/api/experts/apply', { // 注意：等后端写好后，改成真实的接口地址
+        fetch('http://localhost:8080/api/specialists/apply', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // ==========================================
-                // 🌟 核心高光时刻：向保安亮出手环！
-                // ==========================================
-                'Authorization': `Bearer ${token}` 
+                'Authorization': 'Bearer ' + token
             },
             body: JSON.stringify(expertData)
         })
         .then(async response => {
-            // 这里为了防止后端还没写好接口报错，先做个兼容处理
-            if(response.ok) {
-                alert("Application submitted successfully for review!");
-                window.location.href = 'home.html'; // 提交成功回主页
+            if (response.ok) {
+                alert("Application submitted successfully! Please wait for admin review.");
+                window.location.href = 'home.html';
+            } else if (response.status === 401) {
+                alert("Session expired. Please log in again.");
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
             } else {
-                alert("Submission failed. Please try again later.");
+                const errorText = await response.text();
+                try {
+                    const errorObj = JSON.parse(errorText);
+                    alert("Submission failed: " + (errorObj.error || errorObj.message || errorText));
+                } catch(e) {
+                    alert("Submission failed: " + errorText);
+                }
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            // 这里保留你以前的模拟逻辑，万一后端没开，至少前端还能弹个框展示一下
-            setTimeout(() => {
-                alert("Application submitted successfully for review! (Simulated)");
-                window.location.href = 'home.html';
-            }, 1000);
+            console.error('Fetch error:', error);
+            alert("Network error. Please make sure the backend server is running.");
         })
         .finally(() => {
-            btn.text('Come up for review')
-               .prop('disabled', false)
-               .removeClass('opacity-70 cursor-not-allowed');
+            $btn.prop('disabled', false).text(originalText).css('opacity', '1');
         });
-    });
-
-    // 返回按钮逻辑
-    $('#go-back').on('click', function() {
-        window.location.href = 'home.html';
     });
 });

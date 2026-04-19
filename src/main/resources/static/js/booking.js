@@ -24,6 +24,11 @@ function handleProtectedView(pageId) {
     if (checkLogin()) showPage(pageId);
 }
 
+function showJoinUs() {
+      window.location.href = 'expert_apply.html';
+}
+
+
 // --- 2. 页面初始化 ---
 $(document).ready(() => {
     // 启动时检查：没登录直接踢走
