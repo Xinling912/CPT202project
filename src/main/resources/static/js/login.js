@@ -141,16 +141,72 @@ $(document).ready(function() {
     });
 
 
+// ==========================================
+    // 4. Submit Reset Password Logic & Validation
     // ==========================================
-    // 4. Submit Reset Password Logic
-    // ==========================================
+    const newPwdInput = $('#forgot-new-password');
+    const confirmPwdInput = $('#forgot-confirm-password');
+    const errorMsg = $('#pwd-error-msg');
+
+    // 实时验证功能：检查两次密码是否一致
+    function checkPasswordMatch() {
+        const pwd1 = newPwdInput.val();
+        const pwd2 = confirmPwdInput.val();
+
+        if (pwd1 !== '' && pwd2 !== '') {
+            if (pwd1 !== pwd2) {
+                // 不一致：显示错误提示，让确认框变红
+                errorMsg.show();
+                confirmPwdInput.css({
+                    'border-color': '#ef4444',
+                    'box-shadow': '0 0 0 1px #ef4444'
+                });
+                return false;
+            } else {
+                // 一致：隐藏错误，清除红色样式
+                errorMsg.hide();
+                confirmPwdInput.css({
+                    'border-color': '',
+                    'box-shadow': ''
+                });
+                return true;
+            }
+        } else {
+            // 为空时重置状态
+            errorMsg.hide();
+            confirmPwdInput.css({
+                'border-color': '',
+                'box-shadow': ''
+            });
+            return false;
+        }
+    }
+
+    // 绑定输入事件，实现一边输入一边验证
+    newPwdInput.on('input', checkPasswordMatch);
+    confirmPwdInput.on('input', checkPasswordMatch);
+
+    // 提交表单时的逻辑
     $('#forgotForm').on('submit', function(e) {
         e.preventDefault();
 
+        // 提交前强制拦截：如果密码不一致，阻止提交并让输入框获取焦点
+        if (!checkPasswordMatch()) {
+            confirmPwdInput.focus();
+            return;
+        }
+
         const email = $('#forgot-email').val();
         const code = $('#forgot-code').val();
-        const newPassword = $('#forgot-new-password').val();
+        const newPassword = newPwdInput.val();
         const btn = $('#resetBtn');
+
+        // 长度验证 (根据你的 placeholder 要求)
+        if (newPassword.length < 8 || newPassword.length > 32) {
+            alert('Password must be between 8 and 32 characters.');
+            newPwdInput.focus();
+            return;
+        }
 
         btn.text('Resetting...').prop('disabled', true);
 
@@ -168,13 +224,15 @@ $(document).ready(function() {
         .then(async response => {
             const data = await response.json();
             if (response.ok) {
-                alert(data.message || 'Password reset successfully! Please log in with your new password.');
-                // Switch back to login page on success
+                alert(data.message || 'Password reset successfully! Please log in.');
+                // 重置成功后清理现场
                 $('#forgotForm')[0].reset();
+                errorMsg.hide();
+                confirmPwdInput.css({'border-color': '', 'box-shadow': ''});
                 $('#forgot-section').hide();
                 $('#login-section').fadeIn();
             } else {
-                alert('Reset failed: ' + (data.message || 'Please check if your verification code is correct.'));
+                alert('Reset failed: ' + (data.message || 'Please check your verification code.'));
             }
         })
         .catch(error => {

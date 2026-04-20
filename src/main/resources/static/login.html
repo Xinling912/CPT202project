@@ -90,7 +90,14 @@
 
                 <div class="form-group">
                     <label class="form-label center-label">New Password</label>
-                    <input type="password" id="forgot-new-password" class="figma-input" placeholder="8-32 characters (letters & numbers)" required>
+
+                    <input type="password" id="forgot-new-password" class="figma-input mb-3" placeholder="8-32 characters (letters & numbers)" required>
+
+                    <input type="password" id="forgot-confirm-password" class="figma-input" placeholder="Enter your password again!" required>
+
+                    <div id="pwd-error-msg" style="color: #ef4444; font-size: 0.75rem; display: none; text-align: center; margin-top: 5px; font-weight: 500;">
+                        Passwords do not match!
+                    </div>
                 </div>
 
                 <button type="submit" id="resetBtn" class="submit-btn" style="margin-top: 24px;">
