@@ -75,7 +75,7 @@ $(document).ready(function() {
         .then(async response => {
             if (response.ok) {
                 alert("Application submitted successfully! Please wait for admin review.");
-                window.location.href = 'home.html';
+                window.location.href = 'booking.html';
             } else if (response.status === 401) {
                 alert("Session expired. Please log in again.");
                 localStorage.removeItem('token');
