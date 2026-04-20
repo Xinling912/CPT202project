@@ -93,6 +93,7 @@ body {
     text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 0px 4px 8px rgba(0,0,0,0.08);
     letter-spacing: 0.05em;
     margin: 0;
+    text-transform: capitalize;
 }
 
 /* ==========================================

@@ -43,8 +43,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getServletPath();
-        // 登录、注册等接口直接放行
-        if (path.contains("/login") || path.contains("/register") || path.contains("/verify-code")) {
+        // 登录、注册等接口直接放行，还有忘记密码
+        if (path.contains("/login") || path.contains("/register") || path.contains("/verify-code") || path.contains("/forgot-password")) { // 👈 在这里加上了 forgot-password
             filterChain.doFilter(request, response);
             return;
         }
