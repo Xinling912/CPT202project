@@ -1,0 +1,20 @@
+${AnsiColor.BRIGHT_RED}
+  SSSSSSSSS           AAAAA           SSSSSSSSS
+ SSS     SSS         AAAAAAA         SSS     SSS
+ SSS                AAA   AAA        SSS
+  SSSSSSSSS        AAA     AAA        SSSSSSSSS
+         SSS      AAAAAAAAAAAAA              SSS
+ SSS     SSS     AAA         AAA     SSS     SSS
+  SSSSSSSSS     AAA           AAA     SSSSSSSSS
+
+${AnsiColor.WHITE}
+ ===============================================
+   S P E C I A L I S T   A D M I N I S T R A T O R
+ ===============================================
+
+${AnsiColor.BRIGHT_YELLOW}
+ >> Dev: Xingling Du (GOD ACCESS)
+ >> Version: ${spring-boot.version}
+${AnsiColor.BRIGHT_RED}
+ [STATUS] SYSTEM ONLINE - RED ALERT MODE
+${AnsiColor.DEFAULT}
