@@ -73,3 +73,4 @@ INSERT INTO time_slot (specialist_id, slot_date, start_time, end_time, is_booked
 
 SET FOREIGN_KEY_CHECKS = 1;
 SET SQL_SAFE_UPDATES = 1;
+--     1
