@@ -16,6 +16,10 @@ public class SpecialistProfile {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
     private User user;
 
+    // 专家的真实姓名
+    @Column(nullable = false, length = 50)
+    private String realName;
+
     // 与专业分类的多对一关系：多个专家可以属于同一个专业
     @ManyToOne
     @JoinColumn(name = "expertise_id", referencedColumnName = "id", nullable = false)
@@ -23,17 +27,24 @@ public class SpecialistProfile {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 50, nullable = false)
-    private SpecialistLevel level; // JUNIOR, SENIOR, EXPERT
+    private SpecialistLevel level;
 
-    // 💡 CTO小贴士：在 Java 里算钱，绝对不能用 Double，必须用 BigDecimal 防止精度丢失！
     @Column(name = "hourly_fee", precision = 10, scale = 2, nullable = false)
     private BigDecimal hourlyFee;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private SpecialistStatus status; // ACTIVE (接单中), INACTIVE (休息中)
+    private SpecialistStatus status = SpecialistStatus.PENDING; // 默认是待审核;
+    // ACTIVE (接单中), INACTIVE (禁止接单中), PENDING (待审批)
 
-    // TODO: 请使用 IDE 生成 Getter 和 Setter (或添加 Lombok 的 @Data 注解)
+    // 个人简历介绍
+    @Column(columnDefinition = "TEXT")
+    private String resume;
+
+    // 存放用户填写的“其他”专业（审批通过前临时存放）
+    @Column(name = "proposed_expertise_name")
+    private String proposedExpertiseName;
+
     public Long getId() {
         return id;
     }
@@ -41,6 +52,10 @@ public class SpecialistProfile {
     public void setId(Long id) {
         this.id = id;
     }
+
+    public String getRealName() {return realName;}
+
+    public void setRealName(String realName) {this.realName = realName;}
 
     public User getUser() {
         return user;
@@ -81,4 +96,12 @@ public class SpecialistProfile {
     public void setStatus(SpecialistStatus status) {
         this.status = status;
     }
+
+    public String getResume() {return resume;}
+
+    public void setResume(String resume) {this.resume = resume;}
+
+    public String getProposedExpertiseName() {return proposedExpertiseName;}
+
+    public void setProposedExpertiseName(String proposedExpertiseName) {this.proposedExpertiseName = proposedExpertiseName;}
 }
