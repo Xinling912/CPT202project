@@ -4,10 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Admin Dashboard | SAS</title>
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
@@ -30,15 +28,15 @@
                 <span class="nav-text">User Management</span>
                 <span class="arrow"><i class="bi bi-chevron-right"></i></span>
             </button>
-            <div class="submenu" id="subUser">
+            <div class="submenu open" id="subUser">
                 <div class="submenu-item" id="btnSpecialist">
                     Specialist <span class="arrow" style="float: right;"><i class="bi bi-chevron-right" style="font-size: 10px;"></i></span>
                 </div>
-                <div class="submenu-level2" id="subSpecialist">
-                    <div class="submenu-level2-item" id="menuStatus">Specialist Status Adjustment</div>
-                    <div class="submenu-level2-item active" id="menuApproval">Specialist Information Approval</div>
+                <div class="submenu-level2 open" id="subSpecialist">
+                    <div class="submenu-level2-item menu-clickable" id="menuStatus">Specialist Status Adjustment</div>
+                    <div class="submenu-level2-item menu-clickable" id="menuApproval">Specialist Information Approval</div>
                 </div>
-                <div class="submenu-item" id="menuUser">User</div>
+                <div class="submenu-item menu-clickable" id="menuUser">User</div>
             </div>
         </div>
 
@@ -49,8 +47,8 @@
                 <span class="arrow"><i class="bi bi-chevron-right"></i></span>
             </button>
             <div class="submenu" id="subReview">
-                <div class="submenu-item" id="menuSpecialistReview">Specialist Information Review</div>
-                <div class="submenu-item" id="menuPostReview">Community Post Review</div>
+                <div class="submenu-item menu-clickable" id="menuSpecialistReview">Specialist Information Review</div>
+                <div class="submenu-item menu-clickable" id="menuPostReview">Community Post Review</div>
             </div>
         </div>
 
@@ -65,14 +63,12 @@
     <div class="main-content" id="main-content">
         <div class="top-header">
             <div class="top-header-title">Admin Dashboard</div>
-
             <div class="user-profile">
                 <div class="user-info">
                     <div class="user-name">Dream</div>
                     <div class="user-role">Administrator</div>
                 </div>
                 <img src="images/Xiaoxu.png" class="user-avatar" alt="Admin Avatar">
-
                 <div class="dropdown-menu">
                     <a href="#" class="dropdown-item"><i class="bi bi-person"></i> Personal Account</a>
                     <div class="dropdown-divider"></div>
@@ -82,87 +78,38 @@
         </div>
 
         <div class="content-area">
-            <div id="pageApproval" class="specialist-page">
-                <div class="title">Specialists List</div>
-                <div class="subtitle">Manage and review approved specialist portfolios.</div>
 
-                <div class="specialist-item">
-                    <img src="images/specialist1.png" alt="Specialist">
-                    <div class="info">
-                        <div class="name">Xingjian Wu</div>
-                        <div class="desc">A highly professional legal counsel specializing in corporate and civil law, dedicated to providing precise, objective, and justice-driven legal solutions.</div>
-                    </div>
-                    <button class="modify-btn">Modify</button>
-                </div>
-
-                <div class="specialist-item">
-                    <img src="images/specialist2.png" alt="Specialist">
-                    <div class="info">
-                        <div class="name">Shaohui Shen</div>
-                        <div class="desc">An emotional counselor who analyzes relationships with machine-like precision. Ironically, he talks like an AI and is notoriously awkward at chatting with girls in real life, yet his theoretical advice is flawlessly logical.</div>
-                    </div>
-                    <button class="modify-btn">Modify</button>
-                </div>
-
-                <div class="specialist-item">
-                    <img src="images/specialist3.png" alt="Specialist">
-                    <div class="info">
-                        <div class="name">Xinling Du</div>
-                        <div class="desc">A seasoned financial master with an eagle eye for market trends. She excels at wealth management, investment strategies, and maximizing ROI with ruthless efficiency.</div>
-                    </div>
-                    <button class="modify-btn">Modify</button>
+            <div id="pageExisting" class="specialist-page" style="display:none;">
+                <div class="title">Specialist Status Adjustment</div>
+                <div class="subtitle">Manage accounts, suspend or activate existing specialist profiles.</div>
+                <div id="existing-list-body">
+                    <div style="text-align: center; color: #94a3b8; padding: 40px;">Loading specialists...</div>
                 </div>
             </div>
 
-            <div id="pageReview" class="review-page" style="display:none;">
-                <div class="title">Pending Review Content</div>
-                <div class="subtitle">Applications awaiting administrator approval.</div>
+            <div id="pagePending" class="review-page" style="display:none;">
+                <div class="title">Specialist Information Approval</div>
+                <div class="subtitle">Applications awaiting administrator approval to join the platform.</div>
                 <table class="review-table">
                     <thead>
                     <tr>
                         <th><input type="checkbox"></th>
                         <th>ID</th>
-                        <th>User ID</th>
-                        <th>Title</th>
-                        <th>Submit Time</th>
+                        <th>Real Name</th>
+                        <th>Domain</th>
+                        <th>Hourly Fee</th>
                         <th>Action</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    <tr class="review-row">
-                        <td><input type="checkbox"></td>
-                        <td><span class="badge bg-light text-dark fw-bold border" style="padding:4px 8px; border-radius:6px;">1</span></td>
-                        <td style="color:var(--brand); font-weight:700;">#026-1839</td>
-                        <td>Specialist Application</td>
-                        <td style="color:var(--text-muted);">2025-12-22</td>
-                        <td>
-                            <button class="btn btn-approve" onclick="event.stopPropagation()">Approve</button>
-                            <button class="btn btn-reject" onclick="event.stopPropagation()">Reject</button>
-                        </td>
-                    </tr>
-                    <tr class="review-row">
-                        <td><input type="checkbox"></td>
-                        <td><span class="badge bg-light text-dark fw-bold border" style="padding:4px 8px; border-radius:6px;">2</span></td>
-                        <td style="color:var(--brand); font-weight:700;">#022-1829</td>
-                        <td>Specialist Application</td>
-                        <td style="color:var(--text-muted);">2025-12-22</td>
-                        <td>
-                            <button class="btn btn-approve" onclick="event.stopPropagation()">Approve</button>
-                            <button class="btn btn-reject" onclick="event.stopPropagation()">Reject</button>
-                        </td>
-                    </tr>
+                    <tbody id="pending-list-body">
+                    <tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">Loading...</td></tr>
                     </tbody>
                 </table>
-                <div class="pagination">
-                    <button class="page-btn active">1</button>
-                    <button class="page-btn">2</button>
-                    <button class="page-btn">3</button>
-                </div>
             </div>
 
-            <div id="pageEmpty" class="empty-page" style="display:none;">
-                <i class="bi bi-inboxes" style="font-size: 3rem; opacity: 0.3; margin-bottom: 16px; display: block;"></i>
-                <h3>Please select a menu from the sidebar</h3>
+            <div id="pageEmpty" class="empty-page" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height: 50vh;">
+                <i class="bi bi-inboxes" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 16px;"></i>
+                <h3 style="color: #64748b;">No content available yet.</h3>
             </div>
         </div>
     </div>
@@ -171,48 +118,15 @@
 <div id="modalOverlay" class="modal-overlay">
     <div class="modal">
         <div class="modal-header">
-            <h2>Entry of specialist information</h2>
+            <h2>Specialist Details</h2>
             <button class="modal-close" id="closeModalBtn"><i class="bi bi-x-lg"></i></button>
         </div>
-        <form>
-            <div class="form-group">
-                <label class="form-label">Name <span>*</span></label>
-                <input type="text" class="form-input" value="Dr. John Doe">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Profession field <span>*</span></label>
-                <select class="form-select">
-                    <option>Medical</option>
-                    <option>Engineering</option>
-                    <option>Education</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Experience/Level <span>*</span></label>
-                <input type="text" class="form-input" value="Chief Physician">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Consulting fee (yuan/hour) <span>*</span></label>
-                <input type="text" class="form-input" value="500">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Individual resume <span>*</span></label>
-                <textarea class="form-textarea">Dr. John Doe has 20 years of clinical experience in internal medicine, specializing in cardiovascular diseases. He has published more than 50 papers in core journals.</textarea>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Upload qualification certificates <span>*</span></label>
-                <div class="upload-area">
-                    <div class="icon"><i class="bi bi-cloud-arrow-up"></i></div>
-                    <div class="text">Click or drag files here to upload</div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="submit-btn">Come up for review</button>
-            </div>
-        </form>
+        <div id="modal-content" style="padding: 20px; color:#64748b;">
+        </div>
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="js/admin.js"></script>
 </body>
 </html>

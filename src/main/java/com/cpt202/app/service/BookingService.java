@@ -77,7 +77,7 @@ public class BookingService {
     @Transactional(rollbackFor = Exception.class)
     public Booking createBooking(String email, Long specialistId, Long slotId, String notes) {
         // 1. 【安全查找】Service 内部完成身份确认
-        User customer = userRepository.findByEmail(email)
+        User customer = userRepository.findByUsername(email)
                 .orElseThrow(() -> new IllegalArgumentException("ERROR_USER_NOT_FOUND"));
 
         SpecialistProfile specialist = specialistRepository.findById(specialistId)
@@ -140,7 +140,7 @@ public class BookingService {
     @Transactional
     public void cancelBooking(Long bookingId, String reason, String email) {
         // 1. 获取用户与订单信息
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByUsername(email)
                 .orElseThrow(() -> new IllegalArgumentException("USER_NOT_FOUND"));
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("ERROR_BOOKING_NOT_FOUND"));
@@ -242,7 +242,7 @@ public class BookingService {
     // 将“用户提供的邮箱（外部凭证）”转化为“系统内部的业务对象（专家档案）”
     private SpecialistProfile getProfileByEmail(String email) {
         // 你需要注入 userRepository 和 specialistRepository
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByUsername(email)
                 .orElseThrow(() -> new IllegalArgumentException("USER_NOT_FOUND"));
         return specialistRepository.findByUser(user)
                 .orElseThrow(() -> new IllegalArgumentException("SPECIALIST_NOT_FOUND"));

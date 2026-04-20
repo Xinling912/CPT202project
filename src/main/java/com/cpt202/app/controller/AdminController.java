@@ -112,4 +112,55 @@ public class AdminController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+    // ==========================================
+    // 3. 专家大盘管理接口 (封停 / 激活)
+    // ==========================================
+
+    /**
+     * 获取所有【已通过审核的专家】（包含 ACTIVE 和 INACTIVE），用于在调整页面展示
+     */
+    @GetMapping("/specialists")
+    public ResponseEntity<?> getAllExistingSpecialists() {
+        // 获取所有专家，但过滤掉还在审核中(PENDING)或被拒绝的，只留正式专家
+        List<SpecialistProfile> existingProfiles = profileRepository.findAll().stream()
+                .filter(p -> p.getStatus() == SpecialistStatus.ACTIVE || p.getStatus() == SpecialistStatus.INACTIVE)
+                .toList();
+        return ResponseEntity.ok(Map.of("data", existingProfiles));
+    }
+
+    /**
+     * 封停专家 (Suspend) -> 状态改为 INACTIVE
+     */
+    @PostMapping("/specialists/{id}/suspend")
+    public ResponseEntity<?> suspendSpecialist(@PathVariable Long id) {
+        try {
+            SpecialistProfile profile = profileRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("找不到该专家档案"));
+
+            profile.setStatus(SpecialistStatus.INACTIVE);
+            profileRepository.save(profile);
+
+            return ResponseEntity.ok(Map.of("message", "专家已被成功封停！"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 激活专家 (Activate) -> 状态改为 ACTIVE
+     */
+    @PostMapping("/specialists/{id}/activate")
+    public ResponseEntity<?> activateSpecialist(@PathVariable Long id) {
+        try {
+            SpecialistProfile profile = profileRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("找不到该专家档案"));
+
+            profile.setStatus(SpecialistStatus.ACTIVE);
+            profileRepository.save(profile);
+
+            return ResponseEntity.ok(Map.of("message", "专家已被重新激活！"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
