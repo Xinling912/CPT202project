@@ -8,6 +8,9 @@ import com.cpt202.app.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import org.springframework.scheduling.annotation.Scheduled;
+
+
 
 
 
@@ -24,6 +27,7 @@ public class BookingService {
     private final TimeSlotRepository timeSlotRepository;
     private final UserRepository userRepository;
     private final SpecialistProfileRepository specialistRepository;
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BookingService.class);
 
     // 2. 构造器注入
     public BookingService(BookingRepository bookingRepository, TimeSlotRepository timeSlotRepository, UserRepository userRepository, SpecialistProfileRepository specialistRepository) {
@@ -34,48 +38,21 @@ public class BookingService {
 
     }
 
-    // 1. Record：专门用来定义查询结果最后传送时
-    // 只能有这 8 个固定的格子，绝不允许多装其他涉及隐私的数据
-    // 依靠位置对应赋值执行
-    // new BookedScheduleResponse(...) 时，传入的参数顺序必须和定义时的顺序一模一样
-    public record BookedScheduleResponse(
-            Long bookingId,
-            Long timeSlotId,
+
+    public record BookingResponse(
+            Long id,
+            String customerName,
+            String specialistName,
             String date,
             String startTime,
             String endTime,
-            Long customerId,
-            String customerName,
-            String customerEmail
+            String status,
+            String notes
     ) {}
-
-    // 2. 业务方法
-    public List<BookedScheduleResponse> getBookedSchedulesForSpecialist(Long specialistId) {
-        // 定义允许上表单的白名单状态
-        List<BookingStatus> validStatuses = Arrays.asList(BookingStatus.PENDING, BookingStatus.CONFIRMED);
-        // 根据专家ID，和符合要求的订单状态查找符合要求的booking
-        List<Booking> bookings = bookingRepository.findByTimeSlot_Specialist_IdAndStatusIn(specialistId, validStatuses);
-        // Stream 流转换：把刚才获取的 Booking 倒进流水线，一个一个处理。
-        return bookings.stream()
-                //把booking转换可直接获取的信息
-                //从 booking 里提取 Id、深入到 TimeSlot 表里提取日期和时间
-                //再深入到 Customer (User) 表里提取姓名和邮箱
-                .map(booking -> new BookedScheduleResponse(
-                        booking.getId(),
-                        booking.getTimeSlot().getId(),
-                        booking.getTimeSlot().getSlotDate().toString(),
-                        booking.getTimeSlot().getStartTime().toString(),
-                        booking.getTimeSlot().getEndTime().toString(),
-                        booking.getCustomer().getId(),
-                        booking.getCustomer().getUsername(),
-                        booking.getCustomer().getEmail()
-                ))
-                .collect(Collectors.toList()); //把分开的数据再次打包进list
-    }
 
 
     @Transactional(rollbackFor = Exception.class)
-    public Booking createBooking(String email, Long specialistId, Long slotId, String notes) {
+    public BookingResponse createBooking(String email, Long specialistId, Long slotId, String notes) {
         // 1. 【安全查找】Service 内部完成身份确认
         User customer = userRepository.findByUsername(email)
                 .orElseThrow(() -> new IllegalArgumentException("ERROR_USER_NOT_FOUND"));
@@ -131,7 +108,12 @@ public class BookingService {
         booking.setNotes(notes);
         booking.setTotalAmount(specialist.getHourlyFee());
 
-        return bookingRepository.save(booking);
+        //10.添加日志
+        log.info("Booking created successfully. BookingId: {}, Customer: {}", booking.getId(), customer.getUsername());
+
+        // 【修改点】：不再直接返回 Entity，而是先保存，然后转成 DTO
+        Booking savedBooking = bookingRepository.save(booking);
+        return convertToResponse(savedBooking);
     }
 
 
@@ -176,29 +158,68 @@ public class BookingService {
 
     }
 
-    @Transactional
+    @Scheduled(cron = "0 * * * * *") // 务必改为每分钟执行一次
+    @Transactional(rollbackFor = Exception.class)
+    public void processAutoStatusTransitions() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Booking> pendingBookings = bookingRepository.findByStatus(BookingStatus.PENDING);
+
+        for (Booking b : pendingBookings) {
+            LocalDateTime startTime = LocalDateTime.of(b.getTimeSlot().getSlotDate(), b.getTimeSlot().getStartTime());
+
+            // --- 优先级 1: 5分钟硬核截止线 (无论是否紧急，直接 DISABLED) ---
+            if (now.isAfter(startTime.minusMinutes(5))) {
+                cancelBookingAsDisabled(b, "EXPIRED: Less than 5 mins to start");
+                continue; // 跳过后续逻辑，直接进入下一个循环
+            }
+
+            // --- 优先级 2: 确认时限 (根据紧急程度判断) ---
+            boolean isUrgent = startTime.isBefore(now.plusHours(24));
+            LocalDateTime deadline = isUrgent ? b.getCreatedAt().plusHours(1) : b.getCreatedAt().plusHours(24);
+
+            if (now.isAfter(deadline)) {
+                cancelBookingAsAvailable(b, "TIMEOUT: Confirmation deadline exceeded");
+            }
+        }
+
+        // 3. 自动完成 (Confirmed -> Completed)
+        List<Booking> confirmedBookings = bookingRepository.findByStatus(BookingStatus.CONFIRMED);
+        for (Booking b : confirmedBookings) {
+            LocalDateTime end = LocalDateTime.of(b.getTimeSlot().getSlotDate(), b.getTimeSlot().getEndTime());
+            if (now.isAfter(end.plusHours(24))) {
+                b.setStatus(BookingStatus.COMPLETED);
+                bookingRepository.save(b);
+            }
+        }
+    }
+
+    /// 1. 入口方法：Controller 调用此方法，开启事务
+    @Transactional(rollbackFor = Exception.class)
     public void confirmOrder(Long orderId, String email) {
-        // 1. 在这里做身份转换
-        SpecialistProfile profile = getProfileByEmail(email);
-
-        // 2. 调用原有的核心逻辑
-        this.confirmOrder(orderId, profile.getId());
-    }
-
-    @Transactional
-    public void completeOrder(Long orderId, String email) {
-        // 1. 解析身份
         Long specialistId = getProfileByEmail(email).getId();
+        // 直接调用内部核心逻辑
+        confirmOrderInternal(orderId, specialistId);
+    }
 
-        // 2. 调用核心逻辑 (复用你原本写好的那个方法)
-        this.completeOrder(orderId, specialistId);
+    @Transactional(rollbackFor = Exception.class)
+    public void completeOrder(Long orderId, String email) {
+        Long specialistId = getProfileByEmail(email).getId();
+        // 直接调用内部核心逻辑
+        completeOrderInternal(orderId, specialistId);
     }
 
 
-    //专家确认订单(确保只有专家能完成)
-    @Transactional
-    public void confirmOrder(Long orderId, Long currentSpecialistId) {
-        Booking booking = getVerifiedBookingForSpecialist(orderId, currentSpecialistId);
+    // 2. 核心业务逻辑：private 方法，不需要 @Transactional
+    // 因为它由上面的入口方法调用，入口方法已经开启了事务
+    // 在 confirmOrderInternal 中加入拦截
+    private void confirmOrderInternal(Long orderId, Long specialistId) {
+        Booking booking = getVerifiedBookingForSpecialist(orderId, specialistId);
+
+        // 【错误：不应该限制提前5小时】
+        LocalDateTime startTime = LocalDateTime.of(booking.getTimeSlot().getSlotDate(), booking.getTimeSlot().getStartTime());
+        if (LocalDateTime.now().isAfter(startTime.minusMinutes(5))) {
+            throw new IllegalStateException("ERROR_CONFIRMATION_EXPIRED");
+        }
 
         if (booking.getStatus() != BookingStatus.PENDING) {
             throw new IllegalStateException("ERROR_INVALID_STATUS");
@@ -207,35 +228,106 @@ public class BookingService {
         bookingRepository.save(booking);
     }
 
-    // 专家标记完成
-    @Transactional
-    public void completeOrder(Long orderId, Long currentSpecialistId) {
-        // 1. 校验所属权
-        Booking booking = getVerifiedBookingForSpecialist(orderId, currentSpecialistId);
+    private void completeOrderInternal(Long orderId, Long specialistId) {
+        Booking booking = getVerifiedBookingForSpecialist(orderId, specialistId);
 
-        // 2. 校验状态流转
         if (booking.getStatus() != BookingStatus.CONFIRMED) {
             throw new IllegalStateException("ERROR_ONLY_CONFIRMED_CAN_BE_COMPLETED");
+        }
+
+        LocalDateTime startTime = LocalDateTime.of(
+                booking.getTimeSlot().getSlotDate(),
+                booking.getTimeSlot().getStartTime()
+        );
+        // 确保订单已经真正开始了
+        if (LocalDateTime.now().isBefore(startTime)) {
+            throw new IllegalStateException("ERROR_BOOKING_NOT_STARTED_YET");
         }
 
         booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
     }
 
-    /**
-     * 【查询优化】
-     */
-    public List<Booking> getOrdersByCustomer(Long customerId) {
-        return bookingRepository.findByCustomerId(customerId);
+    // 辅助方法：状态设为 CANCELLED，资源设为 DISABLED (封禁)
+    private void cancelBookingAsDisabled(Booking b, String reason) {
+        b.setStatus(BookingStatus.CANCELLED);
+        b.setNotes((b.getNotes() == null ? "" : b.getNotes()) + " | " + reason);
+
+        TimeSlot slot = b.getTimeSlot();
+        slot.setStatus(TimeSlotStatus.DISABLED); // 封禁资源
+
+        timeSlotRepository.save(slot);
+        bookingRepository.save(b);
+        log.warn("Booking {} cancelled. Slot {} DISABLED due to: {}", b.getId(), slot.getId(), reason);
     }
 
-    public List<Booking> getOrdersBySpecialist(Long specialistId) {
-        return bookingRepository.findBySpecialistId(specialistId);
+    // 辅助方法：状态设为 CANCELLED，资源设为 AVAILABLE (释放)
+    private void cancelBookingAsAvailable(Booking b, String reason) {
+        b.setStatus(BookingStatus.CANCELLED);
+        b.setNotes((b.getNotes() == null ? "" : b.getNotes()) + " | " + reason);
+
+        TimeSlot slot = b.getTimeSlot();
+        slot.setStatus(TimeSlotStatus.AVAILABLE); // 释放资源
+
+        timeSlotRepository.save(slot);
+        bookingRepository.save(b);
+        log.info("Booking {} cancelled. Slot {} released.", b.getId(), slot.getId());
     }
+
+
+
+
 
     private long countMonthlyCancellations(Long customerId) {
         LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
         return bookingRepository.countByCustomerIdAndStatusAndCreatedAtAfter(customerId, BookingStatus.CANCELLED, startOfMonth);
+    }
+
+    //实现专家查数据库
+    public List<BookingResponse> getSpecialistOrders(String username) {
+        // 1. 查用户
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // 2. 校验角色 (逻辑搬移)
+        if (!user.getRole().equals(UserRole.SPECIALIST)) {
+            throw new IllegalStateException("Access denied: You are not a specialist");
+        }
+
+        // 3. 查档案
+        SpecialistProfile profile = specialistRepository.findByUser(user)
+                .orElseThrow(() -> new IllegalArgumentException("Specialist profile not found"));
+
+        // 4. 查订单并【转换成 DTO】(解决 Entity 泄露)
+        return bookingRepository.findBySpecialistId(profile.getId())
+                .stream()
+                .map(this::convertToResponse) // 这一步把 Booking 变成前端要的 DTO
+                .collect(Collectors.toList());
+    }
+
+    // 为普通用户提供其个人的订单列表
+    public List<BookingResponse> getOrdersByCustomerResponse(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return bookingRepository.findByCustomerId(user.getId())
+                .stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    // 私有辅助方法：专门用来“瘦身”数据
+    private BookingResponse convertToResponse(Booking b) {
+        return new BookingResponse(
+                b.getId(),                                  // 1. id
+                b.getCustomer().getUsername(),              // 2. customerName
+                b.getSpecialist().getUser().getUsername(),  // 3. specialistName
+                b.getTimeSlot().getSlotDate().toString(),   // 4. date
+                b.getTimeSlot().getStartTime().toString(),  // 5. startTime (补全)
+                b.getTimeSlot().getEndTime().toString(),    // 6. endTime   (补全)
+                b.getStatus().toString(),                   // 7. status    (补全)
+                b.getNotes()                                // 8. notes     (补全)
+        );
     }
 
 
@@ -247,6 +339,7 @@ public class BookingService {
         return specialistRepository.findByUser(user)
                 .orElseThrow(() -> new IllegalArgumentException("SPECIALIST_NOT_FOUND"));
     }
+
 //获取数据 + 检查拥有权（确保该订单是否属于当前的id）
     private Booking getVerifiedBookingForSpecialist(Long orderId, Long currentSpecialistId) {
         Booking booking = bookingRepository.findById(orderId)
@@ -258,13 +351,14 @@ public class BookingService {
         return booking;
     }
 
+
+
     // 根据角色（专家/客户/管理员）执行不同的校验规则
     private void validateAuthorization(Booking booking, User user, boolean isSpecialist) {
         // 1. 管理员拥有最高权限，直接跳过校验 (或者记录审计日志)
         if (user.getRole() == UserRole.ADMIN) {
             return;
         }
-
         // 2. 如果是专家，校验是否为该订单的服务者
         if (isSpecialist) {
             if (!booking.getSpecialist().getUser().getId().equals(user.getId())) {

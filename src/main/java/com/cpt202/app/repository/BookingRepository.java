@@ -13,11 +13,9 @@ import java.util.List;
 @Repository
 //JpaRepository<Booking, Long>：第一个参数实体类名，第二个参数主键的数据类型
 public interface BookingRepository extends JpaRepository<Booking, Long> {
-    // 查找某个顾客的所有订单
-    List<Booking> findByCustomer(User customer);
 
-    // 查找某个专家的所有订单
-    List<Booking> findBySpecialist(SpecialistProfile Specialist);
+
+    List<Booking> findByStatus(BookingStatus status);
 
     // 按照用户ID查询
     List<Booking> findByCustomerId(Long customerId);
@@ -37,9 +35,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             Long customerId,
             BookingStatus status,
             LocalDateTime date);
-
-    // 查专家ID，并且订单状态必须在我们给定的集合(In)里面
-    List<Booking> findByTimeSlot_Specialist_IdAndStatusIn(Long specialistId, List<BookingStatus> statuses);
 
     // 根据专家的 ID 和 订单状态 查询所有有效订单
     List<Booking> findBySpecialistIdAndStatusIn(Long specialistId, List<BookingStatus> statuses);
