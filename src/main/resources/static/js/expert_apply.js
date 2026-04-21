@@ -1,8 +1,6 @@
 $(document).ready(function() {
 
-    // ==========================================
-    // 1. 页面初始化检查
-    // ==========================================
+
     const token = localStorage.getItem('token');
     if (!token) {
         alert("Please log in first!");
@@ -10,9 +8,6 @@ $(document).ready(function() {
         return;
     }
 
-    // ==========================================
-    // 2. UI 交互逻辑
-    // ==========================================
 
     // 处理专业领域下拉框变化
     $('#exp-domain-select').on('change', function() {
@@ -28,19 +23,17 @@ $(document).ready(function() {
         }
     });
 
-    // 处理 Level 下拉框颜色
+
     $('#exp-level').on('change', function() {
         $(this).css('color', '#1f2937');
     });
 
-    // 返回按钮
+
     $('#go-back').on('click', function() {
         window.history.back();
     });
 
-    // ==========================================
-    // 3. 表单提交逻辑
-    // ==========================================
+
     $('#expertForm').on('submit', function(e) {
         e.preventDefault();
 
@@ -51,10 +44,7 @@ $(document).ready(function() {
         const domainSelectValue = $('#exp-domain-select').val();
         const isOther = domainSelectValue === 'other';
 
-        // ========================================================
-        // 核心修复点：字段名必须严格对应后端 SpecialistApplyRequest Record 的属性名
-        // 这样后端 request.realName() 才不会为 null，从而通过校验并执行 save()
-        // ========================================================
+
         const expertData = {
             realName: $('#exp-name').val().trim(),
             level: $('#exp-level').val(),

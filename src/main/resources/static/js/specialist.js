@@ -8,6 +8,15 @@ let currentWeekOffset = 0;
 let currentWeekDates = {};
 let currentFetchedSchedule = [];
 
+// 🌟 全明星头像匹配逻辑
+function getAvatar(username) {
+    if (username === 'ShenShaohui' || username === 'Shaohui Shen') return `images/ssh.jpg`;
+    if (username === 'XingjianWu' || username === 'Xingjian Wu') return `images/specialist1.png`;
+    if (username === 'XinlingDu' || username === 'Xinling Du') return `images/specialist3.png`;
+    if (username === 'Carrot') return `images/carrot.png`;
+    return `https://api.dicebear.com/7.x/initials/svg?seed=${username}`;
+}
+
 $('#toggle-sidebar').on('click', function() {
     $('#sidebar').toggleClass('collapsed');
     $('.main-content').toggleClass('expanded');
@@ -60,15 +69,13 @@ function getDayFromDate(dateString, weekDatesObj) {
     return null;
 }
 
-// 🌟 新增：启动页面顶部的实时时钟
+// 启动实时时钟
 function startRealTimeClock() {
-    // 确保在标题下方插入时间容器
     if ($('#realtime-clock-display').length === 0) {
         $('.stat-card').first().prepend(
             `<div id="realtime-clock-display" class="fw-900 text-primary mb-3" style="font-size:1.1rem; letter-spacing:0.5px;"></div>`
         );
     }
-
     setInterval(() => {
         const now = new Date();
         const yyyy = now.getFullYear();
@@ -118,9 +125,10 @@ function loadMySchedule() {
             currentFetchedSchedule = data.flatSchedule || [];
             renderRealSchedule(currentFetchedSchedule);
         })
-        .catch(err => console.error("加载排班失败:", err));
+        .catch(err => console.error("Failed to load schedule:", err));
 }
 
+// 🌟 替换：画出日历实体方块，并注入订单数据供弹窗使用
 function renderRealSchedule(flatSchedule) {
     $('.day-column').empty();
     const START_HOUR = 8;
@@ -139,17 +147,19 @@ function renderRealSchedule(flatSchedule) {
         let cardType = 'card-vacant';
         let title = 'Vacant';
         let displayStatus = slot.timeSlotStatus;
+        let bookingId = slot.bookingId || slot.id; // 获取订单ID
 
         if (slot.timeSlotStatus === 'BOOKED') {
             title = slot.customerUsername || 'Customer';
             displayStatus = slot.bookingStatus || 'BOOKED';
             if (displayStatus === 'PENDING') cardType = 'card-pending';
             if (displayStatus === 'CONFIRMED') cardType = 'card-confirmed';
-            if (displayStatus === 'CANCELED') cardType = 'card-canceled';
+            if (displayStatus === 'CANCELED' || displayStatus === 'CANCELLED') cardType = 'card-canceled';
         }
 
         const cardHtml = `
-            <div class="apt-card ${cardType}" style="top: ${topPx}px; height: ${heightPx}px;" onclick="openAptDetails(${slot.id})">
+            <div class="apt-card ${cardType}" style="top: ${topPx}px; height: ${heightPx}px;" 
+                 onclick="openAptDetails(${bookingId}, '${displayStatus}', '${title}', '${startH}:00 - ${endH}:00')">
                 <div class="apt-title">${title}</div>
                 <div class="apt-time">${startH}:00 - ${endH}:00</div>
                 <div class="apt-status">${displayStatus}</div>
@@ -159,9 +169,83 @@ function renderRealSchedule(flatSchedule) {
     });
 }
 
-function openAptDetails(id) {
-    alert(`详情功能开发中 (Slot ID: ${id})`);
+// 🌟 替换：点击卡片触发高级审批弹窗
+window.openAptDetails = function(bookingId, status, customerName, timeStr) {
+    if (status === 'PENDING') {
+        if ($('#aptActionModal').length === 0) {
+            $('body').append(`
+                <div class="modal fade" id="aptActionModal" tabindex="-1">
+                  <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content rounded-4 border-0 shadow-lg">
+                      <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-800">Booking Request</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                      </div>
+                      <div class="modal-body text-center pb-4 pt-2">
+                        <div class="mb-3 mt-2">
+                            <div class="text-muted small text-uppercase fw-bold">Customer</div>
+                            <h3 class="fw-900 text-primary" id="modal-customer-name">--</h3>
+                        </div>
+                        <div class="mb-4">
+                            <div class="text-muted small text-uppercase fw-bold">Time Slot</div>
+                            <h5 class="fw-bold" id="modal-apt-time">--</h5>
+                        </div>
+                        <div class="d-flex gap-3 mt-4 px-2">
+                            <button class="btn btn-light flex-grow-1 rounded-pill fw-bold text-danger border" id="btn-reject-apt">Reject</button>
+                            <button class="btn btn-primary flex-grow-1 rounded-pill fw-bold" id="btn-confirm-apt">Confirm</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            `);
+        }
+
+        $('#modal-customer-name').text(customerName);
+        $('#modal-apt-time').text(timeStr);
+        $('#aptActionModal').modal('show');
+
+        $('#btn-confirm-apt').off('click').on('click', function() {
+            processApt(bookingId, 'confirm');
+        });
+
+        $('#btn-reject-apt').off('click').on('click', function() {
+            const reason = prompt("Please enter a reason for rejecting this booking:");
+            if (reason !== null) {
+                processApt(bookingId, 'cancel', reason || "Specialist unavailable");
+            }
+        });
+
+    } else {
+        alert(`This time slot is currently [ ${status} ].`);
+    }
 }
+
+// 🌟 新增：处理确认或拒绝的网络请求
+function processApt(bookingId, action, reason = "") {
+    const token = localStorage.getItem('token');
+    const btn = action === 'confirm' ? $('#btn-confirm-apt') : $('#btn-reject-apt');
+    const originalText = btn.text();
+    btn.prop('disabled', true).text('Processing...');
+
+    let url = `${API_BASE}/api/bookings/${action}/${bookingId}`;
+    if (action === 'cancel') url += `?reason=${encodeURIComponent(reason)}`;
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+    }).then(async res => {
+        if(res.ok) {
+            alert(`Booking successfully ${action === 'confirm' ? 'Confirmed' : 'Rejected'}!`);
+            $('#aptActionModal').modal('hide');
+            loadMySchedule();
+        } else {
+            alert("Action failed: " + await res.text());
+        }
+    }).catch(err => alert("Network Error: Make sure backend is running."))
+        .finally(() => btn.prop('disabled', false).text(originalText));
+}
+
 
 let isDrag = false, startH = null, curDay = null;
 let cacheData = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
@@ -173,13 +257,26 @@ function renderBlocks() {
             const col = $(`.drag-col[data-day="${d}"]`);
             const h = (b.e - b.s) * 80;
 
-            // 🌟 重点渲染：如果是锁定的块（24小时内），不给删除按钮，换灰色样式
             if (b.locked) {
-                col.find(`[data-hour="${b.s}"]`).append(`
-                    <div class="drag-block drag-block-locked" style="height:${h-4}px" title="Within 24 hours. Cannot modify.">
-                        <i class="bi bi-lock-fill mb-1"></i>
-                        Locked ${b.s}:00-${b.e}:00
-                    </div>`);
+                if (b.isBooked) {
+                    // 🌟 已经被预约的，根据状态涂上橙色(Pending)或绿色(Confirmed)
+                    let bgClass = 'bg-secondary';
+                    if (b.statusTitle === 'PENDING') bgClass = 'bg-warning';
+                    if (b.statusTitle === 'CONFIRMED') bgClass = 'bg-success';
+
+                    col.find(`[data-hour="${b.s}"]`).append(`
+                        <div class="drag-block ${bgClass} text-white border-0 shadow-sm" style="height:${h-4}px; opacity: 0.95; cursor: not-allowed;" title="Already Booked">
+                            <i class="bi bi-person-check-fill mb-1"></i>
+                            ${b.statusTitle} ${b.s}:00-${b.e}:00
+                        </div>`);
+                } else {
+                    // 过期锁定（浅灰色）
+                    col.find(`[data-hour="${b.s}"]`).append(`
+                        <div class="drag-block drag-block-locked" style="height:${h-4}px" title="Within 24 hours. Cannot modify.">
+                            <i class="bi bi-lock-fill mb-1"></i>
+                            Locked ${b.s}:00-${b.e}:00
+                        </div>`);
+                }
             } else {
                 col.find(`[data-hour="${b.s}"]`).append(`
                     <div class="drag-block" style="height:${h-4}px">
@@ -190,12 +287,10 @@ function renderBlocks() {
         });
     }
 }
-
 window.removeB = function(e, d, i) {
     e.stopPropagation();
     const block = cacheData[d][i];
 
-    // 双保险：如果是锁定状态，坚决不准删
     if (block.locked) return;
 
     if (block.id) {
@@ -220,23 +315,23 @@ window.removeB = function(e, d, i) {
 };
 
 $(document).ready(() => {
-
-    startRealTimeClock(); // 启动时钟
+    startRealTimeClock();
 
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
-    const name = localStorage.getItem('username');
+    const name = localStorage.getItem('username') || 'Specialist';
+
     if(!token || role !== 'SPECIALIST') {
         alert("Authentication failed.");
         window.location.href = 'login.html';
         return;
     }
 
+    // 🌟 动态渲染名字和真实头像
     $('#header-user-name').text(name);
     $('#nav-user-name').text(name);
-    if(!$('#header-avatar').attr('src') || $('#header-avatar').attr('src') === 'images/beauty.png'){
-        $('#header-avatar').attr('src', `https://api.dicebear.com/7.x/initials/svg?seed=${name}`);
-    }
+    $('#header-avatar').attr('src', getAvatar(name));
+    $('#profile-photo-preview').attr('src', getAvatar(name));
 
     loadMySchedule();
 
@@ -255,7 +350,6 @@ $(document).ready(() => {
     $('#start-manage').click(function() {
         const now = new Date();
 
-        // 🌟 规则 1：如果是周日，彻底锁死“本周”！
         if (currentWeekOffset === 0 && now.getDay() === 0) {
             alert("Platform Rules: Today is Sunday. Modifications for this week are locked. Redirecting to Next Week.");
             $('#wb-week-toggle button:eq(1)').click();
@@ -268,28 +362,61 @@ $(document).ready(() => {
 
         $('#wb-calendar-root').addClass('d-none');
         $('#drag-calendar-root').removeClass('d-none');
-        $('#wb-status').text('Manage Mode: DRAG to set slots. (Slots within 24 hours are locked)');
+
+        // 🌟 提示语
+        $('#wb-status').html('Manage Mode: DRAG to set slots. <br><span class="text-primary fw-bold mt-1 d-inline-block" style="font-size: 0.9rem;"><i class="bi bi-lightbulb-fill me-1"></i>Hint: You can only modify the time slots in the white areas.</span>');
 
         cacheData = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
 
-        // 计算 24 小时后的绝对时间戳阈值
         const thresholdTime = now.getTime() + (24 * 60 * 60 * 1000);
 
-        currentFetchedSchedule.forEach(slot => {
-            if (slot.timeSlotStatus === 'AVAILABLE') {
-                const dayKey = getDayFromDate(slot.slotDate, currentWeekDates);
-                const startH = parseInt(slot.startTime.split(':')[0]);
-                const endH = parseInt(slot.endTime.split(':')[0]);
+        // 给过期/24小时内的底图加上灰色类名
+        $('.drag-col').each(function() {
+            const dayKey = $(this).data('day');
+            const targetDateStr = currentWeekDates[dayKey];
 
-                // 🌟 规则 2：判断这块时间是不是在 24 小时内
-                const slotDateTime = new Date(`${slot.slotDate}T${slot.startTime}`).getTime();
-                const isLocked = slotDateTime < thresholdTime;
+            $(this).find('.drag-slot').each(function() {
+                const startH = parseInt($(this).data('hour'));
+                const slotDateTime = new Date(`${targetDateStr}T${String(startH).padStart(2, '0')}:00:00`).getTime();
 
-                if(dayKey) {
-                    cacheData[dayKey].push({ s: startH, e: endH, id: slot.id, locked: isLocked });
+                if (slotDateTime < thresholdTime) {
+                    $(this).addClass('locked-cell');
+                } else {
+                    $(this).removeClass('locked-cell');
                 }
-            }
+            });
         });
+
+        // 把数据库里已经有的排班加载成卡片 (包含预约过的状态)
+        currentFetchedSchedule.forEach(slot => {
+            const dayKey = getDayFromDate(slot.slotDate, currentWeekDates);
+            if (!dayKey) return;
+
+            const startH = parseInt(slot.startTime.split(':')[0]);
+            const endH = parseInt(slot.endTime.split(':')[0]);
+            const slotDateTime = new Date(`${slot.slotDate}T${slot.startTime}`).getTime();
+
+            const isTimeLocked = slotDateTime < thresholdTime;
+            const isBooked = slot.timeSlotStatus === 'BOOKED';
+
+            // 只要时间过期了，或者已经被顾客预约了，就必须死死锁定！
+            const isLocked = isTimeLocked || isBooked;
+
+            let statusTitle = 'VACANT';
+            if (isBooked) {
+                statusTitle = slot.bookingStatus || 'BOOKED';
+            }
+
+            cacheData[dayKey].push({
+                s: startH,
+                e: endH,
+                id: slot.id,
+                locked: isLocked,
+                isBooked: isBooked,
+                statusTitle: statusTitle
+            });
+        });
+
         renderBlocks();
     });
 
@@ -297,7 +424,6 @@ $(document).ready(() => {
         $('#save-all, #cancel-manage').addClass('d-none');
         $('#start-manage').removeClass('d-none');
         $('#wb-week-toggle').removeClass('d-none');
-
         $('#drag-calendar-root').addClass('d-none');
         $('#wb-calendar-root').removeClass('d-none');
         loadMySchedule();
@@ -329,10 +455,7 @@ $(document).ready(() => {
 
         fetch(`${API_BASE}/api/timeslots/publish`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ slots: slotsToPublish })
         })
             .then(async res => {
@@ -344,25 +467,16 @@ $(document).ready(() => {
                     alert("Failed to save: " + text);
                 }
             })
-            .finally(() => {
-                btn.prop('disabled', false).text('Save Changes');
-            });
+            .finally(() => btn.prop('disabled', false).text('Save Changes'));
     });
 
-    // --- 拖拽事件监听 (加入24小时阈值拦截) ---
     $(document).on('mousedown', '#drag-calendar-root .drag-slot', function(e) {
         if ($(e.target).closest('.drag-block').length > 0) return;
+        // 🌟 防错：如果是灰色格子，直接不让点
+        if ($(this).hasClass('locked-cell')) return;
 
-        // 计算当前点击格子的时间
         curDay = $(this).closest('.drag-col').data('day');
         startH = parseInt($(this).data('hour'));
-
-        const dragTimeObj = new Date(`${currentWeekDates[curDay]}T${String(startH).padStart(2, '0')}:00:00`).getTime();
-        const thresholdTime = Date.now() + (24 * 60 * 60 * 1000);
-
-        // 🌟 如果点击的时间在 24 小时内，直接拦截拖拽行为！
-        if (dragTimeObj < thresholdTime) return;
-
         isDrag = true;
         $(this).addClass('selecting');
     });
@@ -375,15 +489,11 @@ $(document).ready(() => {
         const endH = parseInt($(this).data('hour'));
         const [min, max] = [Math.min(startH, endH), Math.max(startH, endH)];
 
-        const thresholdTime = Date.now() + (24 * 60 * 60 * 1000);
-
         col.find('.drag-slot').removeClass('selecting');
         for(let i=min; i<=max; i++) {
             const targetSlot = col.find(`[data-hour="${i}"]`);
-            const slotTimeObj = new Date(`${currentWeekDates[curDay]}T${String(i).padStart(2, '0')}:00:00`).getTime();
-
-            // 🌟 只有24小时后的格子，才允许变蓝被选中
-            if (slotTimeObj >= thresholdTime && targetSlot.find('.drag-block').length === 0) {
+            // 🌟 防错：划过灰色格子时，不能被选中
+            if (!targetSlot.hasClass('locked-cell') && targetSlot.find('.drag-block').length === 0) {
                 targetSlot.addClass('selecting');
             }
         }

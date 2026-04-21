@@ -1,12 +1,15 @@
 USE booking_system;
+
+-- 1. 先关闭外键检查和安全更新
 SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_SAFE_UPDATES = 0;
 
--- 1. 清理旧数据
-DELETE FROM time_slot;
-DELETE FROM specialist_profile;
-DELETE FROM user;
-DELETE FROM expertise_category;
+-- 2. 🌟 核心修复：按顺序用 TRUNCATE 彻底清空数据并重置自增 ID
+TRUNCATE TABLE booking;
+TRUNCATE TABLE time_slot;
+TRUNCATE TABLE specialist_profile;
+TRUNCATE TABLE user;
+TRUNCATE TABLE expertise_category;
 
 -- 第一步：分类
 INSERT INTO expertise_category (id, name, description) VALUES
@@ -29,16 +32,14 @@ INSERT INTO user (id, username, email, password, role, created_at) VALUES
                                                                        (103, 'Sarah_IELTS', 'sarah@expert.com', '$2a$10$PUKIponqAJqaZCWN/kBoIOJT3pf/aRBs5N1Eg9M4F/aGRQw/3bacq', 'SPECIALIST', NOW()),
                                                                        (104, 'Jessica_Design', 'jessica@expert.com', '$2a$10$PUKIponqAJqaZCWN/kBoIOJT3pf/aRBs5N1Eg9M4F/aGRQw/3bacq', 'SPECIALIST', NOW());
 
--- 第三步：档案 (🌟 注意：每行末尾是逗号，最后一行才是分号)
-INSERT INTO specialist_profile
-(id, hourly_fee, level, status, expertise_id, user_id, proposed_expertise_name, real_name, resume)
-VALUES
-    (1, 100.00, 'SENIOR', 'ACTIVE', 3, 1, NULL, '万峰', '资深后端开发专家，精通 Spring Boot。'),
-    (100, 888.00, 'EXPERT', 'ACTIVE', 6, 100, NULL, 'Shaohui Shen', '资深情感博主。如果你说话像人机、根本不会撩妹，那你就该来咨询我了！专治各种“直男发言”，通过极致的逻辑拆解，让你的情商实现降维打击。'),
-    (101, 600.00, 'EXPERT', 'ACTIVE', 5, 101, NULL, 'Xingjian Wu', '深耕企业法务与刑事辩护多年，以客观精准著称。'),
-    (102, 500.00, 'EXPERT', 'ACTIVE', 1, 102, NULL, 'Xinling Du', '资深理财师，擅长二级市场趋势分析与资产配置。'),
-    (103, 350.00, 'SENIOR', 'ACTIVE', 2, 103, NULL, 'Sarah', '前雅思考官，10年教龄。'),
-    (104, 400.00, 'SENIOR', 'ACTIVE', 8, 104, NULL, 'Jessica', '知名设计奖得主，擅长B端交互设计。');
+-- 第三步：档案
+INSERT INTO specialist_profile (id, hourly_fee, level, status, expertise_id, user_id, proposed_expertise_name, real_name, resume) VALUES
+                                                                                                                                      (1, 100.00, 'SENIOR', 'ACTIVE', 3, 1, NULL, '万峰', '资深后端开发专家，精通 Spring Boot。'),
+                                                                                                                                      (100, 888.00, 'EXPERT', 'ACTIVE', 6, 100, NULL, 'Shaohui Shen', '资深情感博主。如果你说话像人机、根本不会撩妹，那你就该来咨询我了！专治各种“直男发言”，通过极致的逻辑拆解，让你的情商实现降维打击。'),
+                                                                                                                                      (101, 600.00, 'EXPERT', 'ACTIVE', 5, 101, NULL, 'Xingjian Wu', '深耕企业法务与刑事辩护多年，以客观精准著称。'),
+                                                                                                                                      (102, 500.00, 'EXPERT', 'ACTIVE', 1, 102, NULL, 'Xinling Du', '资深理财师，擅长二级市场趋势分析与资产配置。'),
+                                                                                                                                      (103, 350.00, 'SENIOR', 'ACTIVE', 2, 103, NULL, 'Sarah', '前雅思考官，10年教龄。'),
+                                                                                                                                      (104, 400.00, 'SENIOR', 'ACTIVE', 8, 104, NULL, 'Jessica', '知名设计奖得主，擅长B端交互设计。');
 
 -- 第四步：排班
 INSERT INTO time_slot (specialist_id, slot_date, start_time, end_time, is_booked, status) VALUES
@@ -46,5 +47,6 @@ INSERT INTO time_slot (specialist_id, slot_date, start_time, end_time, is_booked
                                                                                               (101, '2026-04-22', '2026-04-22 10:00:00', '2026-04-22 11:00:00', 0, 'AVAILABLE'),
                                                                                               (102, '2026-04-22', '2026-04-22 14:00:00', '2026-04-22 15:00:00', 0, 'AVAILABLE');
 
+-- 3. 重新开启检查
 SET FOREIGN_KEY_CHECKS = 1;
 SET SQL_SAFE_UPDATES = 1;
