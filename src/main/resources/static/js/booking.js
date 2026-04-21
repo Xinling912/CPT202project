@@ -25,9 +25,10 @@ function checkLogin() {
 }
 
 function logout() {
-    if(confirm("Logout from SAS?")) {
-        localStorage.clear();
-        window.location.href = 'login.html';
+    if(confirm("Are you sure you want to log out?")) {
+        localStorage.clear(); // 清除 Token
+        // 🌟 跳转回落地页
+        window.location.href = 'landingpage.html';
     }
 }
 
@@ -161,24 +162,91 @@ window.selectSlot = function(slotId) {
 }
 
 $('#confirm-btn').off('click').on('click', function() {
+    // 1. 从详情页抓取当前专家的信息
+    const specName = $('#pName').text();
+    const specProf = $('#pExpertise').text();
+    const avatarSrc = $('#pAvatar').attr('src');
+    const dateStr = $('#display-date').text();
+
+    // 抓取选中的时间段 (比如从 "12:00 - 15:00" 这个卡片上拿文本)
+    const timeStr = $(`#slot-card-${currentSelectedSlotId} .slot-time`).text();
+
+    // 2. 获取费率并计算总价 (假设按你参考图里的 Charon Coin 结算)
+    // 这里的 replace 是为了把 "$888" 提取成数字 888
+    const hourlyFee = parseFloat($('#pRate').text().replace('$', '')) || 0;
+
+    // 简单计算一下时长：提取 12 和 15 算出差值 3 小时
+    let hours = 1;
+    try {
+        const startH = parseInt(timeStr.split('-')[0].trim().split(':')[0]);
+        const endH = parseInt(timeStr.split('-')[1].trim().split(':')[0]);
+        hours = endH - startH;
+    } catch(e) {}
+
+    const totalFee = hourlyFee * hours;
+
+    // 3. 把数据填入杜姐要求的弹窗里
+    $('#confirm-avatar').attr('src', avatarSrc);
+    $('#confirm-spec-name').text(specName);
+    $('#confirm-spec-prof').text(specProf);
+    $('#confirm-date').text(dateStr);
+    $('#confirm-time').text(timeStr);
+    $('#confirm-fee-rate').text(`${hourlyFee} Yuan`);
+    $('#confirm-total-fee').text(`${totalFee} Yuan`);
+
+    // 清空上次留下的备注
+    $('#booking-notes').val('');
+
+    // 4. 弹出收银台！
+    $('#customerConfirmModal').modal('show');
+});
+
+// ==========================================
+// 🌟 第二步：点击橘色按钮，真正发送请求给后端 (含并发处理)
+// ==========================================
+$('#final-submit-booking-btn').off('click').on('click', function() {
     const btn = $(this);
-    btn.prop('disabled', true).html('Processing...');
+    const notes = $('#booking-notes').val().trim() || "Web Booking.";
+
+    // 按钮变灰防止连点
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
 
     fetch(`${API_BASE}/api/bookings/create`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ specialistId: selectedExpertId, slotId: currentSelectedSlotId, notes: "Web Booking." })
-    })
-        .then(async res => {
-            if (res.ok) {
-                alert("Reservation Successful!");
-                handleProtectedView('user-orders-page');
-            } else {
-                const text = await res.text();
-                alert("Failed to book: " + text);
-            }
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            specialistId: selectedExpertId,
+            slotId: currentSelectedSlotId,
+            notes: notes // 把用户填写的备注传给杜姐
         })
-        .finally(() => btn.prop('disabled', false).text('Confirm Reservation'));
+    }).then(async res => {
+        if (res.ok) {
+            // ✅ 杜姐要求：成功后正中央提示，并跳回界面
+            alert("Booking Confirmed Successfully!");
+            $('#customerConfirmModal').modal('hide');
+            handleProtectedView('user-orders-page'); // 跳去订单列表页
+        } else {
+            // ❌ 杜姐要求：并发情况，时段被抢走 (状态码 409)
+            if (res.status === 409) {
+                alert("该时段已被预约 (This time slot is already booked by someone else).");
+                $('#customerConfirmModal').modal('hide');
+                // 刷新时间块，变灰被抢走的格子
+                showSlots($('#display-date').text());
+            } else {
+                // 其他后端错误（比如达到了每月限制等）
+                const errData = await res.json().catch(()=>({}));
+                alert(`Booking Failed: ${errData.message || 'Unknown error'}`);
+            }
+        }
+    }).catch(err => {
+        alert("Network Error: Could not connect to the server.");
+    }).finally(() => {
+        // 恢复橘色按钮状态
+        btn.prop('disabled', false).text('Confirm Booking');
+    });
 });
 
 // --- 5. 加载订单历史 ---
@@ -231,4 +299,85 @@ function showPage(id) {
     $('.page-view').hide();
     $(`#${id}`).fadeIn();
     window.scrollTo(0,0);
+}
+window.openChangePasswordModal = function() {
+    // 1. 如果页面没这个弹窗，就动态插进去 (加入了第三个密码框)
+    if ($('#changePasswordModal').length === 0) {
+        $('body').append(`
+            <div class="modal fade" id="changePasswordModal" tabindex="-1">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0 shadow-lg">
+                  <div class="modal-header border-bottom-0 pb-0 mt-3 px-4">
+                    <h5 class="modal-title fw-800"><i class="bi bi-shield-lock text-primary me-2"></i>Change Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body p-4">
+                    <div class="form-floating mb-3">
+                      <input type="password" class="form-control rounded-4" id="oldPassword" placeholder="Old Password">
+                      <label for="oldPassword">Old Password</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                      <input type="password" class="form-control rounded-4" id="newPassword" placeholder="New Password">
+                      <label for="newPassword">New Password</label>
+                    </div>
+                    <div class="form-floating mb-4">
+                      <input type="password" class="form-control rounded-4" id="confirmNewPassword" placeholder="Confirm New Password">
+                      <label for="confirmNewPassword">Confirm New Password</label>
+                    </div>
+                    <button class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm" id="btn-submit-password">Update Password</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+        `);
+    }
+
+    // 每次打开弹窗前清空输入框
+    $('#oldPassword').val('');
+    $('#newPassword').val('');
+    $('#confirmNewPassword').val(''); // 清空确认框
+    $('#changePasswordModal').modal('show');
+
+    // 绑定提交事件
+    $('#btn-submit-password').off('click').on('click', function() {
+        const oldPw = $('#oldPassword').val();
+        const newPw = $('#newPassword').val();
+        const confirmPw = $('#confirmNewPassword').val();
+
+        // 🌟 校验 1：是否填完
+        if(!oldPw || !newPw || !confirmPw) {
+            alert("Please fill in all fields!");
+            return;
+        }
+
+        // 🌟 校验 2：两次新密码是否一致
+        if(newPw !== confirmPw) {
+            alert("The new passwords do not match. Please try again!");
+            return;
+        }
+
+        const btn = $(this);
+        btn.prop('disabled', true).text('Updating...');
+
+        fetch(`${API_BASE}/api/users/change-password`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw })
+        }).then(async res => {
+            if(res.ok) {
+                alert("Password updated successfully! Please login again with your new password.");
+                $('#changePasswordModal').modal('hide');
+
+                // 🌟 核心修改：不调 logout() 询问，直接清空 Token 并强制踢回 login.html
+                localStorage.clear();
+                window.location.href = 'login.html';
+            } else {
+                alert("Failed to update: " + await res.text());
+            }
+        }).catch(err => alert("Network error! Make sure the backend is running."))
+            .finally(() => btn.prop('disabled', false).text('Update Password'));
+    });
 }

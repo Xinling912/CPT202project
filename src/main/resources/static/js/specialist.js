@@ -39,8 +39,156 @@ function switchTab(tabId, btn = null) {
 function logout() {
     if(confirm("Are you sure you want to log out?")) {
         localStorage.clear();
-        window.location.href = 'login.html';
+        window.location.href = 'landingpage.html';
     }
+}
+
+window.loadSpecialistOrders = function() {
+    const list = $('#specialist-orders-list').empty().append('<p class="text-muted py-4 text-center">Loading orders...</p>');
+
+    fetch(`${API_BASE}/api/bookings/specialist/my-bookings`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+        .then(async res => {
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+        })
+        .then(orders => {
+            list.empty();
+            if(!orders || orders.length === 0) {
+                list.append('<div class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1"></i><p class="mt-2">No bookings found yet.</p></div>');
+                return;
+            }
+            orders.forEach(o => {
+                const timeStr = `${o.timeSlot.slotDate} | ${o.timeSlot.startTime.substring(0,5)} - ${o.timeSlot.endTime.substring(0,5)}`;
+                let statusBadge = o.status === 'CONFIRMED' ? 'text-success' : (o.status === 'CANCELLED' ? 'text-danger' : 'text-warning');
+
+                // 🌟 动态渲染操作按钮
+                let actionHtml = '';
+                if (o.status === 'PENDING') {
+                    actionHtml = `
+                    <div class="mt-3 d-flex gap-2 justify-content-end border-top pt-3">
+                        <button class="btn btn-sm btn-light text-danger border rounded-pill px-4 fw-bold" onclick="handleAptAction(${o.id}, 'cancel', true)">Reject</button>
+                        <button class="btn btn-sm btn-primary rounded-pill px-4 fw-bold" onclick="handleAptAction(${o.id}, 'confirm')">Confirm</button>
+                    </div>
+                `;
+                } else if (o.status === 'CONFIRMED') {
+                    actionHtml = `
+                    <div class="mt-3 d-flex gap-2 justify-content-end border-top pt-3">
+                        <button class="btn btn-sm btn-light text-danger border rounded-pill px-4 fw-bold" onclick="handleAptAction(${o.id}, 'cancel', true)">Cancel</button>
+                        <button class="btn btn-sm btn-success rounded-pill px-4 fw-bold" onclick="handleAptAction(${o.id}, 'complete')">Complete</button>
+                    </div>
+                `;
+                }
+
+                list.append(`
+                <div class="border rounded-4 p-4 mb-3 shadow-sm bg-white">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="${getAvatar(o.customer.username)}" class="rounded-circle" width="50" height="50" style="object-fit:cover;">
+                            <div>
+                                <h5 class="fw-bold mb-1">Customer: <span class="text-primary">${o.customer.username}</span></h5>
+                                <div class="text-muted small"><i class="bi bi-clock me-1"></i>${timeStr}</div>
+                                ${o.notes ? `<div class="small mt-2 bg-light p-2 rounded text-secondary"><i class="bi bi-chat-left-text me-1"></i>Notes: ${o.notes}</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-900 ${statusBadge} mb-1" style="font-size: 1.1rem;">${o.status}</div>
+                            <div class="small text-muted">Order ID: #${o.id}</div>
+                        </div>
+                    </div>
+                    ${actionHtml}
+                </div>
+            `);
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            list.html('<p class="text-danger text-center py-4">Failed to load orders. Please try again.</p>');
+        });
+}
+
+window.openChangePasswordModal = function() {
+    // 1. 如果页面没这个弹窗，就动态插进去 (加入了第三个密码框)
+    if ($('#changePasswordModal').length === 0) {
+        $('body').append(`
+            <div class="modal fade" id="changePasswordModal" tabindex="-1">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0 shadow-lg">
+                  <div class="modal-header border-bottom-0 pb-0 mt-3 px-4">
+                    <h5 class="modal-title fw-800"><i class="bi bi-shield-lock text-primary me-2"></i>Change Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body p-4">
+                    <div class="form-floating mb-3">
+                      <input type="password" class="form-control rounded-4" id="oldPassword" placeholder="Old Password">
+                      <label for="oldPassword">Old Password</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                      <input type="password" class="form-control rounded-4" id="newPassword" placeholder="New Password">
+                      <label for="newPassword">New Password</label>
+                    </div>
+                    <div class="form-floating mb-4">
+                      <input type="password" class="form-control rounded-4" id="confirmNewPassword" placeholder="Confirm New Password">
+                      <label for="confirmNewPassword">Confirm New Password</label>
+                    </div>
+                    <button class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm" id="btn-submit-password">Update Password</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+        `);
+    }
+
+    // 每次打开弹窗前清空输入框
+    $('#oldPassword').val('');
+    $('#newPassword').val('');
+    $('#confirmNewPassword').val(''); // 清空确认框
+    $('#changePasswordModal').modal('show');
+
+    // 绑定提交事件
+    $('#btn-submit-password').off('click').on('click', function() {
+        const oldPw = $('#oldPassword').val();
+        const newPw = $('#newPassword').val();
+        const confirmPw = $('#confirmNewPassword').val();
+
+        // 🌟 校验 1：是否填完
+        if(!oldPw || !newPw || !confirmPw) {
+            alert("Please fill in all fields!");
+            return;
+        }
+
+        // 🌟 校验 2：两次新密码是否一致
+        if(newPw !== confirmPw) {
+            alert("The new passwords do not match. Please try again!");
+            return;
+        }
+
+        const btn = $(this);
+        btn.prop('disabled', true).text('Updating...');
+
+        fetch(`${API_BASE}/api/users/change-password`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw })
+        }).then(async res => {
+            if(res.ok) {
+                alert("Password updated successfully! Please login again with your new password.");
+                $('#changePasswordModal').modal('hide');
+
+                // 🌟 核心修改：不调 logout() 询问，直接清空 Token 并强制踢回 login.html
+                localStorage.clear();
+                window.location.href = 'login.html';
+            } else {
+                alert("Failed to update: " + await res.text());
+            }
+        }).catch(err => alert("Network error! Make sure the backend is running."))
+            .finally(() => btn.prop('disabled', false).text('Update Password'));
+    });
 }
 
 function getWeekDates(offset = 0) {
@@ -69,7 +217,6 @@ function getDayFromDate(dateString, weekDatesObj) {
     return null;
 }
 
-// 启动实时时钟
 function startRealTimeClock() {
     if ($('#realtime-clock-display').length === 0) {
         $('.stat-card').first().prepend(
@@ -128,7 +275,8 @@ function loadMySchedule() {
         .catch(err => console.error("Failed to load schedule:", err));
 }
 
-// 🌟 替换：画出日历实体方块，并注入订单数据供弹窗使用
+// 🌟 修复：渲染日历方块，增加对 DISABLED 状态的支持
+// 🌟 满足需求：把 DISABLED 画成红色的 Cancelled
 function renderRealSchedule(flatSchedule) {
     $('.day-column').empty();
     const START_HOUR = 8;
@@ -147,7 +295,7 @@ function renderRealSchedule(flatSchedule) {
         let cardType = 'card-vacant';
         let title = 'Vacant';
         let displayStatus = slot.timeSlotStatus;
-        let bookingId = slot.bookingId || slot.id; // 获取订单ID
+        let bookingId = slot.bookingId || slot.id;
 
         if (slot.timeSlotStatus === 'BOOKED') {
             title = slot.customerUsername || 'Customer';
@@ -155,11 +303,15 @@ function renderRealSchedule(flatSchedule) {
             if (displayStatus === 'PENDING') cardType = 'card-pending';
             if (displayStatus === 'CONFIRMED') cardType = 'card-confirmed';
             if (displayStatus === 'CANCELED' || displayStatus === 'CANCELLED') cardType = 'card-canceled';
+        } else if (slot.timeSlotStatus === 'DISABLED') {
+            // 🌟 核心魔法：只要是 DISABLED，统统穿上红色的衣服，标上 Cancelled！
+            cardType = 'card-canceled';
+            title = 'Cancelled';
+            displayStatus = 'DISABLED';
         }
 
         const cardHtml = `
-            <div class="apt-card ${cardType}" style="top: ${topPx}px; height: ${heightPx}px;" 
-                 onclick="openAptDetails(${bookingId}, '${displayStatus}', '${title}', '${startH}:00 - ${endH}:00')">
+            <div class="apt-card ${cardType}" style="top: ${topPx}px; height: ${heightPx}px;" onclick="openAptDetails(${bookingId}, '${displayStatus}', '${title}', '${startH}:00 - ${endH}:00')">
                 <div class="apt-title">${title}</div>
                 <div class="apt-time">${startH}:00 - ${endH}:00</div>
                 <div class="apt-status">${displayStatus}</div>
@@ -168,17 +320,15 @@ function renderRealSchedule(flatSchedule) {
         $(`.day-column[data-day="${dayKey}"]`).append(cardHtml);
     });
 }
-
-// 🌟 替换：点击卡片触发高级审批弹窗
 window.openAptDetails = function(bookingId, status, customerName, timeStr) {
-    if (status === 'PENDING') {
+    if (status === 'PENDING' || status === 'CONFIRMED') {
         if ($('#aptActionModal').length === 0) {
             $('body').append(`
                 <div class="modal fade" id="aptActionModal" tabindex="-1">
                   <div class="modal-dialog modal-dialog-centered modal-sm">
                     <div class="modal-content rounded-4 border-0 shadow-lg">
                       <div class="modal-header border-0 pb-0">
-                        <h5 class="modal-title fw-800">Booking Request</h5>
+                        <h5 class="modal-title fw-800">Booking Management</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                       </div>
                       <div class="modal-body text-center pb-4 pt-2">
@@ -190,10 +340,7 @@ window.openAptDetails = function(bookingId, status, customerName, timeStr) {
                             <div class="text-muted small text-uppercase fw-bold">Time Slot</div>
                             <h5 class="fw-bold" id="modal-apt-time">--</h5>
                         </div>
-                        <div class="d-flex gap-3 mt-4 px-2">
-                            <button class="btn btn-light flex-grow-1 rounded-pill fw-bold text-danger border" id="btn-reject-apt">Reject</button>
-                            <button class="btn btn-primary flex-grow-1 rounded-pill fw-bold" id="btn-confirm-apt">Confirm</button>
-                        </div>
+                        <div class="d-flex gap-3 mt-4 px-2" id="modal-action-buttons"></div>
                       </div>
                     </div>
                   </div>
@@ -203,53 +350,59 @@ window.openAptDetails = function(bookingId, status, customerName, timeStr) {
 
         $('#modal-customer-name').text(customerName);
         $('#modal-apt-time').text(timeStr);
+
+        let buttonsHtml = '';
+        if (status === 'PENDING') {
+            buttonsHtml = `
+                <button class="btn btn-light flex-grow-1 rounded-pill fw-bold text-danger border" onclick="handleAptAction(${bookingId}, 'cancel', true)">Reject</button>
+                <button class="btn btn-primary flex-grow-1 rounded-pill fw-bold" onclick="handleAptAction(${bookingId}, 'confirm')">Confirm</button>
+            `;
+        } else if (status === 'CONFIRMED') {
+            buttonsHtml = `
+                <button class="btn btn-light flex-grow-1 rounded-pill fw-bold text-danger border" onclick="handleAptAction(${bookingId}, 'cancel', true)">Cancel</button>
+                <button class="btn btn-success flex-grow-1 rounded-pill fw-bold" onclick="handleAptAction(${bookingId}, 'complete')">Complete</button>
+            `;
+        }
+        $('#modal-action-buttons').html(buttonsHtml);
         $('#aptActionModal').modal('show');
 
-        $('#btn-confirm-apt').off('click').on('click', function() {
-            processApt(bookingId, 'confirm');
-        });
-
-        $('#btn-reject-apt').off('click').on('click', function() {
-            const reason = prompt("Please enter a reason for rejecting this booking:");
-            if (reason !== null) {
-                processApt(bookingId, 'cancel', reason || "Specialist unavailable");
-            }
-        });
-
     } else {
-        alert(`This time slot is currently [ ${status} ].`);
+        alert(`This time slot is currently [ ${status} ]. No further actions available.`);
     }
 }
 
-// 🌟 新增：处理确认或拒绝的网络请求
-function processApt(bookingId, action, reason = "") {
-    const token = localStorage.getItem('token');
-    const btn = action === 'confirm' ? $('#btn-confirm-apt') : $('#btn-reject-apt');
-    const originalText = btn.text();
-    btn.prop('disabled', true).text('Processing...');
+window.handleAptAction = function(bookingId, action, requiresReason = false) {
+    let reason = "";
+    if (requiresReason) {
+        reason = prompt("Please enter a reason for this cancellation/rejection:");
+        if (reason === null) return;
+    }
 
     let url = `${API_BASE}/api/bookings/${action}/${bookingId}`;
-    if (action === 'cancel') url += `?reason=${encodeURIComponent(reason)}`;
+    if (action === 'cancel') url += `?reason=${encodeURIComponent(reason || "Specialist action")}`;
 
     fetch(url, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     }).then(async res => {
         if(res.ok) {
-            alert(`Booking successfully ${action === 'confirm' ? 'Confirmed' : 'Rejected'}!`);
+            alert(`Order successfully updated!`);
             $('#aptActionModal').modal('hide');
+            // 刷新日历数据
             loadMySchedule();
+            // 🌟 如果当前停留在 All Bookings 页面，顺便把列表也刷新一下
+            if ($('#all-bookings').hasClass('active-tab')) {
+                loadSpecialistOrders();
+            }
         } else {
             alert("Action failed: " + await res.text());
         }
-    }).catch(err => alert("Network Error: Make sure backend is running."))
-        .finally(() => btn.prop('disabled', false).text(originalText));
+    }).catch(err => alert("Network Error."));
 }
 
 
 let isDrag = false, startH = null, curDay = null;
 let cacheData = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
-
 function renderBlocks() {
     $('.drag-block').remove();
     for(let d in cacheData) {
@@ -259,7 +412,6 @@ function renderBlocks() {
 
             if (b.locked) {
                 if (b.isBooked) {
-                    // 🌟 已经被预约的，根据状态涂上橙色(Pending)或绿色(Confirmed)
                     let bgClass = 'bg-secondary';
                     if (b.statusTitle === 'PENDING') bgClass = 'bg-warning';
                     if (b.statusTitle === 'CONFIRMED') bgClass = 'bg-success';
@@ -269,8 +421,14 @@ function renderBlocks() {
                             <i class="bi bi-person-check-fill mb-1"></i>
                             ${b.statusTitle} ${b.s}:00-${b.e}:00
                         </div>`);
+                } else if (b.isDisabled) {
+                    // 🌟 核心魔法：使用 Bootstrap 自带的 bg-danger 让它变红！
+                    col.find(`[data-hour="${b.s}"]`).append(`
+                        <div class="drag-block bg-danger text-white border-0 shadow-sm" style="height:${h-4}px; opacity: 0.9; cursor: not-allowed;" title="Cancelled by Specialist">
+                            <i class="bi bi-x-octagon-fill mb-1"></i>
+                            Cancelled ${b.s}:00-${b.e}:00
+                        </div>`);
                 } else {
-                    // 过期锁定（浅灰色）
                     col.find(`[data-hour="${b.s}"]`).append(`
                         <div class="drag-block drag-block-locked" style="height:${h-4}px" title="Within 24 hours. Cannot modify.">
                             <i class="bi bi-lock-fill mb-1"></i>
@@ -327,7 +485,6 @@ $(document).ready(() => {
         return;
     }
 
-    // 🌟 动态渲染名字和真实头像
     $('#header-user-name').text(name);
     $('#nav-user-name').text(name);
     $('#header-avatar').attr('src', getAvatar(name));
@@ -363,14 +520,12 @@ $(document).ready(() => {
         $('#wb-calendar-root').addClass('d-none');
         $('#drag-calendar-root').removeClass('d-none');
 
-        // 🌟 提示语
-        $('#wb-status').html('Manage Mode: DRAG to set slots. <br><span class="text-primary fw-bold mt-1 d-inline-block" style="font-size: 0.9rem;"><i class="bi bi-lightbulb-fill me-1"></i>Hint: You can only modify the time slots in the white areas.</span>');
+        $('#wb-status').html('Manage Mode: DRAG to set slots. <br><div class="text-danger fw-bolder mt-2 d-inline-block px-3 py-2 bg-danger-subtle border border-danger rounded-3 shadow-sm" style="font-size: 1.15rem; letter-spacing: 0.5px;"><i class="bi bi-exclamation-triangle-fill me-2 fs-4 align-middle"></i>IMPORTANT HINT: You can only modify the time slots in the white areas.</div>');
 
         cacheData = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
 
         const thresholdTime = now.getTime() + (24 * 60 * 60 * 1000);
 
-        // 给过期/24小时内的底图加上灰色类名
         $('.drag-col').each(function() {
             const dayKey = $(this).data('day');
             const targetDateStr = currentWeekDates[dayKey];
@@ -387,7 +542,6 @@ $(document).ready(() => {
             });
         });
 
-        // 把数据库里已经有的排班加载成卡片 (包含预约过的状态)
         currentFetchedSchedule.forEach(slot => {
             const dayKey = getDayFromDate(slot.slotDate, currentWeekDates);
             if (!dayKey) return;
@@ -398,14 +552,14 @@ $(document).ready(() => {
 
             const isTimeLocked = slotDateTime < thresholdTime;
             const isBooked = slot.timeSlotStatus === 'BOOKED';
+            const isDisabled = slot.timeSlotStatus === 'DISABLED'; // 🌟 新增判断
 
-            // 只要时间过期了，或者已经被顾客预约了，就必须死死锁定！
-            const isLocked = isTimeLocked || isBooked;
+            // 只要时间过期、被预约、或者被禁用，全部死死锁定！
+            const isLocked = isTimeLocked || isBooked || isDisabled;
 
             let statusTitle = 'VACANT';
-            if (isBooked) {
-                statusTitle = slot.bookingStatus || 'BOOKED';
-            }
+            if (isBooked) statusTitle = slot.bookingStatus || 'BOOKED';
+            if (isDisabled) statusTitle = 'DISABLED'; // 🌟 名字改成 Disabled
 
             cacheData[dayKey].push({
                 s: startH,
@@ -413,6 +567,7 @@ $(document).ready(() => {
                 id: slot.id,
                 locked: isLocked,
                 isBooked: isBooked,
+                isDisabled: isDisabled, // 🌟 传给前端
                 statusTitle: statusTitle
             });
         });
@@ -472,7 +627,6 @@ $(document).ready(() => {
 
     $(document).on('mousedown', '#drag-calendar-root .drag-slot', function(e) {
         if ($(e.target).closest('.drag-block').length > 0) return;
-        // 🌟 防错：如果是灰色格子，直接不让点
         if ($(this).hasClass('locked-cell')) return;
 
         curDay = $(this).closest('.drag-col').data('day');
@@ -492,7 +646,6 @@ $(document).ready(() => {
         col.find('.drag-slot').removeClass('selecting');
         for(let i=min; i<=max; i++) {
             const targetSlot = col.find(`[data-hour="${i}"]`);
-            // 🌟 防错：划过灰色格子时，不能被选中
             if (!targetSlot.hasClass('locked-cell') && targetSlot.find('.drag-block').length === 0) {
                 targetSlot.addClass('selecting');
             }

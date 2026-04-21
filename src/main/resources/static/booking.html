@@ -28,8 +28,8 @@
                     <img id="nav-user-avatar" src="images/carrot.png" class="header-avatar">
                 </div>
                 <div class="dropdown-menu-custom">
-                    <a href="javascript:void(0)" class="dropdown-item-custom">
-                        <i class="bi bi-gear"></i> Settings
+                    <a href="javascript:void(0)" class="dropdown-item-custom" onclick="openChangePasswordModal()">
+                        <i class="bi bi-key"></i> Change Password
                     </a>
                     <hr class="my-2 opacity-50">
                     <a href="javascript:void(0)" class="dropdown-item-custom text-danger" onclick="logout()">
@@ -62,7 +62,7 @@
 
     <div id="profile-page" class="page-view">
         <div class="container">
-            <button class="btn btn-light rounded-pill mb-4 px-4 shadow-sm" onclick="showPage('list-page')">
+            <button class="btn rounded-pill mb-4 px-4 fw-bold shadow-sm" style="background-color: var(--brand-light); color: var(--brand); border: 2px solid var(--brand);" onclick="showPage('list-page')">
                 <i class="bi bi-arrow-left"></i> Back to Search
             </button>
             <div class="row g-5">
@@ -123,6 +123,55 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="customerConfirmModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 p-4 shadow-lg" style="background: #ffffff; box-shadow: 0 25px 50px rgba(0,98,255,0.1) !important;">
+
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                <h4 class="fw-800 text-primary mb-0">Appointment Details</h4>
+                <button type="button" class="btn btn-light btn-sm rounded-circle px-2" data-bs-dismiss="modal" title="Back">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="d-flex align-items-center gap-4 mb-4">
+                <img id="confirm-avatar" src="" width="80" height="80" class="rounded-4 shadow-sm" style="object-fit: cover;">
+                <div>
+                    <h6 class="fw-bold mb-2">Specialist Name: <span id="confirm-spec-name" class="text-dark fw-900"></span></h6>
+                    <small class="text-muted d-block mb-1">Profession: <span id="confirm-spec-prof" class="text-dark fw-bold"></span></small>
+                    <small class="text-muted d-block mb-1">Date: <span id="confirm-date" class="text-dark fw-bold"></span></small>
+                    <small class="text-muted d-block">Time: <span id="confirm-time" class="text-dark fw-bold"></span></small>
+                </div>
+            </div>
+
+            <div class="form-floating mb-4">
+                <textarea class="form-control bg-light border-0 rounded-3" id="booking-notes" style="height: 80px" placeholder="Leave a note..."></textarea>
+                <label class="text-muted"><i class="bi bi-pencil-square me-1"></i>Notes for the specialist</label>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-end mt-2 pt-3 border-top">
+                <div>
+                    <div class="text-muted small mb-1">Consulting fee (/hour): <span id="confirm-fee-rate"></span></div>
+                    <div class="text-danger">
+                        <span class="fw-bold small">Payment Amount: </span>
+                        <span class="fw-900 fs-5" id="confirm-total-fee"></span>
+                    </div>
+                </div>
+                <button class="btn text-white rounded-pill px-4 py-2 fw-bold shadow-sm" id="final-submit-booking-btn" style="background-color: #f97316; border: none;">
+                    Confirm Booking
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
