@@ -14,7 +14,8 @@ import java.util.List;
 //JpaRepository<Booking, Long>：第一个参数实体类名，第二个参数主键的数据类型
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-
+    // 查询该顾客是否在这个时间段有过特定状态的订单（用于查 CANCELLED 拦截刷单）
+    boolean existsByCustomerIdAndTimeSlotIdAndStatus(Long customerId, Long timeSlotId, BookingStatus status);
     List<Booking> findByStatus(BookingStatus status);
 
     // 按照用户ID查询

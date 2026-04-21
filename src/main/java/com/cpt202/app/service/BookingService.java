@@ -82,6 +82,15 @@ public class BookingService {
         }
 
         //6.顾客重复预约效验
+// 6.5 防止恶意刷单：如果该顾客曾经取消过这个时间段，禁止他立即重新预定！
+        // （注意：这里只拦截当前 customer，不拦截其他顾客，完美实现把机会留给别人）
+        boolean hasCancelledBefore = bookingRepository.existsByCustomerIdAndTimeSlotIdAndStatus(
+                customer.getId(), slotId, BookingStatus.CANCELLED);
+
+        if (hasCancelledBefore) {
+            // 抛出我们前端专属定制的错误码！
+            throw new IllegalStateException("ERROR_RECENTLY_CANCELLED");
+        }
         List<BookingStatus> activeStatuses = Arrays.asList(BookingStatus.PENDING, BookingStatus.CONFIRMED);
         boolean alreadyBooked = bookingRepository.existsByCustomerIdAndTimeSlotIdAndStatusIn(
                 customer.getId(), slotId, activeStatuses);
@@ -89,6 +98,10 @@ public class BookingService {
         if (alreadyBooked) {
             throw new IllegalStateException("ERROR_DUPLICATE_BOOKING_AT_SAME_TIME");
         }
+
+
+
+
 
         // 7. 防止专家用自己的账号预约
         if (customer.getId().equals(specialist.getUser().getId())) {

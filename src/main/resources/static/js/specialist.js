@@ -43,6 +43,7 @@ function logout() {
     }
 }
 
+// 🌟 升级：给专家的订单列表加上 Confirm / Reject / Cancel / Complete 按钮 (扁平化 DTO 适配版)
 window.loadSpecialistOrders = function() {
     const list = $('#specialist-orders-list').empty().append('<p class="text-muted py-4 text-center">Loading orders...</p>');
 
@@ -60,9 +61,16 @@ window.loadSpecialistOrders = function() {
                 list.append('<div class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1"></i><p class="mt-2">No bookings found yet.</p></div>');
                 return;
             }
+
             orders.forEach(o => {
-                const timeStr = `${o.timeSlot.slotDate} | ${o.timeSlot.startTime.substring(0,5)} - ${o.timeSlot.endTime.substring(0,5)}`;
-                let statusBadge = o.status === 'CONFIRMED' ? 'text-success' : (o.status === 'CANCELLED' ? 'text-danger' : 'text-warning');
+                // 🌟 核心防雷：兼容所有后端可能返回的名字 (DTO 或 嵌套)
+                const custName = o.customerName || (o.customer && o.customer.username) || 'Customer';
+                const dateStr = o.slotDate || o.date || (o.timeSlot && o.timeSlot.slotDate) || 'Unknown Date';
+                const startStr = o.startTime ? o.startTime.substring(0,5) : (o.timeSlot && o.timeSlot.startTime ? o.timeSlot.startTime.substring(0,5) : '--:--');
+                const endStr = o.endTime ? o.endTime.substring(0,5) : (o.timeSlot && o.timeSlot.endTime ? o.timeSlot.endTime.substring(0,5) : '--:--');
+
+                const timeStr = `${dateStr} | ${startStr} - ${endStr}`;
+                let statusBadge = o.status === 'CONFIRMED' ? 'text-success' : (o.status === 'CANCELLED' || o.status === 'CANCELED' ? 'text-danger' : 'text-warning');
 
                 // 🌟 动态渲染操作按钮
                 let actionHtml = '';
@@ -86,9 +94,9 @@ window.loadSpecialistOrders = function() {
                 <div class="border rounded-4 p-4 mb-3 shadow-sm bg-white">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="d-flex align-items-center gap-3">
-                            <img src="${getAvatar(o.customer.username)}" class="rounded-circle" width="50" height="50" style="object-fit:cover;">
+                            <img src="${getAvatar(custName)}" class="rounded-circle shadow-sm" width="55" height="55" style="object-fit:cover; border: 2px solid var(--brand-light);">
                             <div>
-                                <h5 class="fw-bold mb-1">Customer: <span class="text-primary">${o.customer.username}</span></h5>
+                                <h5 class="fw-bold mb-1">Customer: <span class="text-primary">${custName}</span></h5>
                                 <div class="text-muted small"><i class="bi bi-clock me-1"></i>${timeStr}</div>
                                 ${o.notes ? `<div class="small mt-2 bg-light p-2 rounded text-secondary"><i class="bi bi-chat-left-text me-1"></i>Notes: ${o.notes}</div>` : ''}
                             </div>
@@ -371,6 +379,7 @@ window.openAptDetails = function(bookingId, status, customerName, timeStr) {
     }
 }
 
+// 🌟 优化版：带报错翻译的订单操作逻辑
 window.handleAptAction = function(bookingId, action, requiresReason = false) {
     let reason = "";
     if (requiresReason) {
@@ -388,18 +397,34 @@ window.handleAptAction = function(bookingId, action, requiresReason = false) {
         if(res.ok) {
             alert(`Order successfully updated!`);
             $('#aptActionModal').modal('hide');
-            // 刷新日历数据
             loadMySchedule();
-            // 🌟 如果当前停留在 All Bookings 页面，顺便把列表也刷新一下
             if ($('#all-bookings').hasClass('active-tab')) {
                 loadSpecialistOrders();
             }
         } else {
-            alert("Action failed: " + await res.text());
+            // 🌟 核心优化：解析后端的 JSON 报错，并进行“人性化翻译”
+            const errorText = await res.text();
+            let errorMessage = errorText;
+
+            try {
+                // 尝试把后端的字符串解析成 JSON 对象
+                const errorJson = JSON.parse(errorText);
+                if (errorJson.message) {
+                    errorMessage = errorJson.message;
+                }
+            } catch (e) {} // 如果解析失败，就用原字符串
+
+            // 🎯 针对杜姐特定的错误码，给专家弹大白话提示！
+            if (errorMessage === 'ERROR_BOOKING_NOT_STARTED_YET') {
+                alert("Action Failed: You cannot mark this booking as complete because the appointment time hasn't started yet!");
+            } else if (errorMessage.includes('24 hours')) {
+                alert("Action Failed: Please cancel at least 24 hours in advance.");
+            } else {
+                alert("Action Failed: " + errorMessage); // 兜底提示
+            }
         }
     }).catch(err => alert("Network Error."));
 }
-
 
 let isDrag = false, startH = null, curDay = null;
 let cacheData = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };

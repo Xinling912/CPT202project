@@ -185,7 +185,7 @@ $('#confirm-btn').off('click').on('click', function() {
 
     const totalFee = hourlyFee * hours;
 
-    // 3. 把数据填入杜姐要求的弹窗里
+
     $('#confirm-avatar').attr('src', avatarSrc);
     $('#confirm-spec-name').text(specName);
     $('#confirm-spec-prof').text(specProf);
@@ -201,9 +201,6 @@ $('#confirm-btn').off('click').on('click', function() {
     $('#customerConfirmModal').modal('show');
 });
 
-// ==========================================
-// 🌟 第二步：点击橘色按钮，真正发送请求给后端 (含并发处理)
-// ==========================================
 $('#final-submit-booking-btn').off('click').on('click', function() {
     const btn = $(this);
     const notes = $('#booking-notes').val().trim() || "Web Booking.";
@@ -211,6 +208,7 @@ $('#final-submit-booking-btn').off('click').on('click', function() {
     // 按钮变灰防止连点
     btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
 
+    // 🌟 这里把真正的 Token 和数据带上，后端绝对马上放行！
     fetch(`${API_BASE}/api/bookings/create`, {
         method: 'POST',
         headers: {
@@ -220,77 +218,147 @@ $('#final-submit-booking-btn').off('click').on('click', function() {
         body: JSON.stringify({
             specialistId: selectedExpertId,
             slotId: currentSelectedSlotId,
-            notes: notes // 把用户填写的备注传给杜姐
+            notes: notes
         })
     }).then(async res => {
         if (res.ok) {
-            // ✅ 杜姐要求：成功后正中央提示，并跳回界面
             alert("Booking Confirmed Successfully!");
             $('#customerConfirmModal').modal('hide');
-            handleProtectedView('user-orders-page'); // 跳去订单列表页
+            handleProtectedView('user-orders-page');
         } else {
-            // ❌ 杜姐要求：并发情况，时段被抢走 (状态码 409)
+            // 🌟 获取后端的报错文本
+            const errText = await res.text();
+
             if (res.status === 409) {
-                alert("该时段已被预约 (This time slot is already booked by someone else).");
+                alert("Action Failed: 你不能预定你取消的订单,谢谢.");
                 $('#customerConfirmModal').modal('hide');
-                // 刷新时间块，变灰被抢走的格子
                 showSlots($('#display-date').text());
-            } else {
-                // 其他后端错误（比如达到了每月限制等）
-                const errData = await res.json().catch(()=>({}));
-                alert(`Booking Failed: ${errData.message || 'Unknown error'}`);
+            }
+            // 🌟 核心拦截：捕获 500 数据库重复报错，进行人性化翻译！
+            else if (res.status === 500 && (errText.includes('Duplicate entry') || errText.includes('Constraint'))) {
+                alert("Action Failed: You have recently cancelled an appointment for this time slot. The system does not allow immediate re-booking of the same slot to prevent spam. Please choose another time!");
+                $('#customerConfirmModal').modal('hide');
+            }
+            else {
+                // 尝试解析其他正常的 JSON 报错 (比如每月限购)
+                try {
+                    const errData = JSON.parse(errText);
+                    alert(`Booking Failed: ${errData.message}`);
+                } catch(e) {
+                    alert(`Booking Failed: ${errText}`);
+                }
             }
         }
     }).catch(err => {
         alert("Network Error: Could not connect to the server.");
     }).finally(() => {
-        // 恢复橘色按钮状态
         btn.prop('disabled', false).text('Confirm Booking');
     });
 });
+// --- 5. 顾客端加载订单历史 ---
+window.loadMyOrders = function() {
+    const list = $('#orders-list').empty().append('<p class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Fetching your bookings...</p>');
 
-// --- 5. 加载订单历史 ---
-function loadMyOrders() {
-    const list = $('#orders-list').empty().append('<p class="text-center py-5 text-muted">Fetching your bookings...</p>');
+    fetch(`${API_BASE}/api/bookings/myOrders`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+        .then(async res => {
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+        })
+        .then(orders => {
+            list.empty();
+            if (!orders || orders.length === 0) {
+                list.append('<div class="text-center py-5"><i class="bi bi-inbox fs-1 opacity-25"></i><h4 class="mt-3">No bookings found.</h4></div>');
+                return;
+            }
 
-    $.get(`${API_BASE}/api/bookings/myOrders`, (orders) => {
-        list.empty();
-        if (!orders || orders.length === 0) {
-            list.append('<div class="text-center py-5"><i class="bi bi-inbox fs-1 opacity-25"></i><h4 class="mt-3">No bookings found.</h4></div>');
-            return;
-        }
+            // 🌟 核心探雷针：打印后端传来的原始数据！
+            console.log("后端返回的订单列表(没事帮会看f12的记录一下 不是报错)：", orders);
+            window.currentOrders = orders;
+            orders.forEach(order => {
+                // 解析扁平化数据
+                const expName = order.specialistName || 'Specialist';
+                const dateStr = order.slotDate || order.date || order.timeSlotDate || order.bookingDate || 'Unknown Date';
+                const startStr = order.startTime ? order.startTime.substring(0,5) : '--:--';
+                const endStr = order.endTime ? order.endTime.substring(0,5) : '--:--';
+                const timeString = `${startStr} - ${endStr}`;
 
-        orders.forEach(order => {
-            let statusColor = order.status === 'CONFIRMED' ? 'text-success' : (order.status === 'CANCELLED' ? 'text-danger' : 'text-primary');
-            const expName = order.specialist.user.username;
+                let statusColor = order.status === 'CONFIRMED' ? 'text-success' : (order.status === 'CANCELLED' || order.status === 'CANCELED' ? 'text-danger' : 'text-warning');
 
-            // 🌟 细节 1：拼接完整的起止时间
-            const timeString = `${order.timeSlot.startTime.substring(0,5)} - ${order.timeSlot.endTime.substring(0,5)}`;
 
-            list.append(`
-                <div class="booking-item-card shadow-sm d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-3">
-                        <img src="${getAvatar(expName)}" class="rounded-circle" width="50" height="50" style="object-fit:cover;">
+
+                // ==========================================
+                // ==========================================
+                let actionHtml = `<div class="mt-2 d-flex justify-content-end gap-2">`;
+
+                // 1. 【先写 Cancel】：因为它在 Flex 容器里会靠左显示
+                if (order.status === 'PENDING' || order.status === 'CONFIRMED') {
+                    actionHtml += `<button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" onclick="cancelCustomerOrder(${order.id})">Cancel Order</button>`;
+                }
+
+                // 2. 【后写 View Detail】：因为它在 Flex 容器里会排在右边，也就是最右侧
+                actionHtml += `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" onclick="openOrderDetail(${order.id})">View Detail</button>`;
+
+                actionHtml += `</div>`;
+
+                if (order.status === 'PENDING' || order.status === 'CONFIRMED') {
+                    actionHtml = `<button class="btn btn-sm btn-outline-danger rounded-pill px-3 mt-2 fw-bold" onclick="cancelCustomerOrder(${order.id})">Cancel Order</button>`;
+                }
+
+
+                const notesHtml = order.notes
+                    ? `<div class="small mt-2 bg-light p-2 rounded text-secondary" style="max-width: 400px;">
+                     <i class="bi bi-chat-left-text me-1"></i><span class="fst-italic">${order.notes}</span>
+                   </div>`
+                    : '';
+
+                list.append(`
+                <div class="booking-item-card shadow-sm d-flex justify-content-between align-items-start p-4 mb-3 border rounded-4 bg-white">
+                    <div class="d-flex align-items-start gap-3">
+                        <img src="${getAvatar(expName)}" class="rounded-circle shadow-sm" width="55" height="55" style="object-fit:cover; border: 2px solid var(--brand-light);">
                         <div>
-                            <h5 class="fw-800 mb-0">${expName}</h5>
-                            <small class="text-muted"><i class="bi bi-calendar-event me-1"></i>${order.timeSlot.slotDate}</small>
-                            <small class="text-muted ms-3"><i class="bi bi-clock me-1"></i>${timeString}</small>
+                            <h5 class="fw-800 mb-1">${expName}</h5>
+                            <div class="mb-1">
+                                <small class="text-muted"><i class="bi bi-calendar-event me-1"></i>${dateStr}</small>
+                                <small class="text-muted ms-3"><i class="bi bi-clock me-1"></i>${timeString}</small>
+                            </div>
+                            ${notesHtml}
                         </div>
                     </div>
                     
                     <div class="text-end d-flex flex-column align-items-end">
-                        <div class="fw-bold ${statusColor} mb-1">${order.status}</div>
-                        <small class="text-muted mb-2">Order ID: #${order.id}</small>
-                        <button class="btn btn-sm btn-outline-dark rounded-pill px-3" style="font-size: 0.8rem; font-weight: 700;" onclick="openOrderDetail(${order.id})">
-                            View Detail
-                        </button>
+                        <div class="fw-900 ${statusColor} mb-1" style="font-size: 1.1rem;">${order.status}</div>
+                        <small class="text-muted mb-1">Order ID: #${order.id}</small>
+                        ${actionHtml}
                     </div>
                 </div>`);
+            });
+        })
+        .catch(err => {
+            list.html(`<div class="text-center text-danger py-5"><h5 class="mt-3">Failed to load orders</h5><p class="small text-muted">${err.message}</p></div>`);
         });
-    });
 }
 
-// 🌟 细节 3：详情功能的占位函数 (先弹个窗，以后咱们再慢慢往里面加具体的模态框)
+window.cancelCustomerOrder = function(orderId) {
+    const reason = prompt("Please enter a reason for cancelling your appointment:");
+    if (reason === null) return;
+
+    fetch(`${API_BASE}/api/bookings/cancel/${orderId}?reason=${encodeURIComponent(reason || "Customer cancelled")}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    }).then(async res => {
+        if(res.ok) {
+            alert("Order cancelled successfully!");
+            loadMyOrders();
+        } else {
+            alert("Failed to cancel: " + await res.text());
+        }
+    }).catch(err => alert("Network Error."));
+}
+
+
 window.openOrderDetail = function(orderId) {
     alert(`Loading details for Order #${orderId}...\n\n(Detail feature is under development!)`);
 }
@@ -301,7 +369,7 @@ function showPage(id) {
     window.scrollTo(0,0);
 }
 window.openChangePasswordModal = function() {
-    // 1. 如果页面没这个弹窗，就动态插进去 (加入了第三个密码框)
+
     if ($('#changePasswordModal').length === 0) {
         $('body').append(`
             <div class="modal fade" id="changePasswordModal" tabindex="-1">
@@ -332,25 +400,25 @@ window.openChangePasswordModal = function() {
         `);
     }
 
-    // 每次打开弹窗前清空输入框
+
     $('#oldPassword').val('');
     $('#newPassword').val('');
-    $('#confirmNewPassword').val(''); // 清空确认框
+    $('#confirmNewPassword').val('');
     $('#changePasswordModal').modal('show');
 
-    // 绑定提交事件
+
     $('#btn-submit-password').off('click').on('click', function() {
         const oldPw = $('#oldPassword').val();
         const newPw = $('#newPassword').val();
         const confirmPw = $('#confirmNewPassword').val();
 
-        // 🌟 校验 1：是否填完
+
         if(!oldPw || !newPw || !confirmPw) {
             alert("Please fill in all fields!");
             return;
         }
 
-        // 🌟 校验 2：两次新密码是否一致
+
         if(newPw !== confirmPw) {
             alert("The new passwords do not match. Please try again!");
             return;
