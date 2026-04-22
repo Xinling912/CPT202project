@@ -35,7 +35,7 @@ INSERT INTO user (id, username, email, password, role, created_at) VALUES
 -- 第三步：档案
 INSERT INTO specialist_profile (id, hourly_fee, level, status, expertise_id, user_id, proposed_expertise_name, real_name, resume) VALUES
                                                                                                                                       (1, 10.00, 'SENIOR', 'ACTIVE', 3, 1, NULL, '万峰', '资深后端开发专家，精通 Spring Boot。'),
-                                                                                                                                      (100, 88.00, 'EXPERT', 'ACTIVE', 6, 100, NULL, 'Shaohui Shen', '资深情感博主。如果你说话像人机、根本不会撩妹，那你就该来咨询我了！专治各种“直男发言”，通过极致的逻辑拆解，让你的情商实现降维打击。'),
+                                                                                                                                      (100, 0.88, 'EXPERT', 'ACTIVE', 6, 100, NULL, 'Shaohui Shen', '资深情感博主。如果你说话像人机、根本不会撩妹，那你就该来咨询我了！专治各种“直男发言”，通过极致的逻辑拆解，让你的情商实现降维打击。'),
                                                                                                                                       (101, 60.00, 'EXPERT', 'ACTIVE', 5, 101, NULL, 'Xingjian Wu', '深耕企业法务与刑事辩护多年，以客观精准著称。'),
                                                                                                                                       (102, 698.00, 'EXPERT', 'ACTIVE', 1, 102, NULL, 'Xinling Du', 'Hello,大家好,我是杜馨玲,全国十佳歌手之一,四川德阳歌坛领域的一姐,同时也是一名在读计算机学生.如果你有任何关于music的问题,call me就对了.'),
                                                                                                                                       (103, 35.00, 'SENIOR', 'ACTIVE', 2, 103, NULL, 'Sarah', '前雅思考官，10年教龄。'),
