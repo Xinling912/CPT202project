@@ -2,10 +2,12 @@ package com.cpt202.app.repository;
 
 import com.cpt202.app.model.Booking;
 import com.cpt202.app.model.BookingStatus;
-import com.cpt202.app.model.SpecialistProfile;
-import com.cpt202.app.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import java.math.BigDecimal;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,5 +41,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     // 根据专家的 ID 和 订单状态 查询所有有效订单
     List<Booking> findBySpecialistIdAndStatusIn(Long specialistId, List<BookingStatus> statuses);
+
+    // 累加专家已完成订单的总金额
+    @Query("SELECT COALESCE(SUM(b.totalAmount), 0) FROM Booking b " +
+            "WHERE b.specialist.id = :specialistId AND b.status = :status")
+    BigDecimal sumTotalAmountBySpecialistIdAndStatus(
+            @Param("specialistId") Long specialistId,
+            @Param("status") BookingStatus status
+    );
 
 }

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Optional;
 
 @Service
@@ -21,6 +22,8 @@ public class SpecialistService {
     private ExpertiseCategoryRepository expertiseRepository;
     @Autowired
     private SpecialistProfileEditRequestRepository editRequestRepository;
+    @Autowired
+    private BookingRepository bookingRepository;
 
     public record SpecialistApplyRequest(
             String realName, // 真实姓名
@@ -97,6 +100,33 @@ public class SpecialistService {
             }
         } else {
             throw new RuntimeException("必须选择一个专业或填写自定义专业");
+
+
         }
+    }
+    // ========== 新增：获取专家累计总收入 ==========
+    /**
+     * 获取专家累计总收入（所有已完成订单的金额总和）
+     * @param username 专家账号的用户名
+     * @return 累计总收入，保留两位小数
+     */
+    public BigDecimal getTotalEarnings(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+        // 建议添加：角色校验
+        if (user.getRole() != UserRole.SPECIALIST) {
+            throw new RuntimeException("只有专家可以查看收入");
+        }
+
+        SpecialistProfile profile = profileRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("专家档案不存在"));
+
+        BigDecimal earnings = bookingRepository.sumTotalAmountBySpecialistIdAndStatus(
+                profile.getId(),
+                BookingStatus.COMPLETED
+        );
+
+        return earnings.setScale(2, RoundingMode.HALF_UP);
     }
 }

@@ -8,6 +8,7 @@ import com.cpt202.app.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import org.springframework.scheduling.annotation.Scheduled;
 
 
@@ -47,9 +48,9 @@ public class BookingService {
             String startTime,
             String endTime,
             String status,
-            String notes
+            String notes,
+            BigDecimal totalAmount
     ) {}
-
 
     @Transactional(rollbackFor = Exception.class)
     public BookingResponse createBooking(String email, Long specialistId, Long slotId, String notes) {
@@ -100,9 +101,6 @@ public class BookingService {
         }
 
 
-
-
-
         // 7. 防止专家用自己的账号预约
         if (customer.getId().equals(specialist.getUser().getId())) {
             throw new IllegalStateException("You cannot book your own service.");
@@ -119,7 +117,18 @@ public class BookingService {
         booking.setTimeSlot(slot);
         booking.setStatus(BookingStatus.PENDING);
         booking.setNotes(notes);
-        booking.setTotalAmount(specialist.getHourlyFee());
+         //计算总金额
+        // 计算时间段的小时数
+        long hours = java.time.Duration.between(slot.getStartTime(), slot.getEndTime()).toHours();
+        // 如果小时数为0（比如时间段不足1小时），至少按1小时计算
+        if (hours <= 0) {
+            hours = 1;
+        }
+        // 计算总金额 = 时薪 × 小时数
+        BigDecimal totalAmount = specialist.getHourlyFee()
+                .multiply(BigDecimal.valueOf(hours))
+                .setScale(2, java.math.RoundingMode.HALF_UP);
+        booking.setTotalAmount(totalAmount);
 
         //10.添加日志
         log.info("Booking created successfully. BookingId: {}, Customer: {}", booking.getId(), customer.getUsername());
@@ -332,14 +341,15 @@ public class BookingService {
     // 私有辅助方法：专门用来“瘦身”数据
     private BookingResponse convertToResponse(Booking b) {
         return new BookingResponse(
-                b.getId(),                                  // 1. id
-                b.getCustomer().getUsername(),              // 2. customerName
-                b.getSpecialist().getUser().getUsername(),  // 3. specialistName
-                b.getTimeSlot().getSlotDate().toString(),   // 4. date
-                b.getTimeSlot().getStartTime().toString(),  // 5. startTime (补全)
-                b.getTimeSlot().getEndTime().toString(),    // 6. endTime   (补全)
-                b.getStatus().toString(),                   // 7. status    (补全)
-                b.getNotes()                                // 8. notes     (补全)
+                b.getId(),
+                b.getCustomer().getUsername(),
+                b.getSpecialist().getUser().getUsername(),
+                b.getTimeSlot().getSlotDate().toString(),
+                b.getTimeSlot().getStartTime().toString(),
+                b.getTimeSlot().getEndTime().toString(),
+                b.getStatus().toString(),
+                b.getNotes(),
+                b.getTotalAmount() // <--- 确保加上这个
         );
     }
 

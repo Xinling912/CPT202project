@@ -1,11 +1,13 @@
 package com.cpt202.app.controller;
 
+import com.cpt202.app.repository.UserRepository;
 import com.cpt202.app.service.SpecialistService;
 import com.cpt202.app.service.SpecialistService.SpecialistApplyRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.cpt202.app.model.*;
 import com.cpt202.app.repository.ExpertiseCategoryRepository;
 import com.cpt202.app.repository.SpecialistProfileRepository;
+import com.cpt202.app.repository.UserRepository;
 import com.cpt202.app.repository.TimeSlotRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/specialists")
@@ -35,15 +38,18 @@ public class SpecialistController {
     private final SpecialistProfileRepository specialistRepository;
     private final TimeSlotRepository timeSlotRepository;
     private final ExpertiseCategoryRepository expertiseCategoryRepository;
+    private final UserRepository userRepository;
 
     public SpecialistController(
             SpecialistProfileRepository specialistRepository,
             TimeSlotRepository timeSlotRepository,
-            ExpertiseCategoryRepository expertiseCategoryRepository
+            ExpertiseCategoryRepository expertiseCategoryRepository,
+            UserRepository userRepository
     ) {
         this.specialistRepository = specialistRepository;
         this.timeSlotRepository = timeSlotRepository;
         this.expertiseCategoryRepository = expertiseCategoryRepository;
+        this.userRepository=userRepository;
     }
 
     /**
@@ -171,4 +177,35 @@ public class SpecialistController {
             return ResponseEntity.badRequest().body(Map.of("error", "提交失败: " + e.getMessage()));
         }
     }
+    /**
+     * 获取专家累计总收入
+     */
+    @GetMapping("/earnings")
+    public ResponseEntity<Map<String, Object>> getTotalEarnings(Authentication auth) {
+        try {
+            String username = auth.getName();
+
+            // 1. 获取用户信息并校验角色
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+            if (user.getRole() != UserRole.SPECIALIST) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "只有专家可以查看收入"));
+            }
+
+            // 2. 获取收入
+            BigDecimal earnings = specialistService.getTotalEarnings(username);
+
+            return ResponseEntity.ok(Map.of(
+                    "totalEarnings", earnings,
+                    "currency", "CNY"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
+
 }
