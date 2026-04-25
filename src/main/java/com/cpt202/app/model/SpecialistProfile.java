@@ -16,7 +16,7 @@ public class SpecialistProfile {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "expertise_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "expertise_id", referencedColumnName = "id", nullable = true)
     private ExpertiseCategory expertise;
 
     @Enumerated(EnumType.STRING)
