@@ -54,8 +54,8 @@
             </div>
 
             <div class="custom-dropdown-menu">
-                <a class="dropdown-item" onclick="switchTab('profile')">
-                    <i class="bi bi-person me-3 fs-5"></i>Personal Profile
+                <a class="dropdown-item" onclick="document.querySelector('button[onclick*=\'profile\']').click();">
+                    <i class="bi bi-person-vcard me-3 fs-5"></i>Professional Profile
                 </a>
                 <a class="dropdown-item" onclick="openChangePasswordModal()">
                     <i class="bi bi-shield-lock me-3 fs-5"></i>Security Settings
@@ -133,26 +133,93 @@
     </section>
 
     <section id="profile" class="tab-content">
-        <div class="row g-4">
-            <div class="col-lg-8">
-                <div class="stat-card">
-                    <h4 class="fw-800 mb-4">Professional Profile</h4>
-                    <form id="profile-form">
-                        <div class="d-flex align-items-center gap-4 mb-4 pb-4 border-bottom">
-                            <div class="position-relative profile-photo-wrapper cursor-pointer shadow-sm" id="profile-photo-btn">
-                                <img src="images/beauty.png" id="profile-photo-preview" alt="Profile">
-                                <div class="photo-overlay"><i class="bi bi-camera-fill fs-3"></i></div>
-                                <input type="file" id="profile-photo-input" class="d-none" accept="image/*">
-                            </div>
-                            <div>
-                                <h6 class="fw-800 mb-1">Profile Photo</h6>
-                                <p class="text-muted small mb-0">Upload a professional headshot.</p>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-primary rounded-pill px-5 fw-bold" id="save-profile-btn">Save Profile</button>
-                    </form>
+        <div class="bg-white rounded-4 shadow-sm p-5 w-100">
+            <h3 class="fw-900 mb-4 pb-3 border-bottom text-dark">Professional Profile</h3>
+
+            <div id="profile-display-mode">
+                <div class="d-flex flex-column flex-md-row align-items-md-center gap-5 mb-5 mt-4">
+                    <div class="text-center">
+                        <img id="display-photo" src="images/beauty.png" class="rounded-circle shadow" width="160" height="160" style="object-fit: cover; border: 4px solid var(--bs-primary);">
+                    </div>
+                    <div>
+                        <h1 class="fw-900 mb-2 text-dark" id="display-name" style="font-size: 2.5rem;">申少辉</h1>
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-bold mb-3 fs-6">Verified Specialist</span>
+                        <p class="text-muted fs-5 mb-0"><i class="bi bi-tag-fill me-2"></i><span id="display-category">金融理财</span></p>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <h5 class="fw-bold text-muted mb-3"><i class="bi bi-person-lines-fill me-2"></i>About Me</h5>
+                    <div class="p-4 bg-light rounded-4">
+                        <p id="display-resume" class="text-dark fs-5 mb-0" style="line-height: 1.8;">
+                            手握日月摘星辰，世间无我这般人。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mb-5 d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="fw-bold text-muted mb-2"><i class="bi bi-cash-coin me-2"></i>Hourly Rate</h5>
+                        <p class="text-primary fw-900 mb-0" style="font-size: 2.5rem;">$<span id="display-fee">9999.00</span> <span class="fs-5 fw-normal text-muted">/ hr</span></p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-outline-primary btn-lg rounded-pill px-5 fw-bold" onclick="toggleProfileEdit()">
+                            <i class="bi bi-pencil-square me-2"></i>Change Profile
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <div id="profile-edit-mode" class="d-none">
+                <form id="profile-form">
+                    <div class="d-flex align-items-center gap-4 mb-4 pb-4 border-bottom">
+                        <div class="position-relative profile-photo-wrapper cursor-pointer shadow-sm" id="profile-photo-btn">
+                            <img src="images/beauty.png" id="profile-photo-preview" alt="Profile" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;">
+                            <div class="photo-overlay" style="border-radius: 50%;"><i class="bi bi-camera-fill fs-3 text-white"></i></div>
+                            <input type="file" id="profile-photo-input" class="d-none" accept="image/*">
+                        </div>
+                        <div>
+                            <h5 class="fw-800 mb-1">Profile Photo</h5>
+                            <p class="text-muted mb-0">Click the image to upload a new professional headshot.</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4 g-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold fs-5">Full Name</label>
+                            <input type="text" class="form-control form-control-lg bg-light" id="edit-name" value="申少辉">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold fs-5">Expertise Category</label>
+                            <select class="form-select form-select-lg bg-light fw-bold text-secondary" id="edit-category">
+                                <option value="金融理财" selected>金融理财</option>
+                                <option value="雅思外语">雅思外语</option>
+                                <option value="后端开发">后端开发</option>
+                                <option value="职场咨询">职场咨询</option>
+                                <option value="法律服务">法律服务</option>
+                                <option value="心理健康">心理健康</option>
+                                <option value="艺术设计">艺术设计</option>
+                                <option value="算法竞赛">算法竞赛</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold fs-5">Hourly Rate ($)</label>
+                            <input type="number" class="form-control form-control-lg bg-light" id="edit-fee" value="9999.00">
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="form-label fw-bold fs-5">Professional Resume</label>
+                        <textarea class="form-control bg-light fs-5" id="edit-resume" rows="6" style="line-height: 1.8;">手握日月摘星辰，世间无我这般人。</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-3 mt-4">
+                        <button type="button" class="btn btn-light btn-lg rounded-pill px-5 fw-bold border" onclick="toggleProfileEdit()">Cancel</button>
+                        <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold" id="save-profile-btn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+
         </div>
     </section>
 
@@ -168,6 +235,67 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/specialist.js"></script>
+
+<script>
+    // 切换展示模式和编辑模式
+    function toggleProfileEdit() {
+        $('#profile-display-mode').toggleClass('d-none');
+        $('#profile-edit-mode').toggleClass('d-none');
+    }
+
+    $(document).ready(function() {
+        // 用于临时存储用户上传的图片数据（Base64格式）
+        let uploadedImageSrc = null;
+
+       // 1. 点击头像包裹区域时，触发隐藏的 file input
+        $('#profile-photo-btn').on('click', function(e) {
+            // 🌟 核心修复：如果事件的目标不是 input 本身，才去触发 click。打破无限冒泡的死循环！
+            if (e.target.id !== 'profile-photo-input') {
+                $('#profile-photo-input').click();
+            }
+        });
+        // 2. 监听文件选择事件，实现本地实时预览
+        $('#profile-photo-input').on('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // 拿到本地图片的地址，更新【编辑模式】下的头像预览
+                    uploadedImageSrc = e.target.result;
+                    $('#profile-photo-preview').attr('src', uploadedImageSrc);
+                };
+                reader.readAsDataURL(file); // 读取本地文件
+            }
+        });
+
+        // 3. 保存按钮逻辑
+        $('#save-profile-btn').on('click', function() {
+            // 抓取文字内容
+            const newName = $('#edit-name').val();
+            const newCategory = $('#edit-category').val();
+            const newFee = $('#edit-fee').val();
+            const newResume = $('#edit-resume').val();
+
+            // 更新文字到展示页
+            $('#display-name').text(newName);
+            $('#display-category').text(newCategory);
+            if(newFee) {
+                $('#display-fee').text(parseFloat(newFee).toFixed(2));
+            }
+            $('#display-resume').text(newResume);
+
+            // 🌟 核心：如果用户上传了新图片，更新主页大图和右上角小图
+            if (uploadedImageSrc) {
+                $('#display-photo').attr('src', uploadedImageSrc);
+                $('#header-avatar').attr('src', uploadedImageSrc);
+            }
+
+            // 切回展示模式
+            toggleProfileEdit();
+            alert("个人资料修改成功！");
+        });
+    });
+</script>
 
 </body>
 </html>
