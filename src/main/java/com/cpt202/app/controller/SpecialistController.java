@@ -206,6 +206,32 @@ public class SpecialistController {
         }
     }
 
+    /**
+     * 获取当前登录专家的个人信息（用于专家端“我的资料”页面）
+     */
+    @GetMapping("/profile")
+    public ResponseEntity<?> getMyProfile(Authentication authentication) {
+        try {
+            String username = authentication.getName();
 
+            // 1. 获取用户信息并校验角色
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+            if (user.getRole() != UserRole.SPECIALIST) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "只有专家可以查看自己的资料"));
+            }
+
+            // 2. 获取专家档案
+            SpecialistProfile profile = specialistRepository.findByUser(user)
+                    .orElseThrow(() -> new RuntimeException("未找到专家档案，请先提交专家申请"));
+
+            return ResponseEntity.ok(Map.of("data", profile));
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
 }
