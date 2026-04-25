@@ -1,9 +1,6 @@
 package com.cpt202.app.controller;
 
-import com.cpt202.app.model.SpecialistProfile;
-import com.cpt202.app.model.SpecialistProfileEditRequest;
-import com.cpt202.app.model.SpecialistProfileEditStatus;
-import com.cpt202.app.model.SpecialistStatus;
+import com.cpt202.app.model.*;
 import com.cpt202.app.repository.SpecialistProfileEditRequestRepository;
 import com.cpt202.app.repository.SpecialistProfileRepository;
 import com.cpt202.app.service.AdminService;
@@ -15,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -113,18 +111,56 @@ public class AdminController {
         }
     }
     // ==========================================
-    // 3. 专家大盘管理接口 (封停 / 激活)
+    // 3. 专家账号管理接口 (封停 / 激活)
     // ==========================================
 
     /**
-     * 获取所有【已通过审核的专家】（包含 ACTIVE 和 INACTIVE），用于在调整页面展示
+     * 获取所有【已通过审核的专家】（包含 ACTIVE 和 INACTIVE），用于在调整页面
+     * 展示支持：搜索（用户名/真实姓名/专业名）+ 专业筛选 + 等级筛选
      */
     @GetMapping("/specialists")
-    public ResponseEntity<?> getAllExistingSpecialists() {
+    public ResponseEntity<?> getAllExistingSpecialists(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long expertiseId,
+            @RequestParam(required = false) SpecialistLevel level) {
+
         // 获取所有专家，但过滤掉还在审核中(PENDING)或被拒绝的，只留正式专家
         List<SpecialistProfile> existingProfiles = profileRepository.findAll().stream()
                 .filter(p -> p.getStatus() == SpecialistStatus.ACTIVE || p.getStatus() == SpecialistStatus.INACTIVE)
-                .toList();
+                .collect(Collectors.toList());
+
+        // 1. 按专业筛选
+        if (expertiseId != null) {
+            existingProfiles = existingProfiles.stream()
+                    .filter(p -> p.getExpertise() != null && p.getExpertise().getId().equals(expertiseId))
+                    .collect(Collectors.toList());
+        }
+
+        // 2. 按等级筛选
+        if (level != null) {
+            existingProfiles = existingProfiles.stream()
+                    .filter(p -> p.getLevel() == level)
+                    .collect(Collectors.toList());
+        }
+
+        // 3. 按关键词搜索（用户名 / 真实姓名 / 专业名）
+        if (keyword != null && !keyword.isBlank()) {
+            String lowerKeyword = keyword.toLowerCase().trim();
+            existingProfiles = existingProfiles.stream()
+                    .filter(p ->
+                            // 按用户名搜索
+                            (p.getUser().getUsername() != null &&
+                                    p.getUser().getUsername().toLowerCase().contains(lowerKeyword)) ||
+                                    // 按真实姓名搜索
+                                    (p.getRealName() != null &&
+                                            p.getRealName().toLowerCase().contains(lowerKeyword)) ||
+                                    // 按专业名称搜索
+                                    (p.getExpertise() != null &&
+                                            p.getExpertise().getName().toLowerCase().contains(lowerKeyword))
+                    )
+                    .collect(Collectors.toList());
+        }
+
         return ResponseEntity.ok(Map.of("data", existingProfiles));
     }
 

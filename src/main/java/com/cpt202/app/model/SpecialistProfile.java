@@ -30,21 +30,19 @@ public class SpecialistProfile {
     @Column(length = 20, nullable = false)
     private SpecialistStatus status;
 
-    // --- 核心修复：添加 resume 字段 ---
+
     @Column(columnDefinition = "TEXT") // 指定为 TEXT 类型，匹配数据库
     private String resume;
-    // ------------------------------
 
-    // --- 🌟 1. 补上真实姓名（SpecialistService 报错需要它） ---
+
     @Column(name = "real_name", length = 100)
     private String realName;
 
-    // --- 🌟 2. 补上申请时的建议专业名（AdminService 报错需要它） ---
+
     @Column(name = "proposed_expertise_name", length = 100)
     private String proposedExpertiseName;
 
 
-// --- 🌟 补上对应的 Getter 和 Setter 方法 ---
 
     public String getRealName() {
         return realName;
@@ -109,7 +107,6 @@ public class SpecialistProfile {
         this.status = status;
     }
 
-    // --- 核心修复：添加 resume 的 Getter 和 Setter ---
     public String getResume() {
         return resume;
     }
