@@ -48,6 +48,6 @@ INSERT INTO time_slot (specialist_id, slot_date, start_time, end_time, is_booked
                                                                                               (101, '2026-04-22', '2026-04-22 10:00:00', '2026-04-22 11:00:00', 0, 'AVAILABLE'),
                                                                                               (102, '2026-04-22', '2026-04-22 14:00:00', '2026-04-22 15:00:00', 0, 'AVAILABLE');
 
--- 3. 重新开启检查
+-- 3. 重新开启检查1
 SET FOREIGN_KEY_CHECKS = 1;
 SET SQL_SAFE_UPDATES = 1;
