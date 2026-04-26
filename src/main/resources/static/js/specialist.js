@@ -8,7 +8,6 @@ let currentWeekOffset = 0;
 let currentWeekDates = {};
 let currentFetchedSchedule = [];
 
-
 function getAvatar(username) {
     if (username === 'ShenShaohui' || username === 'Shaohui Shen') return `images/ssh.jpg`;
     if (username === 'XingjianWu' || username === 'Xingjian Wu') return `images/specialist1.png`;
@@ -46,7 +45,6 @@ function logout() {
     }
 }
 
-
 window.loadSpecialistOrders = function() {
     const list = $('#specialist-orders-list').empty().append('<p class="text-muted py-4 text-center">Loading orders...</p>');
 
@@ -66,7 +64,6 @@ window.loadSpecialistOrders = function() {
             }
 
             orders.forEach(o => {
-                // 🌟 核心防雷：兼容所有后端可能返回的名字 (DTO 或 嵌套)
                 const custName = o.customerName || (o.customer && o.customer.username) || 'Customer';
                 const dateStr = o.slotDate || o.date || (o.timeSlot && o.timeSlot.slotDate) || 'Unknown Date';
                 const startStr = o.startTime ? o.startTime.substring(0,5) : (o.timeSlot && o.timeSlot.startTime ? o.timeSlot.startTime.substring(0,5) : '--:--');
@@ -75,7 +72,6 @@ window.loadSpecialistOrders = function() {
                 const timeStr = `${dateStr} | ${startStr} - ${endStr}`;
                 let statusBadge = o.status === 'CONFIRMED' ? 'text-success' : (o.status === 'CANCELLED' || o.status === 'CANCELED' ? 'text-danger' : 'text-warning');
 
-                // 🌟 动态渲染操作按钮
                 let actionHtml = '';
                 if (o.status === 'PENDING') {
                     actionHtml = `
@@ -121,7 +117,6 @@ window.loadSpecialistOrders = function() {
 }
 
 window.openChangePasswordModal = function() {
-
     if ($('#changePasswordModal').length === 0) {
         $('body').append(`
             <div class="modal fade" id="changePasswordModal" tabindex="-1">
@@ -152,25 +147,21 @@ window.openChangePasswordModal = function() {
         `);
     }
 
-
     $('#oldPassword').val('');
     $('#newPassword').val('');
     $('#confirmNewPassword').val('');
     $('#changePasswordModal').modal('show');
-
 
     $('#btn-submit-password').off('click').on('click', function() {
         const oldPw = $('#oldPassword').val();
         const newPw = $('#newPassword').val();
         const confirmPw = $('#confirmNewPassword').val();
 
-        // 🌟 校验 1：是否填完
         if(!oldPw || !newPw || !confirmPw) {
             alert("Please fill in all fields!");
             return;
         }
 
-        // 🌟 校验 2：两次新密码是否一致
         if(newPw !== confirmPw) {
             alert("The new passwords do not match. Please try again!");
             return;
@@ -191,7 +182,6 @@ window.openChangePasswordModal = function() {
                 alert("Password updated successfully! Please login again with your new password.");
                 $('#changePasswordModal').modal('hide');
 
-                // 🌟 核心修改：不调 logout() 询问，直接清空 Token 并强制踢回 login.html
                 localStorage.clear();
                 window.location.href = 'login.html';
             } else {
@@ -314,7 +304,6 @@ function renderRealSchedule(flatSchedule) {
             if (displayStatus === 'CONFIRMED') cardType = 'card-confirmed';
             if (displayStatus === 'CANCELED' || displayStatus === 'CANCELLED') cardType = 'card-canceled';
         } else if (slot.timeSlotStatus === 'DISABLED') {
-            // 🌟 核心魔法：只要是 DISABLED，统统穿上红色的衣服，标上 Cancelled！
             cardType = 'card-canceled';
             title = 'Cancelled';
             displayStatus = 'DISABLED';
@@ -330,6 +319,7 @@ function renderRealSchedule(flatSchedule) {
         $(`.day-column[data-day="${dayKey}"]`).append(cardHtml);
     });
 }
+
 window.openAptDetails = function(bookingId, status, customerName, timeStr) {
     if (status === 'PENDING' || status === 'CONFIRMED') {
         if ($('#aptActionModal').length === 0) {
@@ -381,7 +371,6 @@ window.openAptDetails = function(bookingId, status, customerName, timeStr) {
     }
 }
 
-
 window.handleAptAction = function(bookingId, action, requiresReason = false) {
     let reason = "";
     if (requiresReason) {
@@ -404,18 +393,15 @@ window.handleAptAction = function(bookingId, action, requiresReason = false) {
                 loadSpecialistOrders();
             }
         } else {
-            // 🌟 核心优化：解析后端的 JSON 报错，并进行“人性化翻译”
             const errorText = await res.text();
             let errorMessage = errorText;
 
             try {
-
                 const errorJson = JSON.parse(errorText);
                 if (errorJson.message) {
                     errorMessage = errorJson.message;
                 }
             } catch (e) {}
-
 
             if (errorMessage === 'ERROR_BOOKING_NOT_STARTED_YET') {
                 alert("Action Failed: You cannot mark this booking as complete because the appointment time hasn't started yet!");
@@ -430,6 +416,7 @@ window.handleAptAction = function(bookingId, action, requiresReason = false) {
 
 let isDrag = false, startH = null, curDay = null;
 let cacheData = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+
 function renderBlocks() {
     $('.drag-block').remove();
     for(let d in cacheData) {
@@ -449,7 +436,6 @@ function renderBlocks() {
                             ${b.statusTitle} ${b.s}:00-${b.e}:00
                         </div>`);
                 } else if (b.isDisabled) {
-                    // 🌟 核心魔法：使用 Bootstrap 自带的 bg-danger 让它变红！
                     col.find(`[data-hour="${b.s}"]`).append(`
                         <div class="drag-block bg-danger text-white border-0 shadow-sm" style="height:${h-4}px; opacity: 0.9; cursor: not-allowed;" title="Cancelled by Specialist">
                             <i class="bi bi-x-octagon-fill mb-1"></i>
@@ -472,6 +458,7 @@ function renderBlocks() {
         });
     }
 }
+
 window.removeB = function(e, d, i) {
     e.stopPropagation();
     const block = cacheData[d][i];
@@ -546,6 +533,7 @@ $(document).ready(() => {
         toggleProfileEdit();
         alert("Professional Profile updated successfully!");
     });
+
     if(!token || role !== 'SPECIALIST') {
         alert("Authentication failed.");
         window.location.href = 'login.html';
@@ -619,14 +607,13 @@ $(document).ready(() => {
 
             const isTimeLocked = slotDateTime < thresholdTime;
             const isBooked = slot.timeSlotStatus === 'BOOKED';
-            const isDisabled = slot.timeSlotStatus === 'DISABLED'; // 🌟 新增判断
-
+            const isDisabled = slot.timeSlotStatus === 'DISABLED';
 
             const isLocked = isTimeLocked || isBooked || isDisabled;
 
             let statusTitle = 'VACANT';
             if (isBooked) statusTitle = slot.bookingStatus || 'BOOKED';
-            if (isDisabled) statusTitle = 'DISABLED'; // 🌟 名字改成 Disabled
+            if (isDisabled) statusTitle = 'DISABLED';
 
             cacheData[dayKey].push({
                 s: startH,
@@ -680,16 +667,16 @@ $(document).ready(() => {
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ slots: slotsToPublish })
         })
-            .then(async res => {
-                if (res.ok) {
-                    alert("Schedule successfully published!");
-                    $('#cancel-manage').click();
-                } else {
-                    const text = await res.text();
-                    alert("Failed to save: " + text);
-                }
-            })
-            .finally(() => btn.prop('disabled', false).text('Save Changes'));
+        .then(async res => {
+            if (res.ok) {
+                alert("Schedule successfully published!");
+                $('#cancel-manage').click();
+            } else {
+                const text = await res.text();
+                alert("Failed to save: " + text);
+            }
+        })
+        .finally(() => btn.prop('disabled', false).text('Save Changes'));
     });
 
     $(document).on('mousedown', '#drag-calendar-root .drag-slot', function(e) {
@@ -735,11 +722,11 @@ $(document).ready(() => {
         }
         $('.drag-slot').removeClass('selecting');
     });
-// 页面加载完直接去查一次钱！
+
+    // 🌟 页面加载完直接去查一次钱！
     loadEarnings();
 
     $('.nav-link').on('click', function() {
-        // 如果点的是 earnings 那个按钮
         if ($(this).attr('onclick').includes('earnings')) {
             loadEarnings();
         }
@@ -747,15 +734,16 @@ $(document).ready(() => {
 
 });
 
-// 获取专家总收入
+// 🌟 核心修改：获取专家总收入，并动态渲染货币符号 🌟
 function loadEarnings() {
     const token = localStorage.getItem('token');
     if (!token) return;
 
+    const amountDisplay = $('#total-earnings-display');
+    const currencyDisplay = $('#currency-display');
 
-    const displayElement = $('#total-earnings-display');
-    displayElement.text('Loading...'); // 请求时的加载提示
-
+    amountDisplay.text('Loading...');
+    currencyDisplay.text('Loading Currency...');
 
     fetch(`${API_BASE}/api/specialists/earnings`, {
         method: 'GET',
@@ -763,18 +751,28 @@ function loadEarnings() {
             'Authorization': `Bearer ${token}`
         }
     })
-        .then(async res => {
-            if (res.ok) {
-                    const data = await res.json();  // 改用 .json() 解析
-                    const amount = data.totalEarnings;  // 取 totalEarnings 字段
-                    displayElement.text(amount.toLocaleString());
-                } else {
-                    console.error("Failed to load earnings");
-                    displayElement.text('Error');
-                }
-        })
-        .catch(err => {
-            console.error("Network error:", err);
-            displayElement.text('Error');
-        });
+    .then(async res => {
+        if (res.ok) {
+            // 收到后端的 JSON 包裹：{"currency":"CNY","totalEarnings":2792.00}
+            const data = await res.json();
+
+            // 1. 拆出数字，并加上千位分隔符 (比如 2,792.00)
+            const amount = parseFloat(data.totalEarnings) || 0;
+            amountDisplay.text(amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+            // 2. 拆出货币单位 (比如 CNY)，并放进下面的小字里
+            const currency = data.currency || 'UNKNOWN CURRENCY';
+            currencyDisplay.text(currency);
+
+        } else {
+            console.error("Failed to load earnings");
+            amountDisplay.text('Error');
+            currencyDisplay.text('--');
+        }
+    })
+    .catch(err => {
+        console.error("Network error:", err);
+        amountDisplay.text('Error');
+        currencyDisplay.text('--');
+    });
 }
