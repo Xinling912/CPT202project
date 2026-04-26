@@ -765,22 +765,13 @@ function loadEarnings() {
     })
         .then(async res => {
             if (res.ok) {
-
-                const data = await res.text();
-
-
-                const amount = parseFloat(data);
-                if (!isNaN(amount)) {
+                    const data = await res.json();  // 改用 .json() 解析
+                    const amount = data.totalEarnings;  // 取 totalEarnings 字段
                     displayElement.text(amount.toLocaleString());
                 } else {
-                    // 如果后端传的是 JSON 对象比如 {"total": 15000}，就要这么拿
-                    const jsonObj = JSON.parse(data);
-                    displayElement.text(jsonObj.total ? jsonObj.total.toLocaleString() : data);
+                    console.error("Failed to load earnings");
+                    displayElement.text('Error');
                 }
-            } else {
-                console.error("Failed to load earnings");
-                displayElement.text('Error');
-            }
         })
         .catch(err => {
             console.error("Network error:", err);
