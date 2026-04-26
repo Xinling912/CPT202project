@@ -4,12 +4,13 @@ USE booking_system;
 SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_SAFE_UPDATES = 0;
 
--- 2. 🌟 核心修复：按顺序用 TRUNCATE 彻底清空数据并重置自增 ID
-TRUNCATE TABLE booking;
+
+TRUNCATE TABLE complaint;
+TRUNCATE TABLE specialist_profile_edit_request;
+TRUNCATE TABLE booking;                       -- 清空订单表
 TRUNCATE TABLE time_slot;
 TRUNCATE TABLE specialist_profile;
 TRUNCATE TABLE user;
-TRUNCATE TABLE expertise_category;
 
 -- 第一步：分类
 INSERT INTO expertise_category (id, name, description) VALUES

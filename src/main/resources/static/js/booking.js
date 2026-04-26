@@ -255,64 +255,47 @@ $('#final-submit-booking-btn').off('click').on('click', function() {
         btn.prop('disabled', false).text('Confirm Booking');
     });
 });
-// --- 5. 顾客端加载订单历史 ---
+
 window.loadMyOrders = function() {
-    const list = $('#orders-list').empty().append('<p class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Fetching your bookings...</p>');
+    const list = $('#orders-list').empty().append('<p class="text-center py-5 text-muted">Fetching your bookings...</p>');
 
     fetch(`${API_BASE}/api/bookings/myOrders`, {
         method: 'GET',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })
-        .then(async res => {
-            if (!res.ok) throw new Error(await res.text());
-            return res.json();
-        })
+        .then(res => res.json())
         .then(orders => {
             list.empty();
             if (!orders || orders.length === 0) {
-                list.append('<div class="text-center py-5"><i class="bi bi-inbox fs-1 opacity-25"></i><h4 class="mt-3">No bookings found.</h4></div>');
+                list.append('<div class="text-center py-5"><h4>No bookings found.</h4></div>');
                 return;
             }
 
-            // 🌟 核心探雷针：打印后端传来的原始数据！ 
-            console.log("后端返回的订单列表(没事帮会看f12的记录一下 不是报错)：", orders);
-            window.currentOrders = orders;
             orders.forEach(order => {
-                // 解析扁平化数据
                 const expName = order.specialistName || 'Specialist';
-                const dateStr = order.slotDate || order.date || order.timeSlotDate || order.bookingDate || 'Unknown Date';
-                const startStr = order.startTime ? order.startTime.substring(0,5) : '--:--';
-                const endStr = order.endTime ? order.endTime.substring(0,5) : '--:--';
-                const timeString = `${startStr} - ${endStr}`;
+                const dateStr = order.slotDate || order.date || 'Unknown Date';
+                const timeString = `${order.startTime ? order.startTime.substring(0,5) : '--'} - ${order.endTime ? order.endTime.substring(0,5) : '--'}`;
 
-                let statusColor = order.status === 'CONFIRMED' ? 'text-success' : (order.status === 'CANCELLED' || order.status === 'CANCELED' ? 'text-danger' : 'text-warning');
+                let statusColor = 'text-warning';
+                if(order.status === 'CONFIRMED' || order.status === 'COMPLETED') statusColor = 'text-success';
+                if(order.status === 'CANCELLED' || order.status === 'CANCELED') statusColor = 'text-danger';
 
 
+                let actionHtml = `<div class="d-flex gap-2 mt-2">`;
 
-                // ==========================================
-                // ==========================================
-                let actionHtml = `<div class="mt-2 d-flex justify-content-end gap-2">`;
 
-                // 1. 【先写 Cancel】：因为它在 Flex 容器里会靠左显示
                 if (order.status === 'PENDING' || order.status === 'CONFIRMED') {
                     actionHtml += `<button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" onclick="cancelCustomerOrder(${order.id})">Cancel Order</button>`;
                 }
 
-                // 2. 【后写 View Detail】：因为它在 Flex 容器里会排在右边，也就是最右侧
-                actionHtml += `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" onclick="openOrderDetail(${order.id})">View Detail</button>`;
 
-                actionHtml += `</div>`;
-
-                if (order.status === 'PENDING' || order.status === 'CONFIRMED') {
-                    actionHtml = `<button class="btn btn-sm btn-outline-danger rounded-pill px-3 mt-2 fw-bold" onclick="cancelCustomerOrder(${order.id})">Cancel Order</button>`;
+                if (order.status === 'COMPLETED') {
+                    actionHtml += `<button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" onclick="openReportModal(${order.id}, '${expName}')">Report</button>`;
                 }
 
 
-                const notesHtml = order.notes
-                    ? `<div class="small mt-2 bg-light p-2 rounded text-secondary" style="max-width: 400px;">
-                     <i class="bi bi-chat-left-text me-1"></i><span class="fst-italic">${order.notes}</span>
-                   </div>`
-                    : '';
+                actionHtml += `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" onclick="openOrderDetail(${order.id})">View Detail</button>`;
+                actionHtml += `</div>`;
 
                 list.append(`
                 <div class="booking-item-card shadow-sm d-flex justify-content-between align-items-start p-4 mb-3 border rounded-4 bg-white">
@@ -320,14 +303,13 @@ window.loadMyOrders = function() {
                         <img src="${getAvatar(expName)}" class="rounded-circle shadow-sm" width="55" height="55" style="object-fit:cover; border: 2px solid var(--brand-light);">
                         <div>
                             <h5 class="fw-800 mb-1">${expName}</h5>
-                            <div class="mb-1">
-                                <small class="text-muted"><i class="bi bi-calendar-event me-1"></i>${dateStr}</small>
-                                <small class="text-muted ms-3"><i class="bi bi-clock me-1"></i>${timeString}</small>
+                            <div class="mb-1 small text-muted">
+                                <i class="bi bi-calendar-event me-1"></i>${dateStr}
+                                <i class="bi bi-clock ms-3 me-1"></i>${timeString}
                             </div>
-                            ${notesHtml}
+                            <div class="small text-secondary fst-italic mt-1">Web Booking.</div>
                         </div>
                     </div>
-                    
                     <div class="text-end d-flex flex-column align-items-end">
                         <div class="fw-900 ${statusColor} mb-1" style="font-size: 1.1rem;">${order.status}</div>
                         <small class="text-muted mb-1">Order ID: #${order.id}</small>
@@ -335,12 +317,51 @@ window.loadMyOrders = function() {
                     </div>
                 </div>`);
             });
-        })
-        .catch(err => {
-            list.html(`<div class="text-center text-danger py-5"><h5 class="mt-3">Failed to load orders</h5><p class="small text-muted">${err.message}</p></div>`);
         });
+};
+
+// --- 举报逻辑：弹出 Modal ---
+let currentReportBookingId = null;
+window.openReportModal = function(bookingId, specName) {
+    currentReportBookingId = bookingId;
+    $('#report-order-id').text('#' + bookingId);
+    $('#report-spec-name').text(specName);
+    $('#report-reason').val('');
+    $('#reportModal').modal('show');
 }
 
+window.submitFinalReport = function() {
+    const reason = $('#report-reason').val().trim();
+    if (!reason) return alert("Please enter a reason.");
+
+    const btn = $('#submit-report-btn');
+    // 🌟 记录原始状态，防止卡死
+    btn.prop('disabled', true).text('Submitting...');
+
+    fetch(`${API_BASE}/api/complaints/report?bookingId=${currentReportBookingId}&reason=${encodeURIComponent(reason)}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+        .then(async res => {
+            const resData = await res.json();
+            if (res.ok) {
+                alert("Report submitted! Admin will review it soon.");
+                $('#reportModal').modal('hide');
+                loadMyOrders();
+            } else {
+                // 🌟 重点：如果是 400 (如重复举报)，直接显示后端给的中文错误
+                alert("Action Failed: " + (resData.error || "Submit error"));
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Network Error: Backend is down or unreachable.");
+        })
+        .finally(() => {
+            // 🌟 无论成功失败，都把按钮还给人家
+            btn.prop('disabled', false).text('Submit Report');
+        });
+};
 window.cancelCustomerOrder = function(orderId) {
     const reason = prompt("Please enter a reason for cancelling your appointment:");
     if (reason === null) return;

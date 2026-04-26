@@ -8,7 +8,7 @@ let currentWeekOffset = 0;
 let currentWeekDates = {};
 let currentFetchedSchedule = [];
 
-// 🌟 全明星头像匹配逻辑
+
 function getAvatar(username) {
     if (username === 'ShenShaohui' || username === 'Shaohui Shen') return `images/ssh.jpg`;
     if (username === 'XingjianWu' || username === 'Xingjian Wu') return `images/specialist1.png`;
@@ -21,7 +21,10 @@ $('#toggle-sidebar').on('click', function() {
     $('#sidebar').toggleClass('collapsed');
     $('.main-content').toggleClass('expanded');
 });
-
+window.toggleProfileEdit = function() {
+    $('#profile-display-mode').toggleClass('d-none');
+    $('#profile-edit-mode').toggleClass('d-none');
+}
 function switchTab(tabId, btn = null) {
     $('.tab-content').removeClass('active-tab');
     $('.nav-link').removeClass('active');
@@ -43,7 +46,7 @@ function logout() {
     }
 }
 
-// 🌟 升级：给专家的订单列表加上 Confirm / Reject / Cancel / Complete 按钮 (扁平化 DTO 适配版)
+
 window.loadSpecialistOrders = function() {
     const list = $('#specialist-orders-list').empty().append('<p class="text-muted py-4 text-center">Loading orders...</p>');
 
@@ -118,7 +121,7 @@ window.loadSpecialistOrders = function() {
 }
 
 window.openChangePasswordModal = function() {
-    // 1. 如果页面没这个弹窗，就动态插进去 (加入了第三个密码框)
+
     if ($('#changePasswordModal').length === 0) {
         $('body').append(`
             <div class="modal fade" id="changePasswordModal" tabindex="-1">
@@ -149,13 +152,13 @@ window.openChangePasswordModal = function() {
         `);
     }
 
-    // 每次打开弹窗前清空输入框
+
     $('#oldPassword').val('');
     $('#newPassword').val('');
-    $('#confirmNewPassword').val(''); // 清空确认框
+    $('#confirmNewPassword').val('');
     $('#changePasswordModal').modal('show');
 
-    // 绑定提交事件
+
     $('#btn-submit-password').off('click').on('click', function() {
         const oldPw = $('#oldPassword').val();
         const newPw = $('#newPassword').val();
@@ -283,8 +286,7 @@ function loadMySchedule() {
         .catch(err => console.error("Failed to load schedule:", err));
 }
 
-// 🌟 修复：渲染日历方块，增加对 DISABLED 状态的支持
-// 🌟 满足需求：把 DISABLED 画成红色的 Cancelled
+
 function renderRealSchedule(flatSchedule) {
     $('.day-column').empty();
     const START_HOUR = 8;
@@ -379,7 +381,7 @@ window.openAptDetails = function(bookingId, status, customerName, timeStr) {
     }
 }
 
-// 🌟 优化版：带报错翻译的订单操作逻辑
+
 window.handleAptAction = function(bookingId, action, requiresReason = false) {
     let reason = "";
     if (requiresReason) {
@@ -407,20 +409,20 @@ window.handleAptAction = function(bookingId, action, requiresReason = false) {
             let errorMessage = errorText;
 
             try {
-                // 尝试把后端的字符串解析成 JSON 对象
+
                 const errorJson = JSON.parse(errorText);
                 if (errorJson.message) {
                     errorMessage = errorJson.message;
                 }
-            } catch (e) {} // 如果解析失败，就用原字符串
+            } catch (e) {}
 
-            // 🎯 针对杜姐特定的错误码，给专家弹大白话提示！
+
             if (errorMessage === 'ERROR_BOOKING_NOT_STARTED_YET') {
                 alert("Action Failed: You cannot mark this booking as complete because the appointment time hasn't started yet!");
             } else if (errorMessage.includes('24 hours')) {
                 alert("Action Failed: Please cancel at least 24 hours in advance.");
             } else {
-                alert("Action Failed: " + errorMessage); // 兜底提示
+                alert("Action Failed: " + errorMessage);
             }
         }
     }).catch(err => alert("Network Error."));
@@ -503,7 +505,47 @@ $(document).ready(() => {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
     const name = localStorage.getItem('username') || 'Specialist';
+    let uploadedImageSrc = null;
 
+    $('#profile-photo-btn').on('click', function(e) {
+        if (e.target.id !== 'profile-photo-input') {
+            $('#profile-photo-input').click();
+        }
+    });
+
+    $('#profile-photo-input').on('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedImageSrc = e.target.result;
+                $('#profile-photo-preview').attr('src', uploadedImageSrc);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    $('#save-profile-btn').on('click', function() {
+        const newName = $('#edit-name').val();
+        const newCategory = $('#edit-category').val();
+        const newFee = $('#edit-fee').val();
+        const newResume = $('#edit-resume').val();
+
+        $('#display-name').text(newName);
+        $('#display-category').text(newCategory);
+        if(newFee) {
+            $('#display-fee').text(parseFloat(newFee).toFixed(2));
+        }
+        $('#display-resume').text(newResume);
+
+        if (uploadedImageSrc) {
+            $('#display-photo').attr('src', uploadedImageSrc);
+            $('#header-avatar').attr('src', uploadedImageSrc);
+        }
+
+        toggleProfileEdit();
+        alert("Professional Profile updated successfully!");
+    });
     if(!token || role !== 'SPECIALIST') {
         alert("Authentication failed.");
         window.location.href = 'login.html';
@@ -514,7 +556,7 @@ $(document).ready(() => {
     $('#nav-user-name').text(name);
     $('#header-avatar').attr('src', getAvatar(name));
     $('#profile-photo-preview').attr('src', getAvatar(name));
-
+    $('#display-photo').attr('src', getAvatar(name));
     loadMySchedule();
 
     $('#wb-week-toggle button').on('click', function() {
@@ -579,7 +621,7 @@ $(document).ready(() => {
             const isBooked = slot.timeSlotStatus === 'BOOKED';
             const isDisabled = slot.timeSlotStatus === 'DISABLED'; // 🌟 新增判断
 
-            // 只要时间过期、被预约、或者被禁用，全部死死锁定！
+
             const isLocked = isTimeLocked || isBooked || isDisabled;
 
             let statusTitle = 'VACANT';
@@ -592,7 +634,7 @@ $(document).ready(() => {
                 id: slot.id,
                 locked: isLocked,
                 isBooked: isBooked,
-                isDisabled: isDisabled, // 🌟 传给前端
+                isDisabled: isDisabled,
                 statusTitle: statusTitle
             });
         });
@@ -693,4 +735,55 @@ $(document).ready(() => {
         }
         $('.drag-slot').removeClass('selecting');
     });
+// 页面加载完直接去查一次钱！
+    loadEarnings();
+
+    $('.nav-link').on('click', function() {
+        // 如果点的是 earnings 那个按钮
+        if ($(this).attr('onclick').includes('earnings')) {
+            loadEarnings();
+        }
+    });
+
 });
+
+// 获取专家总收入
+function loadEarnings() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+
+    const displayElement = $('#total-earnings-display');
+    displayElement.text('Loading...'); // 请求时的加载提示
+
+
+    fetch(`${API_BASE}/api/specialists/earnings`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+        .then(async res => {
+            if (res.ok) {
+
+                const data = await res.text();
+
+
+                const amount = parseFloat(data);
+                if (!isNaN(amount)) {
+                    displayElement.text(amount.toLocaleString());
+                } else {
+                    // 如果后端传的是 JSON 对象比如 {"total": 15000}，就要这么拿
+                    const jsonObj = JSON.parse(data);
+                    displayElement.text(jsonObj.total ? jsonObj.total.toLocaleString() : data);
+                }
+            } else {
+                console.error("Failed to load earnings");
+                displayElement.text('Error');
+            }
+        })
+        .catch(err => {
+            console.error("Network error:", err);
+            displayElement.text('Error');
+        });
+}
