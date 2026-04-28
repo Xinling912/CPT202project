@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Specialist Workspace | ExpertConnect</title>
+    <title>Specialist Workspace | SAS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -17,7 +17,7 @@
     </button>
     <div class="mb-5 px-2 logo-area">
         <h4 class="fw-800 text-primary mb-0 logo-text">
-            <i class="bi bi-intersect me-2"></i><span>ExpertConnect</span>
+            <i class="bi bi-intersect me-2"></i><span>SAS</span>
         </h4>
     </div>
     <nav class="nav flex-column gap-1">
@@ -135,6 +135,13 @@
     <section id="profile" class="tab-content">
         <div class="bg-white rounded-4 shadow-sm p-5 w-100 mb-5">
             <h3 class="fw-900 mb-4 pb-3 border-bottom text-dark">Professional Profile</h3>
+            <div id="pending-alert" class="alert alert-warning d-flex align-items-center d-none rounded-3 mb-4 border-warning">
+                <i class="bi bi-hourglass-split fs-4 me-3"></i>
+                <div>
+                    <h6 class="fw-bold mb-1">Update Under Review</h6>
+                    <p class="mb-0 small">Your recent profile update request is currently being reviewed by the administrator.</p>
+                </div>
+            </div>
 
             <div id="profile-display-mode">
                 <div class="d-flex flex-column flex-md-row align-items-md-center gap-5 mb-5 mt-4">
@@ -160,7 +167,7 @@
                 <div class="mb-5 d-flex align-items-center justify-content-between">
                     <div>
                         <h5 class="fw-bold text-muted mb-2"><i class="bi bi-cash-coin me-2"></i>Hourly Rate</h5>
-                        <p class="text-primary fw-900 mb-0" style="font-size: 2.5rem;">$<span id="display-fee">9999.00</span> <span class="fs-5 fw-normal text-muted">/ hr</span></p>
+                        <p class="text-primary fw-900 mb-0" style="font-size: 2.5rem;"><span id="display-fee">0.00</span> <span class="fs-5 fw-normal text-muted">Yuan / hour</span></p>
                     </div>
                     <div>
                         <button type="button" class="btn btn-outline-primary btn-lg rounded-pill px-5 fw-bold" onclick="toggleProfileEdit()">
@@ -187,7 +194,7 @@
                     <div class="row mb-4 g-4">
                         <div class="col-md-4">
                             <label class="form-label fw-bold fs-5">Full Name</label>
-                            <input type="text" class="form-control form-control-lg bg-light" id="edit-name" value="申少辉">
+                            <input type="text" class="form-control form-control-lg bg-light" id="edit-name" >
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold fs-5">Expertise Category</label>
@@ -203,14 +210,14 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-bold fs-5">Hourly Rate ($)</label>
-                            <input type="number" class="form-control form-control-lg bg-light" id="edit-fee" value="9999.00">
+                            <label class="form-label fw-bold fs-5">Hourly Rate (Yuan)</label>
+                            <input type="number" class="form-control form-control-lg bg-light" id="edit-fee" placeholder="0.00">
                         </div>
                     </div>
 
                     <div class="mb-5">
-                        <label class="form-label fw-bold fs-5">Professional Resume</label>
-                        <textarea class="form-control bg-light fs-5 profile-resume-text" id="edit-resume" rows="6">手握日月摘星辰，世间无我这般人。</textarea>
+                        <label class="form-label fw-bold fs-5">About Me</label>
+                        <textarea class="form-control bg-light fs-5 profile-resume-text" id="edit-resume" rows="6" placeholder="Please update your about me..."></textarea>
                     </div>
 
                     <div class="d-flex justify-content-end gap-3 mt-4">
@@ -219,6 +226,19 @@
                     </div>
                 </form>
             </div>
+
+            <div class="bg-white rounded-4 shadow-sm p-4 w-100 mt-4 d-none">
+                <h5 class="fw-800 mb-4 text-dark"><i class="bi bi-clock-history me-2" ></i>Update History</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                        <tr><th class="text-muted fw-bold">Date & Time</th><th class="text-muted fw-bold">Request Type</th><th class="text-muted fw-bold">Status</th><th class="text-muted fw-bold text-center">Action</th></tr>
+                        </thead>
+                        <tbody id="history-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </section>
 
@@ -230,6 +250,8 @@
         </div>
     </section>
 </main>
+
+
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

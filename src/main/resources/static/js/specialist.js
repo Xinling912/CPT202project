@@ -1,12 +1,23 @@
 /**
  * Master Logic for Specialist Workspace
  */
-
+let currentSpecialistLevel = "";
 const API_BASE = "http://localhost:8080";
-
+function getDefaultProfile() {
+    const currentName = localStorage.getItem('username') || 'Specialist';
+    return {
+        name: currentName,
+        category: 'Uncategorized',
+        fee: '0.00',
+        resume: 'Please update your professional resume...',
+        // 🌟 这里完美接回咱们的头像匹配逻辑！
+        photo: getAvatar(currentName)
+    };
+}
 let currentWeekOffset = 0;
 let currentWeekDates = {};
 let currentFetchedSchedule = [];
+
 
 function getAvatar(username) {
     if (username === 'ShenShaohui' || username === 'Shaohui Shen') return `images/ssh.jpg`;
@@ -45,6 +56,7 @@ function logout() {
     }
 }
 
+
 window.loadSpecialistOrders = function() {
     const list = $('#specialist-orders-list').empty().append('<p class="text-muted py-4 text-center">Loading orders...</p>');
 
@@ -64,6 +76,7 @@ window.loadSpecialistOrders = function() {
             }
 
             orders.forEach(o => {
+                // 🌟 核心防雷：兼容所有后端可能返回的名字 (DTO 或 嵌套)
                 const custName = o.customerName || (o.customer && o.customer.username) || 'Customer';
                 const dateStr = o.slotDate || o.date || (o.timeSlot && o.timeSlot.slotDate) || 'Unknown Date';
                 const startStr = o.startTime ? o.startTime.substring(0,5) : (o.timeSlot && o.timeSlot.startTime ? o.timeSlot.startTime.substring(0,5) : '--:--');
@@ -72,6 +85,7 @@ window.loadSpecialistOrders = function() {
                 const timeStr = `${dateStr} | ${startStr} - ${endStr}`;
                 let statusBadge = o.status === 'CONFIRMED' ? 'text-success' : (o.status === 'CANCELLED' || o.status === 'CANCELED' ? 'text-danger' : 'text-warning');
 
+                // 🌟 动态渲染操作按钮
                 let actionHtml = '';
                 if (o.status === 'PENDING') {
                     actionHtml = `
@@ -117,6 +131,7 @@ window.loadSpecialistOrders = function() {
 }
 
 window.openChangePasswordModal = function() {
+
     if ($('#changePasswordModal').length === 0) {
         $('body').append(`
             <div class="modal fade" id="changePasswordModal" tabindex="-1">
@@ -147,21 +162,25 @@ window.openChangePasswordModal = function() {
         `);
     }
 
+
     $('#oldPassword').val('');
     $('#newPassword').val('');
     $('#confirmNewPassword').val('');
     $('#changePasswordModal').modal('show');
+
 
     $('#btn-submit-password').off('click').on('click', function() {
         const oldPw = $('#oldPassword').val();
         const newPw = $('#newPassword').val();
         const confirmPw = $('#confirmNewPassword').val();
 
+        // 🌟 校验 1：是否填完
         if(!oldPw || !newPw || !confirmPw) {
             alert("Please fill in all fields!");
             return;
         }
 
+        // 🌟 校验 2：两次新密码是否一致
         if(newPw !== confirmPw) {
             alert("The new passwords do not match. Please try again!");
             return;
@@ -182,6 +201,7 @@ window.openChangePasswordModal = function() {
                 alert("Password updated successfully! Please login again with your new password.");
                 $('#changePasswordModal').modal('hide');
 
+                // 🌟 核心修改：不调 logout() 询问，直接清空 Token 并强制踢回 login.html
                 localStorage.clear();
                 window.location.href = 'login.html';
             } else {
@@ -304,6 +324,7 @@ function renderRealSchedule(flatSchedule) {
             if (displayStatus === 'CONFIRMED') cardType = 'card-confirmed';
             if (displayStatus === 'CANCELED' || displayStatus === 'CANCELLED') cardType = 'card-canceled';
         } else if (slot.timeSlotStatus === 'DISABLED') {
+            // 🌟 核心魔法：只要是 DISABLED，统统穿上红色的衣服，标上 Cancelled！
             cardType = 'card-canceled';
             title = 'Cancelled';
             displayStatus = 'DISABLED';
@@ -319,7 +340,6 @@ function renderRealSchedule(flatSchedule) {
         $(`.day-column[data-day="${dayKey}"]`).append(cardHtml);
     });
 }
-
 window.openAptDetails = function(bookingId, status, customerName, timeStr) {
     if (status === 'PENDING' || status === 'CONFIRMED') {
         if ($('#aptActionModal').length === 0) {
@@ -371,6 +391,7 @@ window.openAptDetails = function(bookingId, status, customerName, timeStr) {
     }
 }
 
+
 window.handleAptAction = function(bookingId, action, requiresReason = false) {
     let reason = "";
     if (requiresReason) {
@@ -393,15 +414,18 @@ window.handleAptAction = function(bookingId, action, requiresReason = false) {
                 loadSpecialistOrders();
             }
         } else {
+            // 🌟 核心优化：解析后端的 JSON 报错，并进行“人性化翻译”
             const errorText = await res.text();
             let errorMessage = errorText;
 
             try {
+
                 const errorJson = JSON.parse(errorText);
                 if (errorJson.message) {
                     errorMessage = errorJson.message;
                 }
             } catch (e) {}
+
 
             if (errorMessage === 'ERROR_BOOKING_NOT_STARTED_YET') {
                 alert("Action Failed: You cannot mark this booking as complete because the appointment time hasn't started yet!");
@@ -416,7 +440,6 @@ window.handleAptAction = function(bookingId, action, requiresReason = false) {
 
 let isDrag = false, startH = null, curDay = null;
 let cacheData = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
-
 function renderBlocks() {
     $('.drag-block').remove();
     for(let d in cacheData) {
@@ -436,6 +459,7 @@ function renderBlocks() {
                             ${b.statusTitle} ${b.s}:00-${b.e}:00
                         </div>`);
                 } else if (b.isDisabled) {
+                    // 🌟 核心魔法：使用 Bootstrap 自带的 bg-danger 让它变红！
                     col.find(`[data-hour="${b.s}"]`).append(`
                         <div class="drag-block bg-danger text-white border-0 shadow-sm" style="height:${h-4}px; opacity: 0.9; cursor: not-allowed;" title="Cancelled by Specialist">
                             <i class="bi bi-x-octagon-fill mb-1"></i>
@@ -458,7 +482,6 @@ function renderBlocks() {
         });
     }
 }
-
 window.removeB = function(e, d, i) {
     e.stopPropagation();
     const block = cacheData[d][i];
@@ -512,28 +535,58 @@ $(document).ready(() => {
         }
     });
 
-    $('#save-profile-btn').on('click', function() {
-        const newName = $('#edit-name').val();
+    // 🌟 提交修改资料 (防呆验证 + 自动刷新)
+// ==========================================
+    $('#save-profile-btn').click(function() {
+        // 1. 获取输入框里的新值
+        const newName = $('#edit-name').val().trim();
         const newCategory = $('#edit-category').val();
-        const newFee = $('#edit-fee').val();
-        const newResume = $('#edit-resume').val();
+        const newFee = $('#edit-fee').val().trim();
+        const newResume = $('#edit-resume').val().trim();
 
-        $('#display-name').text(newName);
-        $('#display-category').text(newCategory);
-        if(newFee) {
-            $('#display-fee').text(parseFloat(newFee).toFixed(2));
+        // 2. 获取页面上展示的旧值
+        const oldName = $('#display-name').text().trim();
+        const oldCategory = $('#display-category').text().trim();
+        const oldFee = $('#display-fee').text().trim();
+        const oldResume = $('#display-resume').text().trim();
+
+        // 🌟 【修复1】：找不同！如果四个值完全一样，直接拦截，不准发请求！
+        if (newName === oldName && newCategory === oldCategory && newFee === oldFee && newResume === oldResume) {
+            alert("You haven't made any changes! (请先修改资料再提交)");
+            return; // 直接退出函数，终止提交！
         }
-        $('#display-resume').text(newResume);
 
-        if (uploadedImageSrc) {
-            $('#display-photo').attr('src', uploadedImageSrc);
-            $('#header-avatar').attr('src', uploadedImageSrc);
-        }
+        // 3. 构建发给后端的 JSON
+        const payload = {
+            realName: newName,
+            proposedExpertiseName: newCategory,
+            hourlyFee: parseFloat(newFee) || 0,
+            resume: newResume,
+            newLevel: currentSpecialistLevel,
+            level: currentSpecialistLevel
+        };
 
-        toggleProfileEdit();
-        alert("Professional Profile updated successfully!");
+        const token = localStorage.getItem('token');
+        fetch(`${API_BASE}/api/specialists/apply`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(async res => {
+                if (res.ok) {
+                    alert("Update request submitted successfully!");
+                    // 🌟 【修复3】：只要提交成功，瞬间强制刷新整个页面！黄条立马出来并锁死按钮！
+                    window.location.reload();
+                } else {
+                    const err = await res.json();
+                    alert("Submission failed: " + (err.error || err.message));
+                }
+            })
+            .catch(err => alert("Network error."));
     });
-
     if(!token || role !== 'SPECIALIST') {
         alert("Authentication failed.");
         window.location.href = 'login.html';
@@ -607,13 +660,14 @@ $(document).ready(() => {
 
             const isTimeLocked = slotDateTime < thresholdTime;
             const isBooked = slot.timeSlotStatus === 'BOOKED';
-            const isDisabled = slot.timeSlotStatus === 'DISABLED';
+            const isDisabled = slot.timeSlotStatus === 'DISABLED'; // 🌟 新增判断
+
 
             const isLocked = isTimeLocked || isBooked || isDisabled;
 
             let statusTitle = 'VACANT';
             if (isBooked) statusTitle = slot.bookingStatus || 'BOOKED';
-            if (isDisabled) statusTitle = 'DISABLED';
+            if (isDisabled) statusTitle = 'DISABLED'; // 🌟 名字改成 Disabled
 
             cacheData[dayKey].push({
                 s: startH,
@@ -667,16 +721,16 @@ $(document).ready(() => {
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ slots: slotsToPublish })
         })
-        .then(async res => {
-            if (res.ok) {
-                alert("Schedule successfully published!");
-                $('#cancel-manage').click();
-            } else {
-                const text = await res.text();
-                alert("Failed to save: " + text);
-            }
-        })
-        .finally(() => btn.prop('disabled', false).text('Save Changes'));
+            .then(async res => {
+                if (res.ok) {
+                    alert("Schedule successfully published!");
+                    $('#cancel-manage').click();
+                } else {
+                    const text = await res.text();
+                    alert("Failed to save: " + text);
+                }
+            })
+            .finally(() => btn.prop('disabled', false).text('Save Changes'));
     });
 
     $(document).on('mousedown', '#drag-calendar-root .drag-slot', function(e) {
@@ -722,11 +776,11 @@ $(document).ready(() => {
         }
         $('.drag-slot').removeClass('selecting');
     });
-
-    // 🌟 页面加载完直接去查一次钱！
+// 页面加载完直接去查一次钱！
     loadEarnings();
 
     $('.nav-link').on('click', function() {
+        // 如果点的是 earnings 那个按钮
         if ($(this).attr('onclick').includes('earnings')) {
             loadEarnings();
         }
@@ -734,16 +788,15 @@ $(document).ready(() => {
 
 });
 
-// 🌟 核心修改：获取专家总收入，并动态渲染货币符号 🌟
+// 获取专家总收入
 function loadEarnings() {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    const amountDisplay = $('#total-earnings-display');
-    const currencyDisplay = $('#currency-display');
 
-    amountDisplay.text('Loading...');
-    currencyDisplay.text('Loading Currency...');
+    const displayElement = $('#total-earnings-display');
+    displayElement.text('Loading...'); // 请求时的加载提示
+
 
     fetch(`${API_BASE}/api/specialists/earnings`, {
         method: 'GET',
@@ -751,28 +804,238 @@ function loadEarnings() {
             'Authorization': `Bearer ${token}`
         }
     })
-    .then(async res => {
-        if (res.ok) {
-            // 收到后端的 JSON 包裹：{"currency":"CNY","totalEarnings":2792.00}
-            const data = await res.json();
+        .then(async res => {
+            if (res.ok) {
 
-            // 1. 拆出数字，并加上千位分隔符 (比如 2,792.00)
-            const amount = parseFloat(data.totalEarnings) || 0;
-            amountDisplay.text(amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                const data = await res.text();
 
-            // 2. 拆出货币单位 (比如 CNY)，并放进下面的小字里
-            const currency = data.currency || 'UNKNOWN CURRENCY';
-            currencyDisplay.text(currency);
 
-        } else {
-            console.error("Failed to load earnings");
-            amountDisplay.text('Error');
-            currencyDisplay.text('--');
-        }
+                const amount = parseFloat(data);
+                if (!isNaN(amount)) {
+                    displayElement.text(amount.toLocaleString());
+                } else {
+                    // 如果后端传的是 JSON 对象比如 {"total": 15000}，就要这么拿
+                    const jsonObj = JSON.parse(data);
+                    displayElement.text(jsonObj.total ? jsonObj.total.toLocaleString() : data);
+                }
+            } else {
+                console.error("Failed to load earnings");
+                displayElement.text('Error');
+            }
+        })
+        .catch(err => {
+            console.error("Network error:", err);
+            displayElement.text('Error');
+        });
+}
+// ==========================================
+// Profile 历史与审核核心逻辑
+// ==========================================
+// ==========================================
+// Profile 真实对接后端数据库的逻辑
+// ==========================================
+// ==========================================
+// Profile 真实对接后端数据库的逻辑
+// ==========================================
+function initProfilePage() {
+    const token = localStorage.getItem('token');
+
+    fetch(`${API_BASE}/api/specialists/profile`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
     })
-    .catch(err => {
-        console.error("Network error:", err);
-        amountDisplay.text('Error');
-        currencyDisplay.text('--');
+        .then(async res => {
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+        })
+        .then(data => {
+            const realProfile = data.data || data;
+
+            // 🌟 核心修复点：赋值必须写在拿到了 realProfile 之后！而且要加个兜底防止后端原来就是空的。
+            currentSpecialistLevel = realProfile.level || 'EXPERT';
+            console.log("少辉: 成功拿到并缓存了真实的专家 Level: ", currentSpecialistLevel);
+
+            const realName = realProfile.realName || realProfile.user?.username || 'Unknown';
+            const expName = realProfile.expertise ? realProfile.expertise.name : '未分类';
+            const hourlyFee = realProfile.hourlyFee || '0.00';
+            const resumeText = realProfile.resume || 'Please update your About Me...';
+
+            const avatarUrl = getAvatar(realProfile.user?.username || '', realName);
+
+            $('#display-name').text(realName);
+            $('#display-category').text(expName);
+            $('#display-fee').text(hourlyFee);
+            $('#display-resume').text(resumeText);
+            $('#display-photo').attr('src', avatarUrl);
+            $('#header-avatar').attr('src', avatarUrl);
+
+            // 🌟 3. 渲染到修改表单里 (Profile Edit Mode)
+            $('#edit-name').val(realName);
+            $('#edit-category').val(expName);
+            $('#edit-fee').val(hourlyFee);
+            $('#edit-resume').val(resumeText);
+            $('#profile-photo-preview').attr('src', avatarUrl);
+
+            // 🌟 4. 判断有没有待审批的请求
+            $('#pending-alert').addClass('d-none');
+            $('button[onclick="toggleProfileEdit()"]').prop('disabled', false).html('<i class="bi bi-pencil-square me-2"></i>Change Profile');
+
+            // 渲染历史记录
+            renderHistory();
+        })
+        .catch(err => {
+            console.error("API 报错，无法获取数据库资料:", err);
+            $('#display-resume').text("Backend connection failed. Please check if your MySQL and Spring Boot are running.");
+        });
+}
+function renderHistory() {
+    const historyData = JSON.parse(localStorage.getItem('sas_profile_history')) || [];
+    const tbody = $('#history-list');
+    tbody.empty();
+
+    if (historyData.length === 0) {
+        tbody.append('<tr><td colspan="4" class="text-center text-muted py-4">No update history found.</td></tr>');
+        return;
+    }
+
+    historyData.slice().reverse().forEach((record, index) => {
+        const realIndex = historyData.length - 1 - index;
+        let badgeClass = 'bg-warning text-dark';
+        if(record.status === 'Approved') badgeClass = 'bg-success';
+        if(record.status === 'Rejected') badgeClass = 'bg-danger';
+
+        tbody.append(`
+            <tr>
+                <td class="text-muted">${record.time}</td>
+                <td class="fw-bold text-dark">Profile Information Update</td>
+                <td><span class="badge ${badgeClass} rounded-pill px-3">${record.status}</span></td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="viewHistoryDetail(${realIndex})">
+                        <i class="bi bi-eye me-1"></i> View Details
+                    </button>
+                </td>
+            </tr>
+        `);
     });
 }
+
+window.viewHistoryDetail = function(index) {
+    const historyData = JSON.parse(localStorage.getItem('sas_profile_history')) || [];
+    const record = historyData[index];
+    if(!record) return;
+
+    const oldP = record.oldProfile || {};
+    const newP = record.newProfile || {};
+    let diffHtml = '';
+
+    if (!record.oldProfile) {
+        diffHtml = '<div style="text-align:center; padding: 20px; color:#94a3b8;"><i class="bi bi-info-circle me-2"></i>This is an old record without detailed snapshot data.</div>';
+    } else {
+        const generateRow = (label, oldVal, newVal, isImage = false) => {
+            if (oldVal === newVal) return '';
+            if (isImage) {
+                return `
+                <div class="diff-box">
+                    <div class="diff-label">${label}</div>
+                    <div class="diff-content">
+                        <img src="${oldVal || 'images/beauty.png'}" class="diff-img" title="Old Image">
+                        <i class="bi bi-arrow-right fs-4 diff-arrow"></i>
+                        <img src="${newVal || 'images/beauty.png'}" class="diff-img" style="border-color:#10b981;" title="New Image">
+                    </div>
+                </div>`;
+            }
+            return `
+            <div class="diff-box">
+                <div class="diff-label">${label}</div>
+                <div class="diff-content">
+                    <span class="diff-old">${oldVal || '(Empty)'}</span>
+                    <i class="bi bi-arrow-right fs-5 diff-arrow"></i>
+                    <span class="diff-new">${newVal || '(Empty)'}</span>
+                </div>
+            </div>`;
+        };
+
+        diffHtml += generateRow('Profile Photo', oldP.photo, newP.photo, true);
+        diffHtml += generateRow('Full Name', oldP.name, newP.name);
+        diffHtml += generateRow('Category', oldP.category, newP.category);
+        diffHtml += generateRow('Hourly Fee ($)', oldP.fee, newP.fee);
+        diffHtml += generateRow('Resume / About Me', oldP.resume, newP.resume);
+        if(diffHtml === '') diffHtml = '<div style="text-align:center; padding: 20px; color:#94a3b8; font-weight: bold;">No modifications detected (Data is identical).</div>';
+    }
+
+    document.getElementById('history-diff-container').innerHTML = diffHtml;
+    document.getElementById('expertModalOverlay').style.display = 'flex';
+};
+// ==========================================
+// 🌟 检查状态 (附带“阅后即焚”的绿色成功提示框)
+// ==========================================
+function checkProfileStatus() {
+    const token = localStorage.getItem('token');
+
+    fetch(`${API_BASE}/api/specialists/apply-status`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` },
+        cache: 'no-store'
+    })
+        .then(res => res.json())
+        .then(data => {
+            const status = data.status;
+            const msg = data.message;
+
+            const alertBox = $('#pending-alert');
+            const editBtn = $('button[onclick="toggleProfileEdit()"]');
+
+            // 先把乱七八糟的颜色全洗掉
+            alertBox.removeClass('d-none alert-warning alert-danger alert-success border-warning border-danger border-success alert-dismissible fade show');
+
+            if (status === 'EDIT_PENDING' || status === 'APPLY_PENDING') {
+                // 🌟 重点：只要重新进入审核，就把之前隐藏绿条的记录删掉，保证下次同意时绿条能再次弹出来！
+                localStorage.removeItem('hide_approved_banner');
+
+                alertBox.addClass('alert-warning border-warning');
+                alertBox.html(`<i class="bi bi-hourglass-split fs-4 me-3 text-warning"></i><div><h6 class="fw-bold mb-1 text-warning">Update Under Review</h6><p class="mb-0 small text-dark">${msg}</p></div>`);
+                editBtn.prop('disabled', true).text('Under Review');
+
+            } else if (status === 'EDIT_REJECTED' || status === 'APPLY_REJECTED') {
+                alertBox.addClass('alert-danger border-danger');
+                alertBox.html(`<i class="bi bi-x-circle fs-4 me-3 text-danger"></i><div><h6 class="fw-bold mb-1 text-danger">Update Rejected</h6><p class="mb-0 small text-dark">${msg}</p></div>`);
+                editBtn.prop('disabled', false).html('<i class="bi bi-pencil-square me-2"></i>Edit Again');
+
+            } else if (status === 'EDIT_APPROVED') {
+                // 🌟 检查记事本，如果有“已阅”标记，直接隐藏
+                if (localStorage.getItem('hide_approved_banner') === 'true') {
+                    alertBox.addClass('d-none');
+                } else {
+                    // 没点过关闭，就展示绿条，并附带一个 ✖️ 按钮
+                    alertBox.addClass('alert-success border-success alert-dismissible fade show d-flex align-items-center');
+                    alertBox.html(`
+                    <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
+                    <div class="flex-grow-1">
+                        <h6 class="fw-bold mb-1 text-success">Update Approved</h6>
+                        <p class="mb-0 small text-dark">Your profile has been successfully updated and is now live!</p>
+                    </div>
+                    <button type="button" class="btn-close" style="margin-left:auto;" onclick="$(this).closest('.alert').addClass('d-none');"></button>
+                `);
+
+                    // 🌟 【绝杀1】：只要展示过一次，代码立刻在后台刻上“已阅”！你再刷新绝对不弹！
+                    localStorage.setItem('hide_approved_banner', 'true');
+
+                    // 🌟 【绝杀2】：5秒钟后自动淡出消失，彻底解放双手！
+                    setTimeout(() => {
+                        alertBox.fadeOut('slow', function() { $(this).addClass('d-none'); });
+                    }, 5000);
+                }
+                editBtn.prop('disabled', false).html('<i class="bi bi-pencil-square me-2"></i>Change Profile');
+
+            } else {
+                alertBox.addClass('d-none');
+                editBtn.prop('disabled', false).html('<i class="bi bi-pencil-square me-2"></i>Change Profile');
+            }
+        })
+        .catch(err => console.error("Status Check Failed:", err));
+}
+// 2. 在页面加载完毕时，同时调用这两个函数！
+$(document).ready(function() {
+    initProfilePage();      // 先去拉取真实资料渲染页面
+    checkProfileStatus();   // 🌟 然后立马去问杜姐的接口：当前有没有在审核中的单子？
+});

@@ -114,20 +114,12 @@
 
                 <table class="review-table" style="width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 40px;">
                     <thead style="background-color: #f8fafc; color: #64748b; text-align: left; font-size: 0.875rem;">
-                    <tr><th style="padding: 15px 20px;">Specialist Name</th><th style="padding: 15px 20px;">Requested Category</th><th style="padding: 15px 20px;">Requested Fee ($)</th><th style="padding: 15px 20px; text-align: center;">Action</th></tr>
+                    <tr><th style="padding: 15px 20px;">Specialist Name</th><th style="padding: 15px 20px;">Requested Category</th><th style="padding: 15px 20px;">Requested Fee (Yuan)</th><th style="padding: 15px 20px; text-align: center;">Action</th></tr>
                     </thead>
                     <tbody id="update-review-list-body"></tbody>
                 </table>
 
-                <div class="title" style="font-size: 1.25rem;">Approval History (Last 30 Days)</div>
-                <div class="subtitle">Log of processed modifications. Click 'View Details' to see exactly what was changed.</div>
 
-                <table class="review-table" style="width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <thead style="background-color: #f8fafc; color: #64748b; text-align: left; font-size: 0.875rem;">
-                    <tr><th style="padding: 15px 20px;">Review Date</th><th style="padding: 15px 20px;">Request Type</th><th style="padding: 15px 20px;">Status</th><th style="padding: 15px 20px; text-align: center;">Details</th></tr>
-                    </thead>
-                    <tbody id="admin-history-list-body"></tbody>
-                </table>
             </div>
 
             <div id="pageExpertise" class="admin-page" style="display:none;">
@@ -187,19 +179,25 @@
 </div>
 
 <div id="modalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center;">
-    <div class="modal" style="width: 650px; background: white; border-radius: 12px; padding: 24px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-        <div class="modal-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+    <div style="width: 650px; background: white; border-radius: 12px; padding: 24px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;">
+
+        <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
             <h2 style="margin:0; font-size:1.5rem; color:#1e293b; font-weight: 800;"><i class="bi bi-file-diff me-2"></i> Modification Details</h2>
-            <button class="modal-close" id="closeModalBtn" onclick="closeAdminModal()" style="background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #94a3b8; line-height: 1;">&times;</button>
+            <button onclick="closeAdminModal()" style="background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #94a3b8; line-height: 1;">&times;</button>
         </div>
+
         <div id="modal-content" style="color:#64748b; font-size: 1rem;"></div>
+
         <div style="text-align: right; margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
             <button onclick="closeAdminModal()" style="background: #3b82f6; color: white; border: none; padding: 8px 24px; border-radius: 999px; font-weight: bold; cursor: pointer;">Close</button>
         </div>
+
     </div>
 </div>
 
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="js/admin.js"></script>
+
 </body>
 </html>
