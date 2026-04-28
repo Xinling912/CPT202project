@@ -9,10 +9,10 @@ $(document).ready(function() {
         return;
     }
 
-    // 🌟 1. 进页面第一件事：向杜姐请示当前申请状态！
+    //  1. 进页面第一件事：向少辉请示当前申请状态！
     checkApplyStatus();
 
-    // 🌟 2. 动态加载数据库里真实的专业列表！
+    //  2. 动态加载数据库里真实的专业列表！
     loadExpertiseCategories();
 
 
@@ -96,7 +96,7 @@ $(document).ready(function() {
 });
 
 // ==========================================
-// 🌟 核心功能 1：获取真实专业列表
+// 核心功能 1：获取真实专业列表
 // ==========================================
 function loadExpertiseCategories() {
     fetch(`${API_BASE}/api/expertise/list`, {
@@ -122,7 +122,7 @@ function loadExpertiseCategories() {
 }
 
 // ==========================================
-// 🌟 核心功能 2：追踪用户申请状态
+// 核心功能 2：追踪用户申请状态
 // ==========================================
 function checkApplyStatus() {
     fetch(`${API_BASE}/api/specialists/apply-status`, {
@@ -142,7 +142,7 @@ function checkApplyStatus() {
                 banner.html(`⏳ Update Under Review: ${msg}`);
                 form.hide();
 
-                // 🌟 修复点：这里必须用 else if 隔开！！！
+                //  修复点：这里必须用 else if 隔开！！！
             } else if (status === 'APPLY_REJECTED') {
                 // 被驳回：显示红条，保留表单
                 banner.css({'display': 'block', 'background': '#fee2e2', 'color': '#b91c1c', 'border': '1px solid #ef4444'});

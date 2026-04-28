@@ -59,4 +59,23 @@ public class ExpertiseController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    /**
+     * 修改专业（仅限管理员）
+     * 对应前端的 PUT http://localhost:8080/api/expertise/{id}
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateExpertise(@PathVariable Long id, @RequestBody ExpertiseCategory category) {
+        try {
+            ExpertiseCategory updated = expertiseService.updateExpertise(id, category);
+            return ResponseEntity.ok(Map.of(
+                    "message", "专业信息修改成功",
+                    "data", updated
+            ));
+        } catch (Exception e) {
+            // 🌟 这里的报错会被我们前端的 showToast 完美捕捉！
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

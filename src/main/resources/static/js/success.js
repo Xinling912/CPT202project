@@ -1,10 +1,12 @@
 $(document).ready(function() {
-
+    // 成功后点击去登录
     $('#back-to-login').on('click', function() {
         window.location.href = 'login.html';
     });
 });
+// --- 🌟 Earnings & Finances Logic ---
 
+// 点击“添加新卡”按钮，隐藏列表，显示表单
 $('#show-add-card-btn').on('click', function() {
     $('#add-card-form').removeClass('d-none').addClass('animation-fade-in');
     $('#linked-cards-list').addClass('d-none');

@@ -6,6 +6,10 @@
 const API_BASE = "http://localhost:8080";
 let selectedExpertId = null;
 let currentSelectedSlotId = null;
+// ==========================================
+//报错弹窗武器库 因为报错弹窗太多了 懒得一个一个找了 带给他们梅花一下吧
+// ==========================================
+
 
 // --- 1. 全局配置 ---
 $.ajaxSetup({
@@ -24,14 +28,17 @@ function checkLogin() {
     return true;
 }
 
-function logout() {
-    if(confirm("Are you sure you want to log out?")) {
+// 1. 加上 async
+async function logout() {
+    // 2. 换成高级弹窗并 await
+    const isConfirmed = await showConfirm("Are you sure you want to log out?");
+
+    // 3. 如果确认了，执行清理和跳转
+    if (isConfirmed) {
         localStorage.clear(); // 清除 Token
-        // 🌟 跳转回落地页
         window.location.href = 'landingpage.html';
     }
 }
-
 // 专家/用户全明星头像逻辑
 function getAvatar(username) {
     if (username === 'ShenShaohui' || username === 'Shaohui Shen') return `images/ssh.jpg`;
@@ -46,7 +53,7 @@ $(document).ready(() => {
     if (checkLogin()) {
         initList();
 
-        // 🌟 核心：页面一加载，就把右上角的用户名和头像替换成当前登录人的信息
+        //  核心：页面一加载，就把右上角的用户名和头像替换成当前登录人的信息
         const currentUsername = localStorage.getItem('username') || 'User';
         $('#current-user-display').text(currentUsername);
         $('#nav-user-avatar').attr('src', getAvatar(currentUsername));
@@ -64,7 +71,7 @@ function showJoinUs() {
     window.location.href = 'expert_apply.html';
 }
 
-// 🌟 修复：搜索功能触发逻辑
+//  修复：搜索功能触发逻辑
 function handleSearch() {
     const keyword = $('#search-input').val().trim();
     initList(keyword);
@@ -208,7 +215,7 @@ $('#final-submit-booking-btn').off('click').on('click', function() {
     // 按钮变灰防止连点
     btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
 
-    // 🌟 这里把真正的 Token 和数据带上，后端绝对马上放行！
+    //  这里把真正的 Token 和数据带上，后端绝对马上放行！
     fetch(`${API_BASE}/api/bookings/create`, {
         method: 'POST',
         headers: {
@@ -226,7 +233,7 @@ $('#final-submit-booking-btn').off('click').on('click', function() {
             $('#customerConfirmModal').modal('hide');
             handleProtectedView('user-orders-page');
         } else {
-            // 🌟 获取后端的报错文本
+            // 获取后端的报错文本
             const errText = await res.text();
 
             if (res.status === 409) {
@@ -234,7 +241,7 @@ $('#final-submit-booking-btn').off('click').on('click', function() {
                 $('#customerConfirmModal').modal('hide');
                 showSlots($('#display-date').text());
             }
-            // 🌟 核心拦截：捕获 500 数据库重复报错，进行人性化翻译！
+            //  核心拦截：捕获 500 数据库重复报错，进行人性化翻译！
             else if (res.status === 500 && (errText.includes('Duplicate entry') || errText.includes('Constraint'))) {
                 alert("Action Failed: You have recently cancelled an appointment for this time slot. The system does not allow immediate re-booking of the same slot to prevent spam. Please choose another time!");
                 $('#customerConfirmModal').modal('hide');
@@ -335,7 +342,7 @@ window.submitFinalReport = function() {
     if (!reason) return alert("Please enter a reason.");
 
     const btn = $('#submit-report-btn');
-    // 🌟 记录原始状态，防止卡死
+    //  记录原始状态，防止卡死
     btn.prop('disabled', true).text('Submitting...');
 
     fetch(`${API_BASE}/api/complaints/report?bookingId=${currentReportBookingId}&reason=${encodeURIComponent(reason)}`, {
@@ -349,7 +356,7 @@ window.submitFinalReport = function() {
                 $('#reportModal').modal('hide');
                 loadMyOrders();
             } else {
-                // 🌟 重点：如果是 400 (如重复举报)，直接显示后端给的中文错误
+                //  重点：如果是 400 (如重复举报)，直接显示后端给的中文错误
                 alert("Action Failed: " + (resData.error || "Submit error"));
             }
         })
@@ -358,7 +365,7 @@ window.submitFinalReport = function() {
             alert("Network Error: Backend is down or unreachable.");
         })
         .finally(() => {
-            // 🌟 无论成功失败，都把按钮还给人家
+            //  无论成功失败，都把按钮还给人家
             btn.prop('disabled', false).text('Submit Report');
         });
 };
@@ -460,7 +467,7 @@ window.openChangePasswordModal = function() {
                 alert("Password updated successfully! Please login again with your new password.");
                 $('#changePasswordModal').modal('hide');
 
-                // 🌟 核心修改：不调 logout() 询问，直接清空 Token 并强制踢回 login.html
+                //  核心修改：不调 logout() 询问，直接清空 Token 并强制踢回 login.html
                 localStorage.clear();
                 window.location.href = 'login.html';
             } else {

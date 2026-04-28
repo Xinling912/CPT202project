@@ -1,5 +1,12 @@
 const API_BASE = "http://localhost:8080";
 
+window.logout = async function() {
+    const isConfirmed = await showConfirm("Are you sure you want to log out of the Admin Dashboard?");
+    if (isConfirmed) {
+        localStorage.clear(); // 清理所有的 token 和本地数据
+        window.location.href = 'landingpage.html'; // 跳回主页（或者 login.html）
+    }
+};
 document.addEventListener('DOMContentLoaded', () => {
     // 1. 登录校验
     const savedName = localStorage.getItem('username');
@@ -135,8 +142,10 @@ window.loadExistingSpecialists = function() {
         });
 }
 
-window.toggleStatus = function(id, action) {
-    if (!confirm(`Are you sure you want to ${action} this specialist?`)) return;
+window.toggleStatus = async function(id, action) {
+    const isConfirmed = await showConfirm(`Are you sure you want to ${action} this specialist?`);
+
+    if (!isConfirmed) return; // 如果返回 false (点了 Cancel)，直接退出
     fetch(`${API_BASE}/api/admin/specialists/${id}/${action}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -145,7 +154,7 @@ window.toggleStatus = function(id, action) {
     });
 }
 
-// 🌟 页面 1B：新申请审批 (带详情查看版)
+//  页面 1B：新申请审批 (带详情查看版)
 // ==========================================
 
 // 1. 新建一个新申请的专用快递柜
@@ -194,7 +203,7 @@ window.loadPendingSpecialists = function() {
         });
 }
 
-// 2. 🌟 新增函数：展示新申请的详细信息（复用咱们底部的那个漂亮弹窗）
+// 2.  新增函数：展示新申请的详细信息（复用咱们底部的那个漂亮弹窗）
 window.viewApplicationDetail = function(reqId) {
     const item = window.pendingApplicationsCache[reqId];
     if (!item) {
@@ -236,9 +245,12 @@ window.viewApplicationDetail = function(reqId) {
 
 // ==========================================
 
-window.approveApp = function(id, event) {
+window.approveApp = async function(id, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
-    if (!confirm("Are you sure you want to approve this new specialist application?")) return;
+
+    //  替换 confirm
+    const isConfirmed = await showConfirm("Are you sure you want to approve this new specialist application?");
+    if (!isConfirmed) return;
 
     fetch(`${API_BASE}/api/admin/applications/${id}/approve`, {
         method: 'POST',
@@ -257,10 +269,12 @@ window.approveApp = function(id, event) {
         .catch(err => alert("Network Error."));
 };
 
-window.rejectApp = function(id, event) {
+window.rejectApp = async function(id, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
-    if (!confirm("Are you sure you want to REJECT this new specialist application?")) return;
 
+    // 替换 confirm
+    const isConfirmed = await showConfirm("Are you sure you want to REJECT this new specialist application?");
+    if (!isConfirmed) return;
     fetch(`${API_BASE}/api/admin/applications/${id}/reject`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -361,7 +375,8 @@ window.handleComplaint = async function(complaintId, action, specialistId = null
             } catch (e) {}
         }
     } else {
-        if(!confirm("Dismiss this report?")) return;
+        const isConfirmed = await showConfirm("Dismiss this report?");
+        if(!isConfirmed) return;
     }
 
     fetch(`${API_BASE}/api/complaints/${complaintId}/${action}`, {
@@ -378,6 +393,7 @@ window.handleComplaint = async function(complaintId, action, specialistId = null
 // ==========================================
 // 页面 3：专业领域管理
 // ==========================================
+window.expertiseCache = {};
 window.loadExpertise = function() {
     const tbody = document.getElementById('expertise-table-body');
     tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-muted">Loading expertise data...</td></tr>';
@@ -394,7 +410,13 @@ window.loadExpertise = function() {
                 return;
             }
 
+            // 清空快递柜
+            window.expertiseCache = {};
+
             data.forEach(exp => {
+                // 把当前这一行的数据存进柜子，钥匙是 ID
+                window.expertiseCache[exp.id] = exp;
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
             <td class="text-muted fw-bold">#${exp.id}</td>
@@ -431,9 +453,10 @@ window.addExpertise = function() {
         }
     });
 }
-
-window.deleteExpertise = function(id, name) {
-    if(!confirm(`Are you sure you want to permanently delete [ ${name} ]?`)) return;
+window.deleteExpertise = async function(id, name) {
+    //  替换 confirm
+    const isConfirmed = await showConfirm(`Are you sure you want to permanently delete [ ${name} ]?`);
+    if(!isConfirmed) return;
     fetch(`${API_BASE}/api/expertise/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -447,7 +470,67 @@ window.deleteExpertise = function(id, name) {
         }
     });
 }
-window.editExpertise = function(id) { alert("Edit function coming soon!"); }
+window.editExpertise = function(id) {
+    // 从柜子里拿出旧数据
+    const exp = window.expertiseCache[id];
+    if (!exp) return;
+
+    // 拼装一个带输入框的精美弹窗 HTML
+    const htmlContent = `
+        <div style="padding: 10px;">
+            <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-pencil-square me-2"></i>Edit Expertise Category</h5>
+            
+            <div class="mb-3 text-start">
+                <label class="form-label fw-bold small text-muted text-uppercase">Category Name</label>
+                <input type="text" id="edit-exp-name" class="form-control form-control-lg bg-light" value="${exp.name}">
+            </div>
+            
+            <div class="mb-4 text-start">
+                <label class="form-label fw-bold small text-muted text-uppercase">Description</label>
+                <textarea id="edit-exp-desc" class="form-control bg-light" rows="3">${exp.description || ''}</textarea>
+            </div>
+            
+            <div class="d-flex justify-content-end gap-2 border-top pt-3 mt-2">
+                <button class="btn btn-light fw-bold px-4" onclick="closeAdminModal()">Cancel</button>
+                <button class="btn btn-primary fw-bold px-4 shadow-sm" onclick="submitEditExpertise(${id})">Save Changes</button>
+            </div>
+        </div>
+    `;
+    // 呼叫你的全局模态框
+    openAdminModal(htmlContent);
+};
+
+// 点击弹窗里的 Save Changes 按钮：发给后端保存
+window.submitEditExpertise = function(id) {
+    // 拿到输入框里的新值
+    const newName = document.getElementById('edit-exp-name').value.trim();
+    const newDesc = document.getElementById('edit-exp-desc').value.trim();
+
+    if (!newName || !newDesc) {
+        showToast("Please fill in both Name and Description!", "warning");
+        return;
+    }
+
+
+    // 如果报 404，请确认一下后端 Controller 里修改专业的真实路径！
+    fetch(`${API_BASE}/api/expertise/${id}`, {
+        method: 'PUT',  // 修改通常用 PUT，也有可能杜姐用的是 POST，视情况而定
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: newName, description: newDesc })
+    }).then(async res => {
+        if(res.ok) {
+            showToast("Expertise updated successfully!", "success");
+            closeAdminModal(); // 关闭弹窗
+            loadExpertise();   // 刷新列表
+        } else {
+            const err = await parseError(res);
+            showToast("Failed to update: " + err, "error");
+        }
+    }).catch(err => showToast("Network Error", "error"));
+};
 
 // ==========================================
 // 🌟 5：Content Review 页面真实对接逻辑 (终极防白屏版)
@@ -630,11 +713,13 @@ window.viewPendingDetail = function(reqId) {
     openAdminModal(detailHtml);
 };
 // 3. 同意 / 驳回
-window.handleApproval = function(reqId, isApproved) {
+window.handleApproval = async function(reqId, isApproved) {
     const action = isApproved ? 'approve' : 'reject';
     const actionText = isApproved ? 'Approve' : 'Reject';
-    if(!confirm(`Are you sure you want to ${actionText} this request?`)) return;
 
+    // ✅ 替换 confirm
+    const isConfirmed = await showConfirm(`Are you sure you want to ${actionText} this request?`);
+    if(!isConfirmed) return;
     fetch(`${API_BASE}/api/admin/edits/${reqId}/${action}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -655,3 +740,4 @@ window.cleanAndLoadHistory = function() {
     const tbody = document.getElementById('admin-history-list-body');
     if(tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:#94a3b8;">History feature is currently managed by backend.</td></tr>';
 }
+// ==========================================

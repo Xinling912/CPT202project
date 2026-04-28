@@ -16,10 +16,15 @@ $(document).ready(function() {
     });
 
     // 5. 登出按钮逻辑 (升级版：彻底清空状态)
-    $('#logoutBtn').on('click', function() {
-        if (confirm("Are you sure you want to log out?")) {
-            localStorage.clear(); // 退出时直接清空所有状态 (包括 token, role, username 等)
-            window.location.href = 'login.html';  // 踢回登录页
+    //  1. 加上 async
+    async function logout() {
+        // 2. 换成高级弹窗并 await
+        const isConfirmed = await showConfirm("Are you sure you want to log out?");
+
+        //  3. 如果确认了，执行清理和跳转
+        if (isConfirmed) {
+            localStorage.clear(); // 清除 Token
+            window.location.href = 'landingpage.html';
         }
-    });
+    }
 });

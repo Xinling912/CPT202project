@@ -482,14 +482,16 @@ function renderBlocks() {
         });
     }
 }
-window.removeB = function(e, d, i) {
+window.removeB = async function(e, d, i) {
     e.stopPropagation();
     const block = cacheData[d][i];
 
     if (block.locked) return;
 
     if (block.id) {
-        if(!confirm("This slot is already saved. Delete it permanently from database?")) return;
+        // ✅ 2. 换成高级弹窗并 await
+        const isConfirmed = await showConfirm("This slot is already saved. Delete it permanently from database?");
+        if (!isConfirmed) return; // 如果点了取消，直接退出
 
         fetch(`${API_BASE}/api/timeslots/${block.id}`, {
             method: 'DELETE',
@@ -500,7 +502,8 @@ window.removeB = function(e, d, i) {
                 renderBlocks();
                 loadMySchedule();
             } else {
-                alert("Cannot delete a booked slot.");
+                // 🌟 顺手把这里的 alert 也优化成红色的 Toast！
+                showToast("Cannot delete a booked slot.", 'error');
             }
         });
     } else {
