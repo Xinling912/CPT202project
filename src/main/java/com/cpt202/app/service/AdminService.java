@@ -59,7 +59,7 @@ public class AdminService {
                 .orElseThrow(() -> new RuntimeException("找不到该申请记录"));
 
         // 拒绝申请，状态改为 REJECTED，用户角色保持 CUSTOMER 不变
-        profile.setStatus(SpecialistStatus.INACTIVE);
+        profile.setStatus(SpecialistStatus.REJECTED);
         profileRepository.save(profile);
     }
 

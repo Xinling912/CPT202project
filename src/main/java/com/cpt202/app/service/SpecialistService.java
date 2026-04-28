@@ -23,6 +23,8 @@ public class SpecialistService {
     @Autowired
     private SpecialistProfileEditRequestRepository editRequestRepository;
     @Autowired
+    private SpecialistProfileRepository specialistProfileRepository;
+    @Autowired
     private BookingRepository bookingRepository;
 
     public record SpecialistApplyRequest(
@@ -43,13 +45,52 @@ public class SpecialistService {
 
         // 逻辑分流：
         if (existingProfile.isEmpty() || existingProfile.get().getStatus() != SpecialistStatus.ACTIVE) {
-            // 【场景 A】新专家申请（或未过审）：直接操作主表 SpecialistProfile
+            // 【场景 A】新专家申请（或未过审重新提交）：直接操作主表 SpecialistProfile
+
+            // 如果已经有档案，先检查是否允许重新申请
+            if (existingProfile.isPresent()) {
+                SpecialistProfile profile = existingProfile.get();
+                SpecialistStatus currentStatus = profile.getStatus();
+
+                // 已有待审核的申请
+                if (currentStatus == SpecialistStatus.PENDING) {
+                    throw new RuntimeException("您已有待审核的专家申请，请等待管理员处理");
+                }
+
+                // 已被封禁（不可重新申请）
+                if (currentStatus == SpecialistStatus.INACTIVE) {
+                    throw new RuntimeException("您的账号已被封禁，无法重新申请成为专家");
+                }
+
+                // 被驳回（REJECTED）→ 允许重新申请，更新现有记录（不新增）
+                if (currentStatus == SpecialistStatus.REJECTED) {
+                    fillProfileData(profile, user, request);
+                    profile.setStatus(SpecialistStatus.PENDING);
+                    profileRepository.save(profile);
+                    return;
+                }
+            }
+
+            // 无档案允许新建的情况
             SpecialistProfile profile = existingProfile.orElse(new SpecialistProfile());
             fillProfileData(profile, user, request);
             profile.setStatus(SpecialistStatus.PENDING); // 设为待审核
             profileRepository.save(profile);
+
         } else {
             // 【场景 B】已入驻专家修改资料：操作影子表 EditRequest
+
+            // 检查是否已有待审核的修改申请
+            SpecialistProfile activeProfile = existingProfile.get();
+            boolean hasPendingRequest = editRequestRepository.existsBySpecialistProfileAndStatus(
+                    activeProfile,
+                    SpecialistProfileEditStatus.PENDING
+            );
+
+            if (hasPendingRequest) {
+                throw new RuntimeException("您已有待审核的修改申请，请等待管理员处理后再提交新的申请");
+            }
+            // 创建修改申请
             SpecialistProfileEditRequest editReq = new SpecialistProfileEditRequest();
             editReq.setSpecialistProfile(existingProfile.get());
             editReq.setNewHourlyFee(request.hourlyFee());
@@ -128,5 +169,54 @@ public class SpecialistService {
         );
 
         return earnings.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    public ApplicationStatus getCurrentApplicationStatus(User user) {
+        Optional<SpecialistProfile> profileOpt = specialistProfileRepository.findByUser(user);
+
+        // ========== 1. 普通用户（或申请阶段）==========
+        if (profileOpt.isPresent()) {
+            SpecialistProfile profile = profileOpt.get();
+            SpecialistStatus status = profile.getStatus();
+
+            if (status == SpecialistStatus.PENDING) {
+                return ApplicationStatus.APPLY_PENDING;
+            }
+            if (status == SpecialistStatus.REJECTED) {
+                return ApplicationStatus.APPLY_REJECTED;
+            }
+            if (status == SpecialistStatus.ACTIVE) {
+                // 已是正式专家，继续查修改申请
+                return getActiveSpecialistEditStatus(profile);
+            }
+        }
+
+        // ========== 2. 从未申请过 ==========
+        return ApplicationStatus.NONE;
+    }
+
+
+    private ApplicationStatus getActiveSpecialistEditStatus(SpecialistProfile profile) {
+        // 只查最新的一条修改申请
+        Optional<SpecialistProfileEditRequest> latestOpt =
+                editRequestRepository.findTopBySpecialistProfileOrderBySubmitTimeDesc(profile);
+
+        if (latestOpt.isEmpty()) {
+            return ApplicationStatus.IS_ACTIVE_SPECIALIST;
+        }
+
+        SpecialistProfileEditRequest latest = latestOpt.get();
+        SpecialistProfileEditStatus editStatus = latest.getStatus();
+
+        switch (editStatus) {
+            case PENDING:
+                return ApplicationStatus.EDIT_PENDING;
+            case APPROVED:
+                return ApplicationStatus.EDIT_APPROVED;
+            case REJECTED:
+                return ApplicationStatus.EDIT_REJECTED;
+            default:
+                return ApplicationStatus.IS_ACTIVE_SPECIALIST;
+        }
     }
 }

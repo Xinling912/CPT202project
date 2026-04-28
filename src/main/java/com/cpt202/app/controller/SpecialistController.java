@@ -3,6 +3,7 @@ package com.cpt202.app.controller;
 import com.cpt202.app.repository.UserRepository;
 import com.cpt202.app.service.SpecialistService;
 import com.cpt202.app.service.SpecialistService.SpecialistApplyRequest;
+import com.cpt202.app.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.cpt202.app.model.*;
 import com.cpt202.app.repository.ExpertiseCategoryRepository;
@@ -34,6 +35,8 @@ public class SpecialistController {
 
     @Autowired
     private SpecialistService specialistService;
+    @Autowired
+    private UserService userService;
 
     private final SpecialistProfileRepository specialistRepository;
     private final TimeSlotRepository timeSlotRepository;
@@ -49,7 +52,7 @@ public class SpecialistController {
         this.specialistRepository = specialistRepository;
         this.timeSlotRepository = timeSlotRepository;
         this.expertiseCategoryRepository = expertiseCategoryRepository;
-        this.userRepository=userRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -177,6 +180,7 @@ public class SpecialistController {
             return ResponseEntity.badRequest().body(Map.of("error", "提交失败: " + e.getMessage()));
         }
     }
+
     /**
      * 获取专家累计总收入
      */
@@ -234,4 +238,37 @@ public class SpecialistController {
         }
     }
 
+    @GetMapping("/apply-status")
+    public ResponseEntity<?> getMyApplicationStatus(Authentication auth) {
+        String username = auth.getName();
+        User user = userService.getByUsername(username);
+
+        ApplicationStatus status = specialistService.getCurrentApplicationStatus(user);
+
+        return ResponseEntity.ok(Map.of(
+                "status", status.name(),
+                "message", getStatusMessage(status)
+        ));
+    }
+
+    private String getStatusMessage(ApplicationStatus status) {
+        switch (status) {
+            case NONE:
+                return "您尚未申请成为专家";
+            case APPLY_PENDING:
+                return "专家申请审核中，请耐心等待";
+            case APPLY_REJECTED:
+                return "专家申请被驳回，您可以修改后重新提交";
+            case IS_ACTIVE_SPECIALIST:
+                return "您已是正式专家";
+            case EDIT_PENDING:
+                return "资料修改申请审核中";
+            case EDIT_APPROVED:
+                return "资料修改已通过";
+            case EDIT_REJECTED:
+                return "资料修改被驳回，可重新提交";
+            default:
+                return "";
+        }
+    }
 }
