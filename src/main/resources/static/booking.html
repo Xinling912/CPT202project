@@ -86,7 +86,7 @@
                         <h4 class="fw-800 mb-2">Consultation Fee</h4>
                         <div class="d-flex align-baseline mb-4">
                             <h2 class="fw-900 text-primary mb-0 me-1" id="pRate">$0</h2>
-                            <span class="text-muted fw-bold">/ hr</span>
+                            <span class="text-muted fw-bold"></span>
                         </div>
                         <button class="btn btn-dark w-100 rounded-pill py-3 fw-bold fs-5 shadow-sm" onclick="goToCalendar()">
                             Secure Booking
@@ -99,7 +99,12 @@
 
     <div id="calendar-page" class="page-view">
         <div class="container text-center">
-            <button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('profile-page')"><i class="bi bi-arrow-left"></i> Back to Bio</button>
+            <button class="btn btn-outline-primary fw-bolder rounded-pill px-4 py-2 shadow-sm mb-4 mt-2"
+                    onclick="showPage('profile-page')"
+                    style="transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                <i class="bi bi-arrow-left-circle-fill me-2 fs-5 align-middle"></i>
+                <span class="align-middle" style="letter-spacing: 0.5px;">BACK TO BIO</span>
+            </button>
             <div class="calendar-card shadow-sm p-4 bg-white rounded-5 border">
                 <h4 class="fw-800 mb-4">Select Date</h4>
                 <div class="calendar-grid" id="calendar-body"></div>
@@ -109,7 +114,12 @@
 
     <div id="timeslot-page" class="page-view">
         <div class="container text-center">
-            <button class="btn btn-light rounded-pill mb-4 px-4" onclick="showPage('calendar-page')"><i class="bi bi-arrow-left"></i> Back to Calendar</button>
+            <button class="btn btn-outline-primary fw-bolder rounded-pill px-4 py-2 shadow-sm mb-4 mt-2"
+                    onclick="showPage('calendar-page')"
+                    style="transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                <i class="bi bi-arrow-left-circle-fill me-2 fs-5 align-middle"></i>
+                <span class="align-middle" style="letter-spacing: 0.5px;">BACK TO CALENDAR</span>
+            </button>
             <h2 class="fw-800 mb-5">Slots for <span id="display-date" class="text-primary">--</span></h2>
             <div class="time-grid" id="slot-list"></div>
             <button class="btn btn-dark rounded-pill px-5 py-3 mt-5 fw-bold" id="confirm-btn" style="display:none;">Confirm Reservation</button>

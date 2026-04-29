@@ -19,13 +19,6 @@ let currentWeekDates = {};
 let currentFetchedSchedule = [];
 
 
-function getAvatar(username) {
-    if (username === 'ShenShaohui' || username === 'Shaohui Shen') return `images/ssh.jpg`;
-    if (username === 'XingjianWu' || username === 'Xingjian Wu') return `images/specialist1.png`;
-    if (username === 'XinlingDu' || username === 'Xinling Du') return `images/specialist3.png`;
-    if (username === 'Carrot') return `images/carrot.png`;
-    return `https://api.dicebear.com/7.x/initials/svg?seed=${username}`;
-}
 
 $('#toggle-sidebar').on('click', function() {
     $('#sidebar').toggleClass('collapsed');
@@ -459,7 +452,7 @@ function renderBlocks() {
                             ${b.statusTitle} ${b.s}:00-${b.e}:00
                         </div>`);
                 } else if (b.isDisabled) {
-                    // 🌟 核心魔法：使用 Bootstrap 自带的 bg-danger 让它变红！
+                    //  核心魔法：使用 Bootstrap 自带的 bg-danger 让它变红！
                     col.find(`[data-hour="${b.s}"]`).append(`
                         <div class="drag-block bg-danger text-white border-0 shadow-sm" style="height:${h-4}px; opacity: 0.9; cursor: not-allowed;" title="Cancelled by Specialist">
                             <i class="bi bi-x-octagon-fill mb-1"></i>
@@ -854,7 +847,7 @@ function initProfilePage() {
         .then(data => {
             const realProfile = data.data || data;
 
-            // 🌟 核心修复点：赋值必须写在拿到了 realProfile 之后！而且要加个兜底防止后端原来就是空的。
+            //  核心修复点：赋值必须写在拿到了 realProfile 之后！而且要加个兜底防止后端原来就是空的。
             currentSpecialistLevel = realProfile.level || 'EXPERT';
             console.log("少辉: 成功拿到并缓存了真实的专家 Level: ", currentSpecialistLevel);
 
@@ -1020,10 +1013,10 @@ function checkProfileStatus() {
                     <button type="button" class="btn-close" style="margin-left:auto;" onclick="$(this).closest('.alert').addClass('d-none');"></button>
                 `);
 
-                    // 🌟 【绝杀1】：只要展示过一次，代码立刻在后台刻上“已阅”！你再刷新绝对不弹！
+                    // 【绝杀1】：只要展示过一次，代码立刻在后台刻上“已阅”！你再刷新绝对不弹！
                     localStorage.setItem('hide_approved_banner', 'true');
 
-                    // 🌟 【绝杀2】：5秒钟后自动淡出消失，彻底解放双手！
+                    // 【绝杀2】：5秒钟后自动淡出消失，彻底解放双手！
                     setTimeout(() => {
                         alertBox.fadeOut('slow', function() { $(this).addClass('d-none'); });
                     }, 5000);
@@ -1040,5 +1033,5 @@ function checkProfileStatus() {
 // 2. 在页面加载完毕时，同时调用这两个函数！
 $(document).ready(function() {
     initProfilePage();      // 先去拉取真实资料渲染页面
-    checkProfileStatus();   // 🌟 然后立马去问杜姐的接口：当前有没有在审核中的单子？
+    checkProfileStatus();   //  然后立马去问杜姐的接口：当前有没有在审核中的单子？
 });

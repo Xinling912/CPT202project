@@ -39,14 +39,6 @@ async function logout() {
         window.location.href = 'landingpage.html';
     }
 }
-// 专家/用户全明星头像逻辑
-function getAvatar(username) {
-    if (username === 'ShenShaohui' || username === 'Shaohui Shen') return `images/ssh.jpg`;
-    if (username === 'XingjianWu' || username === 'Xingjian Wu') return `images/specialist1.png`;
-    if (username === 'XinlingDu' || username === 'Xinling Du') return `images/specialist3.png`;
-    if (username === 'Carrot') return `images/carrot.png`;
-    return `https://api.dicebear.com/7.x/initials/svg?seed=${username}`;
-}
 
 // --- 2. 页面初始化 ---
 $(document).ready(() => {
@@ -103,7 +95,7 @@ function initList(keyword = '') {
                             </div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-800">$${item.hourlyFee || 0}/hr</span>
+                         <span class="fw-800 text-primary">${item.hourlyFee || 0} Yuan/hour</span>
                             <span class="text-primary fw-bold">View Detail &raquo;</span>
                         </div>
                     </div>
@@ -117,7 +109,7 @@ function goToProfile(id) {
     $.get(`${API_BASE}/api/specialists/${id}`, (data) => {
         $('#pName').text(data.user.username);
         $('#pExpertise').text(data.expertise ? data.expertise.name : 'Consultant');
-        $('#pRate').text('$' + (data.hourlyFee || 0));
+        $('#pRate').text((data.hourlyFee || 0) + ' Yuan/hour');
         $('#pLevel').text(data.level || 'EXPERT');
         $('#pBio').text(data.resume || "No biography provided.");
         $('#pAvatar').attr('src', getAvatar(data.user.username));
@@ -125,20 +117,70 @@ function goToProfile(id) {
     });
 }
 
-// --- 4. 预约与日历逻辑 ---
+// --- 4. 预约与日历逻辑 (全新动态双月升级版 + 防穿透提取) ---
 function goToCalendar() {
     $.get(`${API_BASE}/api/timeslots/specialist/${selectedExpertId}/available-dates`, (data) => {
-        const dates = Array.isArray(data) ? data : (data.availableDates || []);
+
+        //  核心破案 1：完美兼容后端 {"data": [...]} 的包装盒！
+        let dates = [];
+        if (Array.isArray(data)) dates = data;
+        else if (data.data && Array.isArray(data.data)) dates = data.data;
+        else if (data.availableDates) dates = data.availableDates;
+
         const body = $('#calendar-body').empty();
 
+        // 1. 渲染星期表头
         ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].forEach(day => body.append(`<div class="cal-header-day">${day}</div>`));
-        for (let i = 0; i < 3; i++) body.append(`<div></div>`); // 4月便宜量
 
-        for (let i = 1; i <= 30; i++) {
-            const dateStr = `2026-04-${i.toString().padStart(2, '0')}`;
-            const isAvail = dates.includes(dateStr);
-            body.append(`<div class="cal-date ${isAvail?'available':'empty'}" ${isAvail?`onclick="showSlots('${dateStr}')"`:''}>${i}</div>`);
+        // 2. 获取当前系统真实的年和月
+        const today = new Date();
+        let currentYear = today.getFullYear();
+        let currentMonth = today.getMonth();
+
+        //  3. 核心魔法：循环渲染 2 个月（本月 m=0，下个月 m=1）
+        for (let m = 0; m < 2; m++) {
+            let renderMonth = currentMonth + m;
+            let renderYear = currentYear;
+
+            // 自动进位跨年逻辑
+            if (renderMonth > 11) {
+                renderMonth -= 12;
+                renderYear += 1;
+            }
+
+            const firstDay = new Date(renderYear, renderMonth, 1).getDay();
+            const daysInMonth = new Date(renderYear, renderMonth + 1, 0).getDate();
+
+            // 插入绚丽的月份分割线
+            body.append(`
+                <div style="grid-column: span 7; text-align: center; font-weight: 800; color: #3b82f6; margin-top: 15px; margin-bottom: 5px; font-size: 1.1rem;">
+                    ${renderYear} - ${String(renderMonth + 1).padStart(2, '0')}
+                </div>
+            `);
+
+            // 渲染1号之前的空白占位符
+            for (let i = 0; i < firstDay; i++) {
+                body.append(`<div></div>`);
+            }
+
+            // 渲染这一个月的真实格子
+            for (let i = 1; i <= daysInMonth; i++) {
+                const monthStr = String(renderMonth + 1).padStart(2, '0');
+                const dayStr = String(i).padStart(2, '0');
+                const dateStr = `${renderYear}-${monthStr}-${dayStr}`;
+
+                //  模糊匹配：不管后端给的日期带不带时间戳，只要开头匹配就亮起！
+                const isAvail = JSON.stringify(dates).includes(dateStr);
+
+                body.append(`
+                    <div class="cal-date ${isAvail ? 'available text-primary fw-bolder shadow-sm border border-primary' : 'empty'}" 
+                         ${isAvail ? `onclick="showSlots('${dateStr}')"` : ''}>
+                        ${i}
+                    </div>
+                `);
+            }
         }
+
         showPage('calendar-page');
     });
 }
@@ -149,11 +191,33 @@ function showSlots(dateStr) {
     $('#confirm-btn').hide();
 
     $.get(`${API_BASE}/api/timeslots/specialist/${selectedExpertId}/available-times?date=${dateStr}`, (res) => {
-        const slots = Array.isArray(res) ? res : (res.timeSlots || []);
+
+        //  核心破案 2：同样兼容时间段接口的 JSON 包装盒！
+        let slots = [];
+        if (Array.isArray(res)) slots = res;
+        else if (res.data && Array.isArray(res.data)) slots = res.data;
+        else if (res.timeSlots) slots = res.timeSlots;
+
+        //  核心破案 3：智能时间提取器 (专治 "2026-05-05 09:00:00" 切割乱码)
+        const safeExtractTime = (timeStr) => {
+            if (!timeStr) return '--:--';
+            if (timeStr.includes('T')) return timeStr.split('T')[1].substring(0, 5);
+            if (timeStr.includes(' ')) return timeStr.split(' ')[1].substring(0, 5);
+            return timeStr.substring(0, 5); // 兜底正常的 "09:00:00"
+        };
+
+        if (slots.length === 0) {
+            list.append('<div class="text-muted text-center w-100 py-3 fw-bold">No available slots for this date.</div>');
+            return;
+        }
+
         slots.forEach(s => {
+            const startTime = safeExtractTime(s.startTime);
+            const endTime = safeExtractTime(s.endTime);
+
             list.append(`
                 <div class="slot-card" id="slot-card-${s.id}" onclick="selectSlot(${s.id})">
-                    <div class="slot-time">${s.startTime.substring(0, 5)} - ${s.endTime.substring(0, 5)}</div>
+                    <div class="slot-time fw-bold">${startTime} - ${endTime}</div>
                     <div class="slot-status"><i class="bi bi-check2-circle me-1"></i>Available</div>
                 </div>`);
         });
@@ -180,7 +244,7 @@ $('#confirm-btn').off('click').on('click', function() {
 
     // 2. 获取费率并计算总价 (假设按你参考图里的 Charon Coin 结算)
     // 这里的 replace 是为了把 "$888" 提取成数字 888
-    const hourlyFee = parseFloat($('#pRate').text().replace('$', '')) || 0;
+    const hourlyFee = parseFloat($('#pRate').text().replace(/[^0-9.]/g, '')) || 0;
 
     // 简单计算一下时长：提取 12 和 15 算出差值 3 小时
     let hours = 1;

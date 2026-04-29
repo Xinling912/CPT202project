@@ -169,3 +169,19 @@ window.alert = function(message) {
     // 调用我们自己写的神级弹窗！
     showToast(message, type);
 };
+//匹配头像逻辑
+function getAvatar(username, realName = '') {
+
+    if (username === 'ShenShaohui' ) return `images/ssh.jpg`;
+    if (username === 'XingjianWu' ) return `images/specialist1.png`;
+    if (username === 'XinlingDu' ) return `images/specialist3.png`;
+    if (username === 'Carrot') return `images/carrot.png`;
+
+    if (username === 'Tudou' ) return `images/potato.jpg`;
+    if (username === 'zhangjuyi' ) return `images/zhangjuyi.jpg`;
+    if (username === 'Faker' ) return `images/faker.jpg`;
+    if (username === 'Qlin') return `images/qlin.jpg`;
+
+    // 兜底：如果都没有匹配上，就用自动生成的头像
+    return `https://api.dicebear.com/7.x/initials/svg?seed=${username}`;
+}

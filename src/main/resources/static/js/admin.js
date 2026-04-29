@@ -75,17 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadExistingSpecialists();
 });
 
-// ==========================================
-// 辅助函数：自动匹配头像
-// ==========================================
-function getAvatar(username, realName) {
-    let avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${username}`;
-    if (username === 'ShenShaohui' || realName === 'Shaohui Shen') avatarUrl = 'images/ssh.jpg';
-    else if (username === 'XingjianWu' || realName === 'Xingjian Wu') avatarUrl = 'images/specialist1.png';
-    else if (username === 'XinlingDu' || realName === 'Xinling Du') avatarUrl = 'images/specialist3.png';
-    else if (username === 'Carrot' || realName === 'Carrot') avatarUrl = 'images/carrot.png';
-    return avatarUrl;
-}
 
 // ==========================================
 // 页面 1A：专家状态管理
