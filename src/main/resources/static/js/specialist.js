@@ -526,6 +526,12 @@ $(document).ready(() => {
             reader.onload = function(e) {
                 uploadedImageSrc = e.target.result;
                 $('#profile-photo-preview').attr('src', uploadedImageSrc);
+                const currentUsername = localStorage.getItem('username') || 'Specialist';
+                localStorage.setItem(`custom_avatar_${currentUsername}`, uploadedImageSrc);
+
+                // 顺手把页面左上角和右上角的头像也立刻换掉
+                $('#display-photo').attr('src', uploadedImageSrc);
+                $('#header-avatar').attr('src', uploadedImageSrc);
             };
             reader.readAsDataURL(file);
         }

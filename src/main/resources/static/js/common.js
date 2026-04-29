@@ -171,6 +171,12 @@ window.alert = function(message) {
 };
 //匹配头像逻辑
 function getAvatar(username, realName = '') {
+// 1. 先去本地缓存里找找看，这个账号有没有自己上传过头像？
+    const customAvatar = localStorage.getItem(`custom_avatar_${username}`);
+    if (customAvatar) {
+        return customAvatar; // 如果有，直接返回用户上传的（Base64编码）
+    }
+
 
     if (username === 'ShenShaohui' ) return `images/ssh.jpg`;
     if (username === 'XingjianWu' ) return `images/specialist1.png`;
