@@ -33,13 +33,28 @@ public class AdminService {
         SpecialistProfile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new RuntimeException("找不到该申请记录"));
 
-        // 1. 处理自定义专业入库逻辑
+        // 1. 处理自定义专业入库逻辑 ( 修复版：防止重名报错) 修改杜姐姐的原有代码 不然一直报什么Duplicate entry 报错
         if (profile.getProposedExpertiseName() != null) {
-            ExpertiseCategory newCategory = new ExpertiseCategory();
-            newCategory.setName(profile.getProposedExpertiseName());
-            expertiseRepository.save(newCategory); // 正式存入专业字典表
+            String expName = profile.getProposedExpertiseName();
 
-            profile.setExpertise(newCategory); // 绑定给该专家
+            // 去数据库里查一查，是不是已经有这个专业了？
+            ExpertiseCategory existingCategory = expertiseRepository.findAll().stream()
+                    .filter(e -> e.getName().equalsIgnoreCase(expName))
+                    .findFirst()
+                    .orElse(null);
+
+            if (existingCategory != null) {
+                // 如果有，直接绑定旧的，千万别再 insert 了
+                profile.setExpertise(existingCategory);
+            } else {
+                // 如果真没有，才去创建并保存
+                ExpertiseCategory newCategory = new ExpertiseCategory();
+                newCategory.setName(expName);
+                newCategory.setDescription("用户自定义新专业，待管理员确认");
+                expertiseRepository.save(newCategory);
+                profile.setExpertise(newCategory);
+            }
+
             profile.setProposedExpertiseName(null); // 清空临时占位字段
         }
 
@@ -82,14 +97,24 @@ public class AdminService {
         profile.setHourlyFee(editReq.getNewHourlyFee());
         profile.setResume(editReq.getNewResume());
 
-        // 2. 处理修改时的专业变更逻辑
+        // 2. 处理修改时的专业变更逻辑 (防止 Duplicate entry 报错)
         if (editReq.getNewProposedExpertiseName() != null) {
-            // 他填了新的自定义专业
-            ExpertiseCategory newCategory = new ExpertiseCategory();
-            newCategory.setName(editReq.getNewProposedExpertiseName());
-            expertiseRepository.save(newCategory); // 入库
+            String expName = editReq.getNewProposedExpertiseName();
 
-            profile.setExpertise(newCategory);
+            // 安全检查：防止重复插入
+            ExpertiseCategory existingCategory = expertiseRepository.findAll().stream()
+                    .filter(e -> e.getName().equalsIgnoreCase(expName))
+                    .findFirst()
+                    .orElse(null);
+
+            if (existingCategory != null) {
+                profile.setExpertise(existingCategory); // 已存在，直接绑定
+            } else {
+                ExpertiseCategory newCategory = new ExpertiseCategory();
+                newCategory.setName(expName);
+                expertiseRepository.save(newCategory); // 真不存在才入库
+                profile.setExpertise(newCategory);
+            }
         } else if (editReq.getNewExpertise() != null) {
             // 他选择了下拉框里的其他官方专业
             profile.setExpertise(editReq.getNewExpertise());

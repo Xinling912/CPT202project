@@ -12,7 +12,7 @@ $(document).ready(function() {
 
     // 4. 点击 Join us 跳转到专家申请页面
     $('#joinUsBtn').on('click', function() {
-        window.location.href = 'expert_apply.html'; 
+        window.location.href = 'expert_apply.html';
     });
 
     // 5. 登出按钮逻辑 (升级版：彻底清空状态)

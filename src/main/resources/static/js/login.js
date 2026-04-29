@@ -32,8 +32,8 @@ $(document).ready(function() {
         const inputPwd = $('#log-password').val();
 
         btn.text('Verifying...')
-           .prop('disabled', true)
-           .addClass('opacity-70 cursor-not-allowed');
+            .prop('disabled', true)
+            .addClass('opacity-70 cursor-not-allowed');
 
         const loginData = {
             usernameOrEmail: inputAccount,
@@ -47,52 +47,52 @@ $(document).ready(function() {
             },
             body: JSON.stringify(loginData)
         })
-        .then(async response => {
-            const data = await response.json();
-            console.log("[Debug] Full backend response:", data);
+            .then(async response => {
+                const data = await response.json();
+                console.log("[Debug] Full backend response:", data);
 
-            if (response.ok) {
-                const actualToken = data.token;
-                if (actualToken) {
-                    localStorage.setItem('token', actualToken);
-                    console.log("[Debug] Token saved to local storage:", actualToken);
+                if (response.ok) {
+                    const actualToken = data.token;
+                    if (actualToken) {
+                        localStorage.setItem('token', actualToken);
+                        console.log("[Debug] Token saved to local storage:", actualToken);
+                    } else {
+                        console.warn("Warning: Backend returned success, but no Token was found!");
+                    }
+
+                    const actualUsername = data.username || (data.data && data.data.username) || inputAccount;
+                    localStorage.setItem('username', actualUsername);
+
+                    if (data.role) {
+                        localStorage.setItem('role', data.role);
+                        console.log("[Debug] User role saved:", data.role);
+                    }
+                    if (data.userId) {
+                        localStorage.setItem('userId', data.userId);
+                        console.log("[Debug] User ID saved:", data.userId);
+                    }
+
+                    alert(data.message || "Login successful!");
+
+                    // Redirect based on role
+                    if (data.role === 'SPECIALIST') {
+                        window.location.href = 'specialist.html';
+                    } else if (data.role === 'ADMIN') {
+                        window.location.href = 'admin.html';
+                    } else {
+                        window.location.href = 'booking.html';
+                    }
                 } else {
-                    console.warn("Warning: Backend returned success, but no Token was found!");
+                    alert("Login failed: " + (data.message || "Unknown error, please check your credentials."));
                 }
-
-                const actualUsername = data.username || (data.data && data.data.username) || inputAccount;
-                localStorage.setItem('username', actualUsername);
-
-                if (data.role) {
-                    localStorage.setItem('role', data.role);
-                    console.log("[Debug] User role saved:", data.role);
-                }
-                if (data.userId) {
-                    localStorage.setItem('userId', data.userId);
-                    console.log("[Debug] User ID saved:", data.userId);
-                }
-
-                alert(data.message || "Login successful!");
-
-                // Redirect based on role
-                if (data.role === 'SPECIALIST') {
-                    window.location.href = 'specialist.html';
-                } else if (data.role === 'ADMIN') {
-                    window.location.href = 'admin.html';
-                } else {
-                    window.location.href = 'booking.html';
-                }
-            } else {
-                alert("Login failed: " + (data.message || "Unknown error, please check your credentials."));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("Server connection failed! Please check if your backend is running.");
-        })
-        .finally(() => {
-            btn.text('Log In').prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
-        });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Server connection failed! Please check if your backend is running.");
+            })
+            .finally(() => {
+                btn.text('Log In').prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
+            });
     });
 
 
@@ -114,31 +114,31 @@ $(document).ready(function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email })
         })
-        .then(async response => {
-            const data = await response.json();
-            if (response.ok) {
-                alert(data.message || 'Verification code sent to your email!');
-                // 60-second cooldown timer
-                let timeLeft = 60;
-                const timer = setInterval(() => {
-                    if (timeLeft <= 0) {
-                        clearInterval(timer);
-                        btn.prop('disabled', false).text('Send');
-                    } else {
-                        btn.text(`${timeLeft}s`);
-                        timeLeft -= 1;
-                    }
-                }, 1000);
-            } else {
-                alert('Failed to send: ' + (data.message || 'Unknown error'));
+            .then(async response => {
+                const data = await response.json();
+                if (response.ok) {
+                    alert(data.message || 'Verification code sent to your email!');
+                    // 60-second cooldown timer
+                    let timeLeft = 60;
+                    const timer = setInterval(() => {
+                        if (timeLeft <= 0) {
+                            clearInterval(timer);
+                            btn.prop('disabled', false).text('Send');
+                        } else {
+                            btn.text(`${timeLeft}s`);
+                            timeLeft -= 1;
+                        }
+                    }, 1000);
+                } else {
+                    alert('Failed to send: ' + (data.message || 'Unknown error'));
+                    btn.prop('disabled', false).text('Send');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Network error, unable to send the verification code.");
                 btn.prop('disabled', false).text('Send');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("Network error, unable to send the verification code.");
-            btn.prop('disabled', false).text('Send');
-        });
+            });
     });
 
 
@@ -222,27 +222,27 @@ $(document).ready(function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestData)
         })
-        .then(async response => {
-            const data = await response.json();
-            if (response.ok) {
-                alert(data.message || 'Password reset successfully! Please log in.');
-                // 重置成功后清理现场
-                $('#forgotForm')[0].reset();
-                errorMsg.hide();
-                confirmPwdInput.css({'border-color': '', 'box-shadow': ''});
-                $('#forgot-section').hide();
-                $('#login-section').fadeIn();
-            } else {
-                alert('Reset failed: ' + (data.message || 'Please check your verification code.'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("Server connection failed!");
-        })
-        .finally(() => {
-            btn.text('Reset Password').prop('disabled', false);
-        });
+            .then(async response => {
+                const data = await response.json();
+                if (response.ok) {
+                    alert(data.message || 'Password reset successfully! Please log in.');
+                    // 重置成功后清理现场
+                    $('#forgotForm')[0].reset();
+                    errorMsg.hide();
+                    confirmPwdInput.css({'border-color': '', 'box-shadow': ''});
+                    $('#forgot-section').hide();
+                    $('#login-section').fadeIn();
+                } else {
+                    alert('Reset failed: ' + (data.message || 'Please check your verification code.'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Server connection failed!");
+            })
+            .finally(() => {
+                btn.text('Reset Password').prop('disabled', false);
+            });
     });
 
 });

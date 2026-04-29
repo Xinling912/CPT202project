@@ -67,4 +67,28 @@ public class ExpertiseService {
 
         expertiseRepository.deleteById(id);
     }
+
+    public ExpertiseCategory updateExpertise(Long id, ExpertiseCategory updateData) {
+        // 1. 查找是否存在
+        ExpertiseCategory category = expertiseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("专业分类不存在"));
+
+        // 2. 校验名称（如果要改名，不能改成数据库里已有的其他名字）
+        if (updateData.getName() != null && !updateData.getName().isBlank()) {
+            String newName = updateData.getName().trim();
+            // 如果新名字跟旧名字不一样，且数据库里已经有这个新名字了，就报错
+            if (!category.getName().equalsIgnoreCase(newName) &&
+                    expertiseRepository.existsByNameIgnoreCase(newName)) {
+                throw new RuntimeException("修改失败：专业【" + newName + "】已存在");
+            }
+            category.setName(newName);
+        }
+
+        // 3. 更新描述
+        if (updateData.getDescription() != null) {
+            category.setDescription(updateData.getDescription());
+        }
+
+        return expertiseRepository.save(category);
+    }
 }

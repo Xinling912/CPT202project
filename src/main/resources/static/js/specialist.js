@@ -540,31 +540,54 @@ $(document).ready(() => {
     // 提交修改资料 (防呆验证 + 自动刷新)
 // ==========================================
     $('#save-profile-btn').click(function() {
+        // 1. 获取输入框里的新值
+        const newName = $('#edit-name').val().trim();
+        const newCategory = $('#edit-category').val();
+        const newFee = $('#edit-fee').val().trim();
+        const newResume = $('#edit-resume').val().trim();
+
+        // 2. 获取页面上展示的旧值
+        const oldName = $('#display-name').text().trim();
+        const oldCategory = $('#display-category').text().trim();
+        const oldFee = $('#display-fee').text().trim();
+        const oldResume = $('#display-resume').text().trim();
+
+        //  【修复1】：找不同！如果四个值完全一样，直接拦截，不准发请求！
+        if (newName === oldName && newCategory === oldCategory && newFee === oldFee && newResume === oldResume) {
+            alert("You haven't made any changes! (请先修改资料再提交)");
+            return; // 直接退出函数，终止提交！
+        }
+
+        // 3. 构建发给后端的 JSON
         const payload = {
-            realName: $('#edit-name').val().trim(),
-            level: $('#edit-level').val(), // 🌟 获取选中的 JUNIOR/SENIOR/EXPERT
-            hourlyFee: parseFloat($('#edit-fee').val()) || 0,
-            resume: $('#edit-resume').val().trim(),
-            expertiseId: null, // 杜姐后端要这个，我们传 null
-            newExpertiseName: $('#edit-category').val() // 🌟 传选中的专业名称
+            realName: newName,
+            proposedExpertiseName: newCategory,
+            hourlyFee: parseFloat(newFee) || 0,
+            resume: newResume,
+            newLevel: currentSpecialistLevel,
+            level: currentSpecialistLevel
         };
 
+        const token = localStorage.getItem('token');
         fetch(`${API_BASE}/api/specialists/apply`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
         })
             .then(async res => {
                 if (res.ok) {
-                    alert("Success! Pending admin approval.");
+                    alert("Update request submitted successfully!");
+                    //  【修复3】：只要提交成功，瞬间强制刷新整个页面！黄条立马出来并锁死按钮！
                     window.location.reload();
                 } else {
-                    alert("Failed: " + await res.text());
+                    const err = await res.json();
+                    alert("Submission failed: " + (err.error || err.message));
                 }
-            });
+            })
+            .catch(err => alert("Network error."));
     });
     if(!token || role !== 'SPECIALIST') {
         alert("Authentication failed.");
@@ -818,37 +841,54 @@ function loadEarnings() {
 // ==========================================
 function initProfilePage() {
     const token = localStorage.getItem('token');
+
     fetch(`${API_BASE}/api/specialists/profile`, {
         method: 'GET',
         headers: { 'Authorization': `Bearer ${token}` }
     })
-        .then(res => {
-            if (!res.ok) throw new Error("Backend Enum Error or Auth failed");
+        .then(async res => {
+            if (!res.ok) throw new Error(await res.text());
             return res.json();
         })
         .then(data => {
-            const p = data.data || data;
+            const realProfile = data.data || data;
 
-            // 🌟 核心：确保 currentSpecialistLevel 是合法的枚举值
-            currentSpecialistLevel = p.level || 'EXPERT';
+            //  核心修复点：赋值必须写在拿到了 realProfile 之后！而且要加个兜底防止后端原来就是空的。
+            currentSpecialistLevel = realProfile.level || 'EXPERT';
+            console.log("少辉: 成功拿到并缓存了真实的专家 Level: ", currentSpecialistLevel);
 
-            // 渲染显示区
-            $('#display-name').text(p.realName || 'Unknown');
-            $('#display-category').text(p.expertise ? p.expertise.name : (p.proposedExpertiseName || '未分类'));
-            $('#display-fee').text(p.hourlyFee || '0.00');
-            $('#display-resume').text(p.resume || '');
+            const realName = realProfile.realName || realProfile.user?.username || 'Unknown';
+            const expName = realProfile.expertise ? realProfile.expertise.name : '未分类';
+            const hourlyFee = realProfile.hourlyFee || '0.00';
+            const resumeText = realProfile.resume || 'Please update your About Me...';
 
-            // 🌟 渲染编辑区
-            $('#edit-name').val(p.realName);
-            $('#edit-fee').val(p.hourlyFee);
-            $('#edit-resume').val(p.resume);
+            const avatarUrl = getAvatar(realProfile.user?.username || '', realName);
 
-            // 关键：让两个下拉框选中正确的值
-            $('#edit-level').val(currentSpecialistLevel);
-            const catName = p.expertise ? p.expertise.name : p.proposedExpertiseName;
-            $('#edit-category').val(catName);
+            $('#display-name').text(realName);
+            $('#display-category').text(expName);
+            $('#display-fee').text(hourlyFee);
+            $('#display-resume').text(resumeText);
+            $('#display-photo').attr('src', avatarUrl);
+            $('#header-avatar').attr('src', avatarUrl);
+
+            //  3. 渲染到修改表单里 (Profile Edit Mode)
+            $('#edit-name').val(realName);
+            $('#edit-category').val(expName);
+            $('#edit-fee').val(hourlyFee);
+            $('#edit-resume').val(resumeText);
+            $('#profile-photo-preview').attr('src', avatarUrl);
+
+            //  4. 判断有没有待审批的请求
+            $('#pending-alert').addClass('d-none');
+            $('button[onclick="toggleProfileEdit()"]').prop('disabled', false).html('<i class="bi bi-pencil-square me-2"></i>Change Profile');
+
+            // 渲染历史记录
+            renderHistory();
         })
-        .catch(err => console.error("初始化失败:", err));
+        .catch(err => {
+            console.error("API 报错，无法获取数据库资料:", err);
+            $('#display-resume').text("Backend connection failed. Please check if your MySQL and Spring Boot are running.");
+        });
 }
 function renderHistory() {
     const historyData = JSON.parse(localStorage.getItem('sas_profile_history')) || [];
