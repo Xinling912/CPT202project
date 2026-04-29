@@ -1,0 +1,73 @@
+=================================================
+  SAS (Specialist Administration System) 测试账号本
+  统一测试密码: Yasuo123..
+=================================================
+
+👑 【第一类：管理员 Admin】
+(权限：审批专家入驻、审批资料修改、处理举报、封号、管理专业分类)
+-------------------------------------------------
+Username: God
+Email:    admin@qq.com
+Role:     ADMIN
+
+
+🎓 【第二类：专家 Specialists】
+(权限：发布排班、修改个人履历、接单、处理订单)
+-------------------------------------------------
+1. Username: Wanfeng
+   Email:    expert@qq.com
+   Role:     SPECIALIST
+   [备注: 后端开发]
+
+2. Username: ShenShaohui
+   Email:    ssh@expert.com
+   Role:     SPECIALIST
+   [备注: 心理健康/情感]
+
+3. Username: XingjianWu
+   Email:    wu@expert.com
+   Role:     SPECIALIST
+   [备注: 法律服务]
+
+4. Username: XinlingDu
+   Email:    du@expert.com
+   Role:     SPECIALIST
+   [备注: 音乐/歌唱指导]
+
+5. Username: Sarah_IELTS
+   Email:    sarah@expert.com
+   Role:     SPECIALIST
+   [备注: 雅思外语]
+
+6. Username: Jessica_Design
+   Email:    jessica@expert.com
+   Role:     SPECIALIST
+   [备注: 艺术设计]
+
+7. Username: zhangjuyi
+   Email:    zjy@expert.com
+   Role:     SPECIALIST
+   [备注: 影视表演]
+
+8. Username: Faker
+   Email:    faker@expert.com
+   Role:     SPECIALIST
+   [备注: 电子竞技]
+
+
+🛍️ 【第三类：顾客 Customers】
+(权限：大厅浏览、筛选专家、预约下单、取消订单、提交举报)
+-------------------------------------------------
+1. Username: Carrot
+   Email:    carrot@qq.com
+   Role:     CUSTOMER
+
+2. Username: Qlin
+   Email:    Qlin@qq.com
+   Role:     CUSTOMER
+
+3. Username: Tudou
+   Email:    Tudou@qq.com
+   Role:     CUSTOMER
+
+=================================================

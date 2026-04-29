@@ -42,13 +42,13 @@ function switchTab(tabId, btn = null) {
     window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
-function logout() {
-    if(confirm("Are you sure you want to log out?")) {
+async function logout() {
+    const isConfirmed = await showConfirm("Are you sure you want to log out?");
+    if (isConfirmed) {
         localStorage.clear();
         window.location.href = 'landingpage.html';
     }
 }
-
 
 window.loadSpecialistOrders = function() {
     const list = $('#specialist-orders-list').empty().append('<p class="text-muted py-4 text-center">Loading orders...</p>');
