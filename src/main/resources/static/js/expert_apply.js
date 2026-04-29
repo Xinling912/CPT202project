@@ -55,7 +55,7 @@ $(document).ready(function() {
             hourlyFee: Number($('#exp-fee').val()),
             resume: $('#exp-resume').val().trim(),
             expertiseId: isOther ? null : Number(domainSelectValue),
-            // 🌟 核心：如果是Other，就把输入的文本发过去，后端会自动创建新专业
+            // 核心：如果是Other，就把输入的文本发过去，后端会自动创建新专业(并非自动 成功录取该专家后才会创建新的专业)
             newExpertiseName: isOther ? $('#exp-domain-input').val().trim() : null
         };
 

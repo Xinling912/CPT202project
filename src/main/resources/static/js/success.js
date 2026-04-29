@@ -4,7 +4,7 @@ $(document).ready(function() {
         window.location.href = 'login.html';
     });
 });
-// --- 🌟 Earnings & Finances Logic ---
+// ---  Earnings & Finances Logic ---
 
 // 点击“添加新卡”按钮，隐藏列表，显示表单
 $('#show-add-card-btn').on('click', function() {

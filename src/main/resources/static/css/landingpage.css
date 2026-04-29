@@ -31,9 +31,9 @@ body {
 .text-gradient {
     background: linear-gradient(135deg, #0062ff 0%, #00c6ff 100%);
     -webkit-background-clip: text;
-    background-clip: text; /* 🌟 满足 VSCode 洁癖的标准属性 */
+    background-clip: text; /* 满足 VSCode 洁癖的标准属性 */
     -webkit-text-fill-color: transparent;
-    color: transparent; /* 🌟 备用通用属性 */
+    color: transparent; /*  备用通用属性 */
 }
 
 .hero-subtitle { font-size: 1.25rem; color: #475569; margin-bottom: 3rem; line-height: 1.6; }

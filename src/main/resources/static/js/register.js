@@ -81,7 +81,7 @@ $(document).ready(function() {
             verifyCode: verifyCode
         };
 
-        // 呼叫杜姐的正式注册接口！
+        // 呼叫小杜的正式注册接口..
         fetch('http://localhost:8080/api/users/register', {
             method: 'POST',
             headers: {

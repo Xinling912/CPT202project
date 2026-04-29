@@ -10,7 +10,7 @@ function getDefaultProfile() {
         category: 'Uncategorized',
         fee: '0.00',
         resume: 'Please update your professional resume...',
-        // 🌟 这里完美接回咱们的头像匹配逻辑！
+        // 这里完美接回咱们的头像匹配逻辑！
         photo: getAvatar(currentName)
     };
 }
@@ -76,7 +76,7 @@ window.loadSpecialistOrders = function() {
             }
 
             orders.forEach(o => {
-                // 🌟 核心防雷：兼容所有后端可能返回的名字 (DTO 或 嵌套)
+                //  核心防雷：兼容所有后端可能返回的名字 (DTO 或 嵌套)
                 const custName = o.customerName || (o.customer && o.customer.username) || 'Customer';
                 const dateStr = o.slotDate || o.date || (o.timeSlot && o.timeSlot.slotDate) || 'Unknown Date';
                 const startStr = o.startTime ? o.startTime.substring(0,5) : (o.timeSlot && o.timeSlot.startTime ? o.timeSlot.startTime.substring(0,5) : '--:--');
@@ -85,7 +85,7 @@ window.loadSpecialistOrders = function() {
                 const timeStr = `${dateStr} | ${startStr} - ${endStr}`;
                 let statusBadge = o.status === 'CONFIRMED' ? 'text-success' : (o.status === 'CANCELLED' || o.status === 'CANCELED' ? 'text-danger' : 'text-warning');
 
-                // 🌟 动态渲染操作按钮
+                //  动态渲染操作按钮
                 let actionHtml = '';
                 if (o.status === 'PENDING') {
                     actionHtml = `
@@ -174,13 +174,13 @@ window.openChangePasswordModal = function() {
         const newPw = $('#newPassword').val();
         const confirmPw = $('#confirmNewPassword').val();
 
-        // 🌟 校验 1：是否填完
+        // 校验 1：是否填完
         if(!oldPw || !newPw || !confirmPw) {
             alert("Please fill in all fields!");
             return;
         }
 
-        // 🌟 校验 2：两次新密码是否一致
+        // 校验 2：两次新密码是否一致
         if(newPw !== confirmPw) {
             alert("The new passwords do not match. Please try again!");
             return;
@@ -201,7 +201,7 @@ window.openChangePasswordModal = function() {
                 alert("Password updated successfully! Please login again with your new password.");
                 $('#changePasswordModal').modal('hide');
 
-                // 🌟 核心修改：不调 logout() 询问，直接清空 Token 并强制踢回 login.html
+                //  核心修改：不调 logout() 询问，直接清空 Token 并强制踢回 login.html
                 localStorage.clear();
                 window.location.href = 'login.html';
             } else {
@@ -324,7 +324,7 @@ function renderRealSchedule(flatSchedule) {
             if (displayStatus === 'CONFIRMED') cardType = 'card-confirmed';
             if (displayStatus === 'CANCELED' || displayStatus === 'CANCELLED') cardType = 'card-canceled';
         } else if (slot.timeSlotStatus === 'DISABLED') {
-            // 🌟 核心魔法：只要是 DISABLED，统统穿上红色的衣服，标上 Cancelled！
+            // 核心魔法：只要是 DISABLED，统统穿上红色的衣服，标上 Cancelled！
             cardType = 'card-canceled';
             title = 'Cancelled';
             displayStatus = 'DISABLED';
@@ -414,7 +414,7 @@ window.handleAptAction = function(bookingId, action, requiresReason = false) {
                 loadSpecialistOrders();
             }
         } else {
-            // 🌟 核心优化：解析后端的 JSON 报错，并进行“人性化翻译”
+            //  核心优化：解析后端的 JSON 报错，并进行“人性化翻译”
             const errorText = await res.text();
             let errorMessage = errorText;
 
@@ -489,7 +489,7 @@ window.removeB = async function(e, d, i) {
     if (block.locked) return;
 
     if (block.id) {
-        // ✅ 2. 换成高级弹窗并 await
+        // 2. 换成高级弹窗并 await
         const isConfirmed = await showConfirm("This slot is already saved. Delete it permanently from database?");
         if (!isConfirmed) return; // 如果点了取消，直接退出
 
@@ -502,7 +502,7 @@ window.removeB = async function(e, d, i) {
                 renderBlocks();
                 loadMySchedule();
             } else {
-                // 🌟 顺手把这里的 alert 也优化成红色的 Toast！
+                // 顺手把这里的 alert 也优化成红色的 Toast！
                 showToast("Cannot delete a booked slot.", 'error');
             }
         });
@@ -538,7 +538,7 @@ $(document).ready(() => {
         }
     });
 
-    // 🌟 提交修改资料 (防呆验证 + 自动刷新)
+    // 提交修改资料 (防呆验证 + 自动刷新)
 // ==========================================
     $('#save-profile-btn').click(function() {
         // 1. 获取输入框里的新值
@@ -553,7 +553,7 @@ $(document).ready(() => {
         const oldFee = $('#display-fee').text().trim();
         const oldResume = $('#display-resume').text().trim();
 
-        // 🌟 【修复1】：找不同！如果四个值完全一样，直接拦截，不准发请求！
+        //  【修复1】：找不同！如果四个值完全一样，直接拦截，不准发请求！
         if (newName === oldName && newCategory === oldCategory && newFee === oldFee && newResume === oldResume) {
             alert("You haven't made any changes! (请先修改资料再提交)");
             return; // 直接退出函数，终止提交！
@@ -581,7 +581,7 @@ $(document).ready(() => {
             .then(async res => {
                 if (res.ok) {
                     alert("Update request submitted successfully!");
-                    // 🌟 【修复3】：只要提交成功，瞬间强制刷新整个页面！黄条立马出来并锁死按钮！
+                    //  【修复3】：只要提交成功，瞬间强制刷新整个页面！黄条立马出来并锁死按钮！
                     window.location.reload();
                 } else {
                     const err = await res.json();
@@ -663,14 +663,14 @@ $(document).ready(() => {
 
             const isTimeLocked = slotDateTime < thresholdTime;
             const isBooked = slot.timeSlotStatus === 'BOOKED';
-            const isDisabled = slot.timeSlotStatus === 'DISABLED'; // 🌟 新增判断
+            const isDisabled = slot.timeSlotStatus === 'DISABLED'; //  新增判断
 
 
             const isLocked = isTimeLocked || isBooked || isDisabled;
 
             let statusTitle = 'VACANT';
             if (isBooked) statusTitle = slot.bookingStatus || 'BOOKED';
-            if (isDisabled) statusTitle = 'DISABLED'; // 🌟 名字改成 Disabled
+            if (isDisabled) statusTitle = 'DISABLED'; //  名字改成 Disabled
 
             cacheData[dayKey].push({
                 s: startH,
@@ -872,14 +872,14 @@ function initProfilePage() {
             $('#display-photo').attr('src', avatarUrl);
             $('#header-avatar').attr('src', avatarUrl);
 
-            // 🌟 3. 渲染到修改表单里 (Profile Edit Mode)
+            //  3. 渲染到修改表单里 (Profile Edit Mode)
             $('#edit-name').val(realName);
             $('#edit-category').val(expName);
             $('#edit-fee').val(hourlyFee);
             $('#edit-resume').val(resumeText);
             $('#profile-photo-preview').attr('src', avatarUrl);
 
-            // 🌟 4. 判断有没有待审批的请求
+            //  4. 判断有没有待审批的请求
             $('#pending-alert').addClass('d-none');
             $('button[onclick="toggleProfileEdit()"]').prop('disabled', false).html('<i class="bi bi-pencil-square me-2"></i>Change Profile');
 
@@ -970,7 +970,7 @@ window.viewHistoryDetail = function(index) {
     document.getElementById('expertModalOverlay').style.display = 'flex';
 };
 // ==========================================
-// 🌟 检查状态 (附带“阅后即焚”的绿色成功提示框)
+//  检查状态 (附带“阅后即焚”的绿色成功提示框)
 // ==========================================
 function checkProfileStatus() {
     const token = localStorage.getItem('token');
@@ -992,7 +992,7 @@ function checkProfileStatus() {
             alertBox.removeClass('d-none alert-warning alert-danger alert-success border-warning border-danger border-success alert-dismissible fade show');
 
             if (status === 'EDIT_PENDING' || status === 'APPLY_PENDING') {
-                // 🌟 重点：只要重新进入审核，就把之前隐藏绿条的记录删掉，保证下次同意时绿条能再次弹出来！
+                //  重点：只要重新进入审核，就把之前隐藏绿条的记录删掉，保证下次同意时绿条能再次弹出来！
                 localStorage.removeItem('hide_approved_banner');
 
                 alertBox.addClass('alert-warning border-warning');
@@ -1005,7 +1005,7 @@ function checkProfileStatus() {
                 editBtn.prop('disabled', false).html('<i class="bi bi-pencil-square me-2"></i>Edit Again');
 
             } else if (status === 'EDIT_APPROVED') {
-                // 🌟 检查记事本，如果有“已阅”标记，直接隐藏
+                // 检查记事本，如果有“已阅”标记，直接隐藏
                 if (localStorage.getItem('hide_approved_banner') === 'true') {
                     alertBox.addClass('d-none');
                 } else {

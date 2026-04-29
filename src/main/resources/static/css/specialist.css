@@ -100,7 +100,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
 .drag-slot { height: var(--hour-height); border-bottom: 1px solid #f1f5f9; position: relative; cursor: crosshair; }
 .drag-slot.selecting { background-color: rgba(0, 98, 255, 0.1) !important; }
 
-/* 🌟 冻结状态的排班格子 (24小时内不可修改) 视觉防错 */
+/*  冻结状态的排班格子 (24小时内不可修改) 视觉防错 */
 .drag-slot.locked-cell { background-color: #f1f5f9 !important; cursor: not-allowed !important; }
 .drag-slot.locked-cell::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(203, 213, 225, 0.2) 10px, rgba(203, 213, 225, 0.2) 20px); pointer-events: none; }
 
@@ -145,7 +145,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); colo
 .upload-area:hover { background-color: #f0f7ff; border-color: var(--brand) !important; }
 .form-control:focus { box-shadow: 0 0 0 0.25rem var(--brand-glow); border-color: var(--brand); }
 /* ==========================================
- * 🌟 细节 1：让 Vacant 卡片右上角的红叉一直显示
+ *  细节 1：让 Vacant 卡片右上角的红叉一直显示
  * ========================================== */
 .drag-del-btn {
     display: block !important; /* 强制覆盖原来的 display: none */

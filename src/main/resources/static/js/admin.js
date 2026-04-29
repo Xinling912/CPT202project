@@ -533,7 +533,7 @@ window.submitEditExpertise = function(id) {
 };
 
 // ==========================================
-// 🌟 5：Content Review 页面真实对接逻辑 (终极防白屏版)
+//  5：Content Review 页面真实对接逻辑 (终极防白屏版)
 // ==========================================
 
 // 建立一个全局快递柜，用来存复杂的简历数据，防止把 HTML 挤爆
@@ -591,7 +591,7 @@ window.loadPendingRequests = function() {
 
             list.forEach(item => {
                 const reqId = item.id;
-                // 🌟 把复杂的 item 数据存进快递柜，钥匙就是 reqId
+                //  把复杂的 item 数据存进快递柜，钥匙就是 reqId
                 window.pendingEditsCache[reqId] = item;
 
                 const realName = item.newRealName || item.specialistProfile?.realName || item.user?.username || 'Unknown';
@@ -600,7 +600,7 @@ window.loadPendingRequests = function() {
                 const username = item.specialistProfile?.user?.username || item.user?.username || '';
                 const avatarUrl = getAvatar(username, realName);
 
-                // 🌟 注意：这里的 Compare 按钮，只传极其安全的纯数字 reqId！
+                //  注意：这里的 Compare 按钮，只传极其安全的纯数字 reqId！
                 html += `
             <tr style="border-top: 1px solid #e2e8f0; transition: background 0.2s;">
                 <td style="padding: 15px 20px;">
@@ -717,7 +717,7 @@ window.handleApproval = async function(reqId, isApproved) {
     const action = isApproved ? 'approve' : 'reject';
     const actionText = isApproved ? 'Approve' : 'Reject';
 
-    // ✅ 替换 confirm
+    //  替换 confirm
     const isConfirmed = await showConfirm(`Are you sure you want to ${actionText} this request?`);
     if(!isConfirmed) return;
     fetch(`${API_BASE}/api/admin/edits/${reqId}/${action}`, {

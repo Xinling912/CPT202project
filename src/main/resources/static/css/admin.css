@@ -18,7 +18,7 @@
 body { background-color: var(--bg); color: var(--text-main); }
 .admin-container { display: flex; min-height: 100vh; }
 
-/* --- 🌟 升级版可缩放 Sidebar --- */
+/* ---  升级版可缩放 Sidebar --- */
 .sidebar {
     width: var(--sidebar-w);
     height: 100vh;
@@ -30,7 +30,7 @@ body { background-color: var(--bg); color: var(--text-main); }
     white-space: nowrap;
 }
 
-/* --- 🌟 升级后的折叠状态样式 --- */
+/* ---  升级后的折叠状态样式 --- */
 .sidebar.collapsed {
     width: 85px;
 }
@@ -67,11 +67,11 @@ body { background-color: var(--bg); color: var(--text-main); }
     font-size: 22px;
 }
 
-/* 🌟 侧边栏缩放控制按钮 (已修复位置) */
+/*  侧边栏缩放控制按钮 (已修复位置) */
 .btn-toggle-custom {
     position: absolute;
     right: -16px;
-    top: 260px; /* 🌟 完美移到了 System Log 下方 */
+    top: 260px; /*  完美移到了 System Log 下方 */
     width: 32px;
     height: 32px;
     background-color: var(--brand-light);
@@ -120,7 +120,7 @@ body { background-color: var(--bg); color: var(--text-main); }
     transition: 0.2s;
 }
 
-/* 🌟 修复：区分 hover、激活(active) 和 仅仅展开(expanded) 的发光状态 */
+/*  修复：区分 hover、激活(active) 和 仅仅展开(expanded) 的发光状态 */
 .nav-btn:hover { background-color: var(--brand-light); color: var(--brand); }
 .nav-btn.active { background-color: var(--brand-light) !important; color: var(--brand) !important; }
 .nav-btn.expanded:not(.active) { background-color: transparent; color: var(--text-muted); }

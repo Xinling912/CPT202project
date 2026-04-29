@@ -15,7 +15,7 @@ body { background-color: var(--bg); font-family: 'Plus Jakarta Sans', sans-serif
 .page-active { display: block; }
 @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* --- 🌟 个人头像与悬浮菜单 (完美修复版) --- */
+/* ---  个人头像与悬浮菜单 (完美修复版) --- */
 .user-profile-dropdown { position: relative; padding: 10px 0; }
 .profile-trigger { cursor: pointer; padding: 4px 8px; border-radius: 50px; transition: 0.2s; }
 .profile-trigger:hover { background: #f4f4f5; }
