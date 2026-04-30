@@ -88,7 +88,6 @@ class SpecialistSearchIntegrationTest {
         slot.setStatus(TimeSlotStatus.AVAILABLE);
         timeSlotRepository.save(slot);
     }
-
     // --- SCENARIO 1: Combined Multi-Filter Search ---
     @Test
     void searchByAllCriteriaCombined_ShouldFindLisa() {
@@ -98,13 +97,10 @@ class SpecialistSearchIntegrationTest {
         spec = addExpertiseFilter(spec, techCategory.getId());
         spec = addLevelFilter(spec, SpecialistLevel.EXPERT);
         spec = addDateFilter(spec, LocalDate.now().plusDays(1));
-
         Page<SpecialistProfile> result = specialistRepository.findAll(spec, PageRequest.of(0, 10));
-
         assertEquals(1, result.getTotalElements());
         assertEquals("lisa_tech", result.getContent().get(0).getUser().getUsername());
     }
-
     // --- SCENARIO 2: Single Dimension - Expertise Only ---
     @Test
     void searchByExpertiseOnly_ShouldReturnOnlyTechSpecialists() {
@@ -116,7 +112,6 @@ class SpecialistSearchIntegrationTest {
         assertEquals(1, result.getTotalElements());
         assertEquals("Lisa Wang", result.getContent().get(0).getRealName());
     }
-
     // --- SCENARIO 3: Single Dimension - Level Only ---
     @Test
     void searchByLevelOnly_ShouldReturnOnlyJuniorSpecialists() {
@@ -128,7 +123,6 @@ class SpecialistSearchIntegrationTest {
         assertEquals(1, result.getTotalElements());
         assertEquals("Bob Smith", result.getContent().get(0).getRealName());
     }
-
     // --- SCENARIO 4: Single Dimension - Keyword Only ---
     @Test
     void searchByKeywordOnly_ShouldReturnMatchingUsernames() {
@@ -140,7 +134,6 @@ class SpecialistSearchIntegrationTest {
         assertEquals(1, result.getTotalElements());
         assertEquals("bob_health", result.getContent().get(0).getUser().getUsername());
     }
-
     // --- SCENARIO 5: Date Availability Check ---
     @Test
     void searchByDateOnly_ShouldReturnSpecialistsWithOpenSlots() {
@@ -153,26 +146,20 @@ class SpecialistSearchIntegrationTest {
         assertEquals(1, result.getTotalElements());
         assertEquals("Lisa Wang", result.getContent().get(0).getRealName());
     }
-
     // --- Helper Methods replicating Controller logic[cite: 1] ---
-
     private Specification<SpecialistProfile> buildBaseSpec() {
         return (root, query, cb) -> cb.equal(root.get("status"), SpecialistStatus.ACTIVE);
     }
-
     private Specification<SpecialistProfile> addKeywordFilter(Specification<SpecialistProfile> spec, String k) {
         return spec.and((root, query, cb) ->
                 cb.like(cb.lower(root.join("user").get("username")), "%" + k.toLowerCase() + "%"));
     }
-
     private Specification<SpecialistProfile> addExpertiseFilter(Specification<SpecialistProfile> spec, Long id) {
         return spec.and((root, query, cb) -> cb.equal(root.join("expertise").get("id"), id));
     }
-
     private Specification<SpecialistProfile> addLevelFilter(Specification<SpecialistProfile> spec, SpecialistLevel lv) {
         return spec.and((root, query, cb) -> cb.equal(root.get("level"), lv));
     }
-
     private Specification<SpecialistProfile> addDateFilter(Specification<SpecialistProfile> spec, LocalDate date) {
         return spec.and((root, query, cb) -> {
             var subquery = query.subquery(Long.class);
