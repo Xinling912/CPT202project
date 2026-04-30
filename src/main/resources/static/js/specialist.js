@@ -538,37 +538,52 @@ $(document).ready(() => {
     });
 
     // 提交修改资料 (防呆验证 + 自动刷新)
-// ==========================================
-    $('#save-profile-btn').click(function() {
+    $('#save-profile-btn').off('click').on('click', function() {
         // 1. 获取输入框里的新值
         const newName = $('#edit-name').val().trim();
-        const newCategory = $('#edit-category').val();
-        const newFee = $('#edit-fee').val().trim();
+        // 🌟 核心修复 1：拿到下拉框选中的【纯文本】（如“电子竞技”），而不是 ID（"10"）
+        const newCategoryText = $('#edit-category option:selected').text().trim();
+        // 🌟 核心修复 2：把金额统一转成数字比对，防止 "9999" 和 "9999.00" 误判
+        const newFee = parseFloat($('#edit-fee').val()) || 0;
         const newResume = $('#edit-resume').val().trim();
 
         // 2. 获取页面上展示的旧值
         const oldName = $('#display-name').text().trim();
-        const oldCategory = $('#display-category').text().trim();
-        const oldFee = $('#display-fee').text().trim();
+        const oldCategoryText = $('#display-category').text().trim();
+        const oldFee = parseFloat($('#display-fee').text()) || 0;
         const oldResume = $('#display-resume').text().trim();
 
-        //  【修复1】：找不同！如果四个值完全一样，直接拦截，不准发请求！
-        if (newName === oldName && newCategory === oldCategory && newFee === oldFee && newResume === oldResume) {
-            alert("You haven't made any changes! (请先修改资料再提交)");
-            return; // 直接退出函数，终止提交！
-        }
+        // 3. 找不同！现在是真正的【完全对齐比对】！
+        if (newName === oldName &&
+            newCategoryText === oldCategoryText &&
+            newFee === oldFee &&
+            newResume === oldResume) {
 
-        // 3. 构建发给后端的 JSON
+            alert("You haven't made any changes! (请先修改资料再提交)");
+            return; // 直接退出函数，绝不发送无用请求！
+        }
+        const selectedCategoryId = parseInt($('#edit-category').val());
+        const selectedLevel = $('#edit-level').val();
+
         const payload = {
             realName: newName,
-            proposedExpertiseName: newCategory,
-            hourlyFee: parseFloat(newFee) || 0,
+            hourlyFee: newFee,
             resume: newResume,
-            newLevel: currentSpecialistLevel,
-            level: currentSpecialistLevel
+
+
+            expertiseId: selectedCategoryId,
+            newExpertiseId: selectedCategoryId,
+            proposedExpertiseName: newCategoryText,
+            level: selectedLevel,
+            newLevel: selectedLevel
         };
 
+        // 防浏览器缓存神器：在 F12 控制台打印出来，确保代码真更新了！
+        console.log(" 准备发送给后端的终极 Payload:", payload);
         const token = localStorage.getItem('token');
+        const btn = $(this);
+        btn.prop('disabled', true).text('Submitting...');
+
         fetch(`${API_BASE}/api/specialists/apply`, {
             method: 'POST',
             headers: {
@@ -580,14 +595,17 @@ $(document).ready(() => {
             .then(async res => {
                 if (res.ok) {
                     alert("Update request submitted successfully!");
-                    //  【修复3】：只要提交成功，瞬间强制刷新整个页面！黄条立马出来并锁死按钮！
                     window.location.reload();
                 } else {
                     const err = await res.json();
                     alert("Submission failed: " + (err.error || err.message));
+                    btn.prop('disabled', false).text('Save Changes');
                 }
             })
-            .catch(err => alert("Network error."));
+            .catch(err => {
+                alert("Network error.");
+                btn.prop('disabled', false).text('Save Changes');
+            });
     });
     if(!token || role !== 'SPECIALIST') {
         alert("Authentication failed.");

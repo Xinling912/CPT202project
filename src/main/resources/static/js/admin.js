@@ -628,17 +628,17 @@ window.viewPendingDetail = function(reqId) {
     const oldProfile = item.specialistProfile || {};
     const oldName = oldProfile.realName || oldProfile.user?.username || 'Unknown';
     const oldCategory = oldProfile.expertise ? oldProfile.expertise.name : 'N/A';
-
     const oldFee = oldProfile.hourlyFee !== undefined && oldProfile.hourlyFee !== null ? `${oldProfile.hourlyFee} Yuan/hour` : 'N/A';
     const oldResume = oldProfile.resume || 'No resume content.';
+    const oldLevel = oldProfile.level || 'EXPERT';
 
-// --- 第二步：提取新数据 (Requested Updates) ---
-// 如果新数据是空的，说明专家没改这一项，那就直接等于旧数据
+    // --- 第二步：提取新数据 (Requested Updates) ---
     const newName = item.newRealName || oldName;
     const newCategory = item.newProposedExpertiseName || (item.newExpertise ? item.newExpertise.name : oldCategory);
-
     const newFee = item.newHourlyFee !== undefined && item.newHourlyFee !== null ? `${item.newHourlyFee} Yuan/hour` : oldFee;
     const newResume = item.newResume || oldResume;
+    const newLevel = item.newLevel || oldLevel;
+
     // --- 第三步：制造一个“智能对比生成器” ---
     const renderRow = (label, oldVal, newVal, isLongText = false) => {
         // 情况A：如果没改动
@@ -686,10 +686,13 @@ window.viewPendingDetail = function(reqId) {
         }
     };
 
-    // --- 第四步：拼装最终的弹窗 HTML ---
+    // --- 第四步：拼装最终的弹窗 HTML
     let detailHtml = `
         <div style="padding: 10px;">
-            ${renderRow('Specialist Name', oldName, newName)}
+            <div class="row">
+                <div class="col-6">${renderRow('Specialist Name', oldName, newName)}</div>
+                <div class="col-6">${renderRow('Professional Level', oldLevel, newLevel)}</div>
+            </div>
             <div class="row">
                 <div class="col-6">${renderRow('Expertise Category', oldCategory, newCategory)}</div>
                 <div class="col-6">${renderRow('Hourly Fee', oldFee, newFee)}</div>
