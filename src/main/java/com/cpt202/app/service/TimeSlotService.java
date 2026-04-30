@@ -78,7 +78,7 @@ public class TimeSlotService {
      */
     public List<TimeSlot> getAllTimeSlotsForSpecialistSchedule(Long specialistId) {
         LocalDate startDate = LocalDate.now();
-        LocalDate endDate = startDate.plusWeeks(1);
+        LocalDate endDate = startDate.plusWeeks(2);
         
         List<TimeSlot> allSlots = timeSlotRepository.findBySpecialistId(specialistId);
         
