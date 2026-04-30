@@ -192,26 +192,25 @@
                     </div>
 
                     <div class="row mb-4 g-4">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label fw-bold fs-5">Full Name</label>
                             <input type="text" class="form-control form-control-lg bg-light" id="edit-name" >
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold fs-5">Expertise Category</label>
-                            <select class="form-select form-select-lg bg-light fw-bold text-secondary" id="edit-category">
-                                <option value="音乐/歌唱指导" selected>音乐/歌唱指导</option>
-                                <option value="雅思外语">雅思外语</option>
-                                <option value="后端开发">后端开发</option>
-                                <option value="职场咨询">职场咨询</option>
-                                <option value="法律服务">法律服务</option>
-                                <option value="心理健康/情感">心理健康/情感</option>
-                                <option value="艺术设计">艺术设计</option>
-                                <option value="算法竞赛">算法竞赛</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label fw-bold fs-5">Hourly Rate (Yuan)</label>
                             <input type="number" class="form-control form-control-lg bg-light" id="edit-fee" placeholder="0.00">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold fs-5">Professional Level</label>
+                            <select class="form-select form-select-lg bg-light fw-bold text-secondary" id="edit-level">
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold fs-5">Expertise Category</label>
+                            <select class="form-select form-select-lg bg-light fw-bold text-secondary" id="edit-category">
+                            </select>
                         </div>
                     </div>
 
@@ -219,7 +218,8 @@
                         <label class="form-label fw-bold fs-5">About Me</label>
                         <textarea class="form-control bg-light fs-5 profile-resume-text" id="edit-resume" rows="6" placeholder="Please update your about me..."></textarea>
                     </div>
-
+-
+                    **
                     <div class="d-flex justify-content-end gap-3 mt-4">
                         <button type="button" class="btn btn-light btn-lg rounded-pill px-5 fw-bold border" onclick="toggleProfileEdit()">Cancel</button>
                         <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold" id="save-profile-btn">Save Changes</button>

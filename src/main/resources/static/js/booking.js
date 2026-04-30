@@ -44,34 +44,60 @@ async function logout() {
 $(document).ready(() => {
     if (checkLogin()) {
         initList();
-
+        loadFilterData();//新增：页面一加载，就去后端拉取真实的专业和等级数据！
         //  核心：页面一加载，就把右上角的用户名和头像替换成当前登录人的信息
         const currentUsername = localStorage.getItem('username') || 'User';
         $('#current-user-display').text(currentUsername);
         $('#nav-user-avatar').attr('src', getAvatar(currentUsername));
     }
 });
+function loadFilterData() {
+    $.get(`${API_BASE}/api/specialists/filters`, (res) => {
+        // 1. 动态渲染 Category 下拉框
+        const categorySelect = $('#search-category');
+        if (res.expertises && res.expertises.length > 0) {
+            res.expertises.forEach(exp => {
+                categorySelect.append(`<option value="${exp.id}">${exp.name}</option>`);
+            });
+        }
 
-function handleProtectedView(pageId) {
-    if (checkLogin()) {
-        showPage(pageId);
-        if (pageId === 'user-orders-page') loadMyOrders(); // 切换到订单页时拉取数据
-    }
+        // 2. 动态渲染 Level 下拉框
+        const levelSelect = $('#search-level');
+        if (res.levels && res.levels.length > 0) {
+            res.levels.forEach(lvl => {
+                // 做一个人性化的文本转换
+                let displayLvl = lvl === 'JUNIOR' ? 'Junior Specialist' :
+                    lvl === 'SENIOR' ? 'Senior Specialist' :
+                        lvl === 'EXPERT' ? 'Expert Specialist' : lvl;
+                levelSelect.append(`<option value="${lvl}">${displayLvl}</option>`);
+            });
+        }
+    }).fail(() => {
+        console.error("Failed to load filter options from database.");
+    });
 }
 
-function showJoinUs() {
-    window.location.href = 'expert_apply.html';
-}
-
-//  修复：搜索功能触发逻辑
+// --- 搜索触发逻辑 ---
 function handleSearch() {
     const keyword = $('#search-input').val().trim();
-    initList(keyword);
+    const categoryId = $('#search-category').val(); // 拿到的绝对是真实的 ID
+    const level = $('#search-level').val();         // 拿到的绝对是 JUNIOR/SENIOR/EXPERT
+
+    initList(keyword, categoryId, level);
 }
-// --- 3. 专家列表与详情 ---
-function initList(keyword = '') {
+
+// --- 带参数发送给的后端接口 ---
+function initList(keyword = '', categoryId = '', level = '') {
     let url = `${API_BASE}/api/specialists`;
-    if (keyword) url += `?keyword=${encodeURIComponent(keyword)}`;
+    let queryParams = [];
+
+    if (keyword) queryParams.push(`keyword=${encodeURIComponent(keyword)}`);
+    if (categoryId) queryParams.push(`expertiseId=${categoryId}`);
+    if (level) queryParams.push(`level=${level}`);
+
+    if (queryParams.length > 0) {
+        url += '?' + queryParams.join('&');
+    }
 
     $.get(url, (res) => {
         const grid = $('#expert-grid').empty();
@@ -103,7 +129,86 @@ function initList(keyword = '') {
         });
     });
 }
+function handleProtectedView(pageId) {
+    if (checkLogin()) {
+        showPage(pageId);
+        if (pageId === 'user-orders-page') loadMyOrders(); // 切换到订单页时拉取数据
+    }
+}
 
+function showJoinUs() {
+    window.location.href = 'expert_apply.html';
+}
+
+//  修复：搜索功能触发逻辑
+function handleSearch() {
+    // 抓取输入框的名字
+    const keyword = $('#search-input').val().trim();
+
+    // 抓取下拉框的分类 ID (确保你 HTML 里分类下拉框的 ID 叫 search-category)
+    const categoryId = $('#search-category').val();
+
+    // 抓取下拉框的等级 (确保你 HTML 里等级下拉框的 ID 叫 search-level)
+    const level = $('#search-level').val();
+
+    // 把这三个参数一起传给 initList
+    initList(keyword, categoryId, level);
+}
+function initList(keyword = '', categoryId = '', level = '') {
+    let url = `${API_BASE}/api/specialists`;
+    let queryParams = [];
+
+    // 1. 如果有关键字，加进去
+    if (keyword) {
+        queryParams.push(`keyword=${encodeURIComponent(keyword)}`);
+    }
+    // 2. 如果选了分类且不是“全部分类/空”，把分类 ID 传给 expertiseId
+    if (categoryId && categoryId !== '' && categoryId !== 'ALL') {
+        queryParams.push(`expertiseId=${categoryId}`);
+    }
+    // 3. 如果选了等级且不是“全部等级/空”，把等级传给 level
+    if (level && level !== '' && level !== 'ALL') {
+        queryParams.push(`level=${level}`);
+    }
+
+    // 智能拼接 URL
+    if (queryParams.length > 0) {
+        url += '?' + queryParams.join('&');
+    }
+
+    console.log("打印表演一下小杜的超强搜索功能 哈哈 调侃一下 URL:", url); // 你可以按 F12 看看这句打印
+
+    // 下面的 $.get 渲染逻辑完全不用动！保持你原来的样子！
+    $.get(url, (res) => {
+        const grid = $('#expert-grid').empty();
+        const content = res.content || res || [];
+
+        if (content.length === 0) {
+            grid.append('<div class="col-12 text-center text-muted py-5"><h4>No experts found.</h4></div>');
+            return;
+        }
+
+        content.forEach(item => {
+            grid.append(`
+                <div class="col-md-6">
+                    <div class="expert-card shadow-sm" onclick="goToProfile(${item.id})">
+                        <span class="badge bg-light text-primary rounded-pill mb-3 border" style="width: fit-content;">${item.level || 'EXPERT'}</span>
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <img src="${getAvatar(item.user.username)}" style="width:60px; height:60px; border-radius:50%; object-fit: cover; border: 2px solid #0d6efd;">
+                            <div>
+                                <h3 class="fw-800 mb-0">${item.user.username}</h3>
+                                <div class="text-muted small">${item.expertise ? item.expertise.name : 'Professional'}</div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                         <span class="fw-800 text-primary">${item.hourlyFee || 0} Yuan/hour</span>
+                            <span class="text-primary fw-bold">View Detail &raquo;</span>
+                        </div>
+                    </div>
+                </div>`);
+        });
+    });
+}
 function goToProfile(id) {
     selectedExpertId = id;
     $.get(`${API_BASE}/api/specialists/${id}`, (data) => {
@@ -301,7 +406,7 @@ $('#final-submit-booking-btn').off('click').on('click', function() {
             const errText = await res.text();
 
             if (res.status === 409) {
-                alert("Action Failed: 你不能预定你取消的订单,谢谢.");
+                alert("Action Failed:Sorry, this schedule has been reserved by others.");
                 $('#customerConfirmModal').modal('hide');
                 showSlots($('#display-date').text());
             }

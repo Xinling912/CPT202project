@@ -839,56 +839,94 @@ function loadEarnings() {
 // ==========================================
 // Profile 真实对接后端数据库的逻辑
 // ==========================================
-function initProfilePage() {
+//
+async function initProfilePage() {
     const token = localStorage.getItem('token');
+    if (!token) return;
 
-    fetch(`${API_BASE}/api/specialists/profile`, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` }
-    })
-        .then(async res => {
-            if (!res.ok) throw new Error(await res.text());
-            return res.json();
-        })
-        .then(data => {
-            const realProfile = data.data || data;
-
-            //  核心修复点：赋值必须写在拿到了 realProfile 之后！而且要加个兜底防止后端原来就是空的。
-            currentSpecialistLevel = realProfile.level || 'EXPERT';
-            console.log("少辉: 成功拿到并缓存了真实的专家 Level: ", currentSpecialistLevel);
-
-            const realName = realProfile.realName || realProfile.user?.username || 'Unknown';
-            const expName = realProfile.expertise ? realProfile.expertise.name : '未分类';
-            const hourlyFee = realProfile.hourlyFee || '0.00';
-            const resumeText = realProfile.resume || 'Please update your About Me...';
-
-            const avatarUrl = getAvatar(realProfile.user?.username || '', realName);
-
-            $('#display-name').text(realName);
-            $('#display-category').text(expName);
-            $('#display-fee').text(hourlyFee);
-            $('#display-resume').text(resumeText);
-            $('#display-photo').attr('src', avatarUrl);
-            $('#header-avatar').attr('src', avatarUrl);
-
-            //  3. 渲染到修改表单里 (Profile Edit Mode)
-            $('#edit-name').val(realName);
-            $('#edit-category').val(expName);
-            $('#edit-fee').val(hourlyFee);
-            $('#edit-resume').val(resumeText);
-            $('#profile-photo-preview').attr('src', avatarUrl);
-
-            //  4. 判断有没有待审批的请求
-            $('#pending-alert').addClass('d-none');
-            $('button[onclick="toggleProfileEdit()"]').prop('disabled', false).html('<i class="bi bi-pencil-square me-2"></i>Change Profile');
-
-            // 渲染历史记录
-            renderHistory();
-        })
-        .catch(err => {
-            console.error("API 报错，无法获取数据库资料:", err);
-            $('#display-resume').text("Backend connection failed. Please check if your MySQL and Spring Boot are running.");
+    try {
+        // 第一步：去后端拉取所有的专业和等级字典
+        const filterRes = await fetch(`${API_BASE}/api/specialists/filters`, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (filterRes.ok) {
+            const filterData = await filterRes.json();
+
+            // 渲染专业分类
+            const categorySelect = $('#edit-category').empty();
+            if (filterData.expertises) {
+                filterData.expertises.forEach(exp => {
+                    categorySelect.append(`<option value="${exp.id}">${exp.name}</option>`);
+                });
+            }
+
+            // 渲染等级
+            const levelSelect = $('#edit-level').empty();
+            if (filterData.levels) {
+                filterData.levels.forEach(lvl => {
+                    let displayLvl = lvl === 'JUNIOR' ? 'Junior Specialist' :
+                        lvl === 'SENIOR' ? 'Senior Specialist' :
+                            lvl === 'EXPERT' ? 'Expert Specialist' : lvl;
+                    levelSelect.append(`<option value="${lvl}">${displayLvl}</option>`);
+                });
+            }
+        } else {
+            console.error("⚠️ 警告: 拉取字典失败，可能是后端接口权限问题", await filterRes.text());
+        }
+
+        // 第二步：再去拉取该专家个人的真实资料
+        const profileRes = await fetch(`${API_BASE}/api/specialists/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!profileRes.ok) throw new Error("无法获取个人资料");
+
+        const profileJson = await profileRes.json();
+        const realProfile = profileJson.data || profileJson;
+
+        if(!realProfile) return;
+
+        // 提取个人数据
+        currentSpecialistLevel = realProfile.level || 'EXPERT';
+        const realName = realProfile.realName || realProfile.user?.username || 'Unknown';
+        const expName = realProfile.expertise ? realProfile.expertise.name : '未分类';
+        const expId = realProfile.expertise ? realProfile.expertise.id : null;
+        const hourlyFee = realProfile.hourlyFee || '0.00';
+        const resumeText = realProfile.resume || 'Please update your About Me...';
+
+        const avatarUrl = getAvatar(realProfile.user?.username || '', realName);
+
+        // 🌟 恢复展示界面的数据 (Profile Display Mode)
+        $('#display-name').text(realName);
+        $('#display-category').text(expName);
+        $('#display-fee').text(hourlyFee);
+        $('#display-resume').text(resumeText);
+        $('#display-photo').attr('src', avatarUrl);
+        $('#header-avatar').attr('src', avatarUrl);
+
+        // 🌟 恢复编辑界面的数据并自动选中下拉框 (Profile Edit Mode)
+        $('#edit-name').val(realName);
+        $('#edit-fee').val(hourlyFee);
+        $('#edit-resume').val(resumeText);
+        $('#profile-photo-preview').attr('src', avatarUrl);
+
+        // 稍微延迟 50 毫秒，确保前面的下拉框 option 已经塞进 HTML 里了再选中
+        setTimeout(() => {
+            $('#edit-level').val(currentSpecialistLevel);
+            if(expId) $('#edit-category').val(expId);
+        }, 50);
+
+
+
+
+        // 渲染历史记录
+        renderHistory();
+
+    } catch (err) {
+        console.error("Initialization Failed:", err);
+        $('#display-resume').text("Backend connection failed. 可能是 Token 过期或后端没开。");
+    }
 }
 function renderHistory() {
     const historyData = JSON.parse(localStorage.getItem('sas_profile_history')) || [];
@@ -1036,8 +1074,12 @@ function checkProfileStatus() {
         })
         .catch(err => console.error("Status Check Failed:", err));
 }
-// 2. 在页面加载完毕时，同时调用这两个函数！
+//  完美排队执行，彻底告别打架！
 $(document).ready(function() {
-    initProfilePage();      // 先去拉取真实资料渲染页面
-    checkProfileStatus();   //  然后立马去问杜姐的接口：当前有没有在审核中的单子？
+    // 先去拉取真实资料渲染页面
+    initProfilePage().then(() => {
+        //  必须等资料拉取完了 再去问后端当前的状态 是吧 我不知道
+        // 如果在审核中，这个函数会绝对权威地把你的按钮锁死
+        checkProfileStatus();
+    });
 });
