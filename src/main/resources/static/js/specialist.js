@@ -790,15 +790,14 @@ $(document).ready(() => {
 
 });
 
-// 获取专家总收入
+// 获取专家总收入 ( 完美匹配后端的 JSON 字段)
 function loadEarnings() {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-
     const displayElement = $('#total-earnings-display');
-    displayElement.text('Loading...'); // 请求时的加载提示
-
+    const currencyElement = $('#currency-display'); // 顺手把右上角的货币单位也动态更新了
+    displayElement.text('Loading...');
 
     fetch(`${API_BASE}/api/specialists/earnings`, {
         method: 'GET',
@@ -808,17 +807,23 @@ function loadEarnings() {
     })
         .then(async res => {
             if (res.ok) {
+                // 直接用 .json() 解析，不用 .text() 那么麻烦了
+                const data = await res.json();
 
-                const data = await res.text();
+                // 精准抓取杜姐后端的字段：totalEarnings
+                const amount = data.totalEarnings;
+                const currency = data.currency || "CNY";
 
-
-                const amount = parseFloat(data);
-                if (!isNaN(amount)) {
-                    displayElement.text(amount.toLocaleString());
+                if (amount !== undefined && amount !== null) {
+                    // 完美格式化：强制保留两位小数，比如 0.00，显得非常专业
+                    displayElement.text(parseFloat(amount).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }));
+                    // 顺手更新货币符号
+                    if(currencyElement.length) currencyElement.text(currency);
                 } else {
-                    // 如果后端传的是 JSON 对象比如 {"total": 15000}，就要这么拿
-                    const jsonObj = JSON.parse(data);
-                    displayElement.text(jsonObj.total ? jsonObj.total.toLocaleString() : data);
+                    displayElement.text('0.00');
                 }
             } else {
                 console.error("Failed to load earnings");
