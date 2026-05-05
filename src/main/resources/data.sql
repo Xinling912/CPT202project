@@ -52,13 +52,25 @@ INSERT INTO specialist_profile (id, hourly_fee, level, status, expertise_id, use
                                                                                                                                       (106, 9999.00, 'SENIOR', 'ACTIVE', 10, 106, NULL, 'Faker', 'The absolute core of T1, six-time League of Legends World Champion, the undisputed God of Esports (The Unkillable Demon King). Want to learn screen switching and prediction? Come find me.');
 
 INSERT INTO time_slot (specialist_id, slot_date, start_time, end_time, status) VALUES
-                                                                                   (106, '2026-05-05', '09:00:00', '11:00:00', 'AVAILABLE'),
-
-                                                                                   (106, '2026-05-05', '14:00:00', '15:00:00', 'AVAILABLE'),
-                                                                                   (106, '2026-05-06', '14:00:00', '17:00:00', 'AVAILABLE'),
-
-                                                                                   (101, '2026-05-05', '09:00:00', '11:00:00', 'AVAILABLE'),
-
-                                                                                   (102, '2026-05-05', '14:00:00', '16:00:00', 'AVAILABLE');
+                                                                                   (106, '2026-05-06', '14:00:00', '16:00:00', 'AVAILABLE'),
+                                                                                   (106, '2026-05-15', '20:00:00', '22:00:00', 'AVAILABLE'),
+                                                                                   (105, '2026-05-19', '10:00:00', '12:00:00', 'AVAILABLE'),
+                                                                                   (103, '2026-05-11', '09:00:00', '10:00:00', 'AVAILABLE'),
+                                                                                   (103, '2026-05-11', '10:00:00', '11:00:00', 'AVAILABLE'),
+                                                                                   (103, '2026-05-11', '11:00:00', '12:00:00', 'AVAILABLE'),
+                                                                                   (104, '2026-05-07', '09:15:00', '10:00:00', 'AVAILABLE'),
+                                                                                   (104, '2026-05-13', '14:30:00', '15:00:00', 'AVAILABLE'),
+                                                                                   (104, '2026-05-18', '16:45:00', '18:15:00', 'AVAILABLE'),
+                                                                                   (101, '2026-05-12', '06:30:00', '08:00:00', 'AVAILABLE'),
+                                                                                   (100, '2026-05-08', '23:00:00', '23:59:59', 'AVAILABLE'),
+                                                                                   (1, '2026-05-16', '13:00:00', '18:00:00', 'AVAILABLE'),
+                                                                                   (102, '2026-05-17', '14:00:00', '17:00:00', 'AVAILABLE'),
+                                                                                   (106, '2026-05-09', '14:00:00', '16:00:00', 'AVAILABLE'),
+                                                                                   (101, '2026-05-09', '14:00:00', '16:00:00', 'AVAILABLE'),
+                                                                                   (105, '2026-05-09', '14:00:00', '16:00:00', 'AVAILABLE'),
+                                                                                   (106, '2026-05-10', '14:00:00', '15:00:00', 'BOOKED'),
+                                                                                   (103, '2026-05-12', '09:00:00', '11:00:00', 'BOOKED'),
+                                                                                   (102, '2026-05-01', '09:00:00', '10:00:00', 'AVAILABLE'),
+                                                                                   (106, '2026-05-04', '14:00:00', '16:00:00', 'BOOKED');
 SET FOREIGN_KEY_CHECKS = 1;
 SET SQL_SAFE_UPDATES = 1;

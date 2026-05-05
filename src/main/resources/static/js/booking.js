@@ -6,6 +6,7 @@
 const API_BASE = "http://localhost:8080";
 let selectedExpertId = null;
 let currentSelectedSlotId = null;
+let currentMyOrders = [];
 // ==========================================
 //报错弹窗武器库 因为报错弹窗太多了 懒得一个一个找了 带给他们梅花一下吧
 // ==========================================
@@ -557,7 +558,65 @@ window.cancelCustomerOrder = function(orderId) {
 
 
 window.openOrderDetail = function(orderId) {
-    alert(`Loading details for Order #${orderId}...\n\n(Detail feature is under development!)`);
+    $('#detail-spec-name').text('Loading...');
+    $('#orderDetailModal').modal('show');
+
+    fetch(`${API_BASE}/api/bookings/myOrders`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+        .then(res => res.json())
+        .then(data => {
+            let orderList = [];
+            if (Array.isArray(data)) {
+                orderList = data;
+            } else if (data.data && Array.isArray(data.data)) {
+                orderList = data.data;
+            } else if (data.content && Array.isArray(data.content)) {
+                orderList = data.content;
+            }
+
+            const order = orderList.find(o => String(o.id) === String(orderId));
+
+            if (!order) {
+                $('#orderDetailModal').modal('hide');
+                alert("Action Failed: Order data not found on server.");
+                return;
+            }
+
+            $('#detail-order-id').text('#' + order.id);
+
+            const statusEl = $('#detail-status');
+            statusEl.text(order.status).removeClass('bg-success bg-warning bg-danger bg-secondary');
+
+            if (order.status === 'COMPLETED' || order.status === 'CONFIRMED') {
+                statusEl.addClass('bg-success');
+            } else if (order.status === 'PENDING') {
+                statusEl.addClass('bg-warning text-dark');
+            } else if (order.status === 'CANCELLED' || order.status === 'CANCELED') {
+                statusEl.addClass('bg-danger');
+            } else {
+                statusEl.addClass('bg-secondary');
+            }
+
+            const expName = order.specialistName || 'Specialist';
+            $('#detail-spec-name').text(expName);
+            $('#detail-avatar').attr('src', getAvatar(expName));
+
+            $('#detail-date').text(order.slotDate || order.date || 'N/A');
+            const startTime = order.startTime ? order.startTime.substring(0, 5) : '--:--';
+            const endTime = order.endTime ? order.endTime.substring(0, 5) : '--:--';
+            $('#detail-time').text(`${startTime} - ${endTime}`);
+
+            $('#detail-total-fee').text(order.totalAmount || order.totalFee ? `${order.totalAmount || order.totalFee} Yuan` : 'Consult Rate');
+            $('#detail-notes').text(order.notes || 'No special notes provided.');
+
+        })
+        .catch(err => {
+            console.error("Fetch Error:", err);
+            $('#orderDetailModal').modal('hide');
+            alert("Network Error: Failed to fetch order details.");
+        });
 }
 
 function showPage(id) {
