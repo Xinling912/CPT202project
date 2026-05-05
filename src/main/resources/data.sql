@@ -10,6 +10,7 @@ TRUNCATE TABLE booking;
 TRUNCATE TABLE time_slot;
 TRUNCATE TABLE specialist_profile;
 TRUNCATE TABLE user;
+TRUNCATE TABLE expertise_category;
 
 -- Step 1: Categories (Added 9-Film and Television Acting, 10-Esports)
 INSERT INTO expertise_category (id, name, description) VALUES
