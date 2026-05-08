@@ -7,10 +7,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/common.css">
     <style>
-        /* 针对成功页面的微调样式 */
+        /* Specific styling adjustments for the success page */
         .success-card {
-            max-width: 340px; /* 成功框稍微窄一点 */
-            aspect-ratio: 1 / 1; /* 强制变成正方形 */
+            max-width: 340px; /* Make the success card slightly narrower */
+            aspect-ratio: 1 / 1; /* Force it into a square shape */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -31,28 +31,28 @@
 </head>
 <body>
 
-    <div id="app">
-        <div id="auth-bg">
-            <div class="welcome-container">
-                <h1 class="welcome-text uppercase">welcome</h1>
-            </div>
-            <div class="circle ring-large"></div>
-            <div class="circle ring-medium"></div>
-            <div class="circle ring-small"></div>
+<div id="app">
+    <div id="auth-bg">
+        <div class="welcome-container">
+            <h1 class="welcome-text uppercase">welcome</h1>
         </div>
-
-        <div id="view-container">
-            <div class="login-card success-card fade-in">
-                <div class="success-icon">😊</div>
-                <h3 class="success-title">Registered Successfully !</h3>
-                <button id="back-to-login" class="submit-btn">
-                    Sign in, now!
-                </button>
-            </div>
-        </div>
+        <div class="circle ring-large"></div>
+        <div class="circle ring-medium"></div>
+        <div class="circle ring-small"></div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="js/success.js"></script>
+    <div id="view-container">
+        <div class="login-card success-card fade-in">
+            <div class="success-icon">😊</div>
+            <h3 class="success-title">Registered Successfully !</h3>
+            <button id="back-to-login" class="submit-btn">
+                Sign in, now!
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="js/success.js"></script>
 </body>
 </html>

@@ -3,12 +3,12 @@ const API_BASE = "http://localhost:8080";
 window.logout = async function() {
     const isConfirmed = await showConfirm("Are you sure you want to log out of the Admin Dashboard?");
     if (isConfirmed) {
-        localStorage.clear(); // 清理所有的 token 和本地数据
-        window.location.href = 'landingpage.html'; // 跳回主页（或者 login.html）
+        localStorage.clear(); // Clear all tokens and local data
+        window.location.href = 'landingpage.html'; // Redirect to home page (or login.html)
     }
 };
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. 登录校验
+    // 1. Login Validation
     const savedName = localStorage.getItem('username');
     if (savedName) {
         const userNameEl = document.querySelector('.user-name');
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'login.html';
     }
 
-    // 2. 侧边栏折叠
+    // 2. Sidebar Toggle
     const toggleBtn = document.getElementById('toggle-sidebar');
     if (toggleBtn) {
         toggleBtn.onclick = function() {
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // 3. 子菜单逻辑
+    // 3. Submenu Logic
     window.toggleSub = function(btnId, subId) {
         const btn = document.getElementById(btnId);
         const sub = document.getElementById(subId);
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnReview = document.getElementById('btnReview');
     if (btnReview) btnReview.onclick = () => toggleSub('btnReview', 'subReview');
 
-    // 4. 路由分发器
+    // 4. Route Dispatcher
     document.querySelectorAll('.menu-clickable').forEach(menu => {
         menu.onclick = function(e) {
             e.stopPropagation();
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ==========================================
-// 页面 1A：专家状态管理
+// Page 1A: Specialist Status Management
 // ==========================================
 window.loadExistingSpecialists = function() {
     const token = localStorage.getItem('token');
@@ -134,7 +134,7 @@ window.loadExistingSpecialists = function() {
 window.toggleStatus = async function(id, action) {
     const isConfirmed = await showConfirm(`Are you sure you want to ${action} this specialist?`);
 
-    if (!isConfirmed) return; // 如果返回 false (点了 Cancel)，直接退出
+    if (!isConfirmed) return; // If false (Clicked Cancel), exit directly
     fetch(`${API_BASE}/api/admin/specialists/${id}/${action}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -143,10 +143,10 @@ window.toggleStatus = async function(id, action) {
     });
 }
 
-//  页面 1B：新申请审批 (带详情查看版)
+//  Page 1B: New Application Approval (Detailed View Version)
 // ==========================================
 
-// 1. 新建一个新申请的专用快递柜
+// 1. Create a dedicated storage for new applications
 window.pendingApplicationsCache = {};
 
 window.loadPendingSpecialists = function() {
@@ -163,11 +163,11 @@ window.loadPendingSpecialists = function() {
             let list = resData.data || [];
             tbody.innerHTML = list.length ? '' : '<tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">No pending applications.</td></tr>';
 
-            // 每次加载前清空快递柜
+            // Clear storage before each load
             window.pendingApplicationsCache = {};
 
             list.forEach(item => {
-                // 把数据存进快递柜
+                // Store data into storage
                 window.pendingApplicationsCache[item.id] = item;
 
                 const realName = item.realName || (item.user?item.user.username:'Unknown');
@@ -192,11 +192,11 @@ window.loadPendingSpecialists = function() {
         });
 }
 
-// 2.  新增函数：展示新申请的详细信息（复用咱们底部的那个漂亮弹窗）
+// 2. Added function: Display detailed information of new applications (reuse the bottom modal)
 window.viewApplicationDetail = function(reqId) {
     const item = window.pendingApplicationsCache[reqId];
     if (!item) {
-        alert("无法读取该条数据，请刷新重试！");
+        alert("Unable to read data, please refresh and try again!");
         return;
     }
 
@@ -228,7 +228,7 @@ window.viewApplicationDetail = function(reqId) {
             </div>
         </div>
     `;
-    // 调用我们之前写好的开弹窗函数
+    // Call the modal opening function
     openAdminModal(detailHtml);
 };
 
@@ -237,7 +237,7 @@ window.viewApplicationDetail = function(reqId) {
 window.approveApp = async function(id, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
-    //  替换 confirm
+    // Replace confirm
     const isConfirmed = await showConfirm("Are you sure you want to approve this new specialist application?");
     if (!isConfirmed) return;
 
@@ -248,9 +248,9 @@ window.approveApp = async function(id, event) {
         .then(async res => {
             if (res.ok) {
                 alert("Application successfully Approved!");
-                loadPendingSpecialists(); // 刷新列表
+                loadPendingSpecialists(); // Refresh list
             } else {
-                // 🌟 核心：捕获杜姐后端的真实报错并弹出来！
+                // 🌟 Capture real backend error and display it
                 const err = await res.json();
                 alert("Failed to Approve: " + (err.error || err.message));
             }
@@ -261,7 +261,7 @@ window.approveApp = async function(id, event) {
 window.rejectApp = async function(id, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
-    // 替换 confirm
+    // Replace confirm
     const isConfirmed = await showConfirm("Are you sure you want to REJECT this new specialist application?");
     if (!isConfirmed) return;
     fetch(`${API_BASE}/api/admin/applications/${id}/reject`, {
@@ -271,9 +271,9 @@ window.rejectApp = async function(id, event) {
         .then(async res => {
             if (res.ok) {
                 alert("Application successfully Rejected!");
-                loadPendingSpecialists(); // 刷新列表
+                loadPendingSpecialists(); // Refresh list
             } else {
-                // 🌟 核心：捕获杜姐后端的真实报错并弹出来！
+                // 🌟 Capture real backend error and display it
                 const err = await res.json();
                 alert("Failed to Reject: " + (err.error || err.message));
             }
@@ -282,7 +282,7 @@ window.rejectApp = async function(id, event) {
 };
 
 // ==========================================
-// 4：举报管理 (Report)
+// 4: Report Management
 // ==========================================
 window.toggleComplaintTab = function(mode, btn) {
     document.querySelectorAll('#complaint-tabs button').forEach(b => {
@@ -380,7 +380,7 @@ window.handleComplaint = async function(complaintId, action, specialistId = null
 }
 
 // ==========================================
-// 页面 3：专业领域管理
+// Page 3: Expertise Category Management
 // ==========================================
 window.expertiseCache = {};
 window.loadExpertise = function() {
@@ -399,11 +399,11 @@ window.loadExpertise = function() {
                 return;
             }
 
-            // 清空快递柜
+            // Clear storage
             window.expertiseCache = {};
 
             data.forEach(exp => {
-                // 把当前这一行的数据存进柜子，钥匙是 ID
+                // Store current row data into storage, ID is the key
                 window.expertiseCache[exp.id] = exp;
 
                 const tr = document.createElement('tr');
@@ -443,7 +443,7 @@ window.addExpertise = function() {
     });
 }
 window.deleteExpertise = async function(id, name) {
-    //  替换 confirm
+    // Replace confirm
     const isConfirmed = await showConfirm(`Are you sure you want to permanently delete [ ${name} ]?`);
     if(!isConfirmed) return;
     fetch(`${API_BASE}/api/expertise/${id}`, {
@@ -460,11 +460,11 @@ window.deleteExpertise = async function(id, name) {
     });
 }
 window.editExpertise = function(id) {
-    // 从柜子里拿出旧数据
+    // Get old data from storage
     const exp = window.expertiseCache[id];
     if (!exp) return;
 
-    // 拼装一个带输入框的精美弹窗 HTML
+    // Assemble modal HTML with input fields
     const htmlContent = `
         <div style="padding: 10px;">
             <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-pencil-square me-2"></i>Edit Expertise Category</h5>
@@ -485,13 +485,13 @@ window.editExpertise = function(id) {
             </div>
         </div>
     `;
-    // 呼叫你的全局模态框
+    // Call the global modal
     openAdminModal(htmlContent);
 };
 
-// 点击弹窗里的 Save Changes 按钮：发给后端保存
+// Click Save Changes in modal: Send to backend
 window.submitEditExpertise = function(id) {
-    // 拿到输入框里的新值
+    // Get new values from inputs
     const newName = document.getElementById('edit-exp-name').value.trim();
     const newDesc = document.getElementById('edit-exp-desc').value.trim();
 
@@ -501,9 +501,8 @@ window.submitEditExpertise = function(id) {
     }
 
 
-    // 如果报 404，请确认一下后端 Controller 里修改专业的真实路径！
     fetch(`${API_BASE}/api/expertise/${id}`, {
-        method: 'PUT',  // 修改通常用 PUT，也有可能杜姐用的是 POST，视情况而定
+        method: 'PUT',  // Usually PUT for updates
         headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'application/json'
@@ -512,8 +511,8 @@ window.submitEditExpertise = function(id) {
     }).then(async res => {
         if(res.ok) {
             showToast("Expertise updated successfully!", "success");
-            closeAdminModal(); // 关闭弹窗
-            loadExpertise();   // 刷新列表
+            closeAdminModal(); // Close modal
+            loadExpertise();   // Refresh list
         } else {
             const err = await parseError(res);
             showToast("Failed to update: " + err, "error");
@@ -522,10 +521,10 @@ window.submitEditExpertise = function(id) {
 };
 
 // ==========================================
-//  5：Content Review 页面真实对接逻辑 (终极防白屏版)
+// Page 5: Content Review Logic
 // ==========================================
 
-// 建立一个全局快递柜，用来存复杂的简历数据，防止把 HTML 挤爆
+// Global storage to store complex resume data
 window.pendingEditsCache = {};
 
 function hideAllPagesForReview() {
@@ -553,7 +552,7 @@ window.closeAdminModal = function() {
     document.getElementById('modalOverlay').style.display = 'none';
 }
 
-// 1. 获取所有待审核的 Profile 申请
+// 1. Get all pending Profile update requests
 window.loadPendingRequests = function() {
     const tbody = document.getElementById('update-review-list-body');
     if(!tbody) return;
@@ -574,13 +573,13 @@ window.loadPendingRequests = function() {
                 return;
             }
 
-            // 每次加载前清空快递柜
+            // Clear storage before loading
             window.pendingEditsCache = {};
             let html = '';
 
             list.forEach(item => {
                 const reqId = item.id;
-                //  把复杂的 item 数据存进快递柜，钥匙就是 reqId
+                // Store complex item data in storage with reqId as the key
                 window.pendingEditsCache[reqId] = item;
 
                 const realName = item.newRealName || item.specialistProfile?.realName || item.user?.username || 'Unknown';
@@ -589,7 +588,7 @@ window.loadPendingRequests = function() {
                 const username = item.specialistProfile?.user?.username || item.user?.username || '';
                 const avatarUrl = getAvatar(username, realName);
 
-                //  注意：这里的 Compare 按钮，只传极其安全的纯数字 reqId！
+                // Note: Only numeric reqId is passed to Compare button for safety
                 html += `
             <tr style="border-top: 1px solid #e2e8f0; transition: background 0.2s;">
                 <td style="padding: 15px 20px;">
@@ -615,16 +614,16 @@ window.loadPendingRequests = function() {
         });
 }
 
-// 2. 填充详情弹窗
+// 2. Populate detailed modal
 window.viewPendingDetail = function(reqId) {
-    // 凭着传进来的 ID 钥匙，去柜子里把数据拿出来
+    // Retrieve data from storage using reqId
     const item = window.pendingEditsCache[reqId];
     if (!item) {
-        alert("无法读取该条数据，请刷新重试！");
+        alert("Unable to read data, please refresh and try again!");
         return;
     }
 
-    // --- 第一步：提取旧数据 (Current Profile) ---
+    // --- Step 1: Extract Current Profile data ---
     const oldProfile = item.specialistProfile || {};
     const oldName = oldProfile.realName || oldProfile.user?.username || 'Unknown';
     const oldCategory = oldProfile.expertise ? oldProfile.expertise.name : 'N/A';
@@ -632,16 +631,16 @@ window.viewPendingDetail = function(reqId) {
     const oldResume = oldProfile.resume || 'No resume content.';
     const oldLevel = oldProfile.level || 'EXPERT';
 
-    // --- 第二步：提取新数据 (Requested Updates) ---
+    // --- Step 2: Extract Requested Updates data ---
     const newName = item.newRealName || oldName;
     const newCategory = item.newProposedExpertiseName || (item.newExpertise ? item.newExpertise.name : oldCategory);
     const newFee = item.newHourlyFee !== undefined && item.newHourlyFee !== null ? `${item.newHourlyFee} Yuan/hour` : oldFee;
     const newResume = item.newResume || oldResume;
     const newLevel = item.newLevel || oldLevel;
 
-    // --- 第三步：制造一个“智能对比生成器” ---
+    // --- Step 3: Create Comparison Renderer ---
     const renderRow = (label, oldVal, newVal, isLongText = false) => {
-        // 情况A：如果没改动
+        // Case A: No change
         if (oldVal === newVal) {
             return `
                 <div class="mb-3">
@@ -653,9 +652,9 @@ window.viewPendingDetail = function(reqId) {
             `;
         }
 
-        // 情况B：如果有改动
+        // Case B: Value changed
         if (isLongText) {
-            // 长文本（简历）：左右分栏对比
+            // Long text (Resume): Side-by-side comparison
             return `
                 <div class="mb-3">
                     <label class="text-muted small fw-bold text-uppercase">${label}</label>
@@ -672,7 +671,7 @@ window.viewPendingDetail = function(reqId) {
                 </div>
             `;
         } else {
-            // 短文本：删除线 + 箭头
+            // Short text: Strikethrough + Arrow
             return `
                 <div class="mb-3">
                     <label class="text-muted small fw-bold text-uppercase">${label}</label>
@@ -686,7 +685,7 @@ window.viewPendingDetail = function(reqId) {
         }
     };
 
-    // --- 第四步：拼装最终的弹窗 HTML
+    // --- Step 4: Assemble final modal HTML
     let detailHtml = `
         <div style="padding: 10px;">
             <div class="row">
@@ -704,12 +703,12 @@ window.viewPendingDetail = function(reqId) {
     `;
     openAdminModal(detailHtml);
 };
-// 3. 同意 / 驳回
+// 3. Approve / Reject
 window.handleApproval = async function(reqId, isApproved) {
     const action = isApproved ? 'approve' : 'reject';
     const actionText = isApproved ? 'Approve' : 'Reject';
 
-    //  替换 confirm
+    // Replace confirm
     const isConfirmed = await showConfirm(`Are you sure you want to ${actionText} this request?`);
     if(!isConfirmed) return;
     fetch(`${API_BASE}/api/admin/edits/${reqId}/${action}`, {
@@ -732,4 +731,3 @@ window.cleanAndLoadHistory = function() {
     const tbody = document.getElementById('admin-history-list-body');
     if(tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:#94a3b8;">History feature is currently managed by backend.</td></tr>';
 }
-// ==========================================

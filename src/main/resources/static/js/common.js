@@ -1,4 +1,4 @@
-// 1. 智能提取后端报错信息 (专治各种花式 JSON 报错)
+// 1. Smart extraction of backend error messages (handles various JSON error formats)
 
 async function parseError(response) {
 
@@ -6,17 +6,17 @@ async function parseError(response) {
 
     try {
 
-// 尝试把后端的报错解析成 JSON 对象
+// Try to parse the backend error into a JSON object
 
         const json = JSON.parse(text);
 
-// 如果后端传了 error 字段就用 error，传了 message 就用 message，都没有就原样返回
+// If the backend provided an "error" field, use it; if "message", use that; otherwise return original text
 
         return json.error || json.message || text;
 
     } catch (e) {
 
-// 如果后端传的根本不是 JSON（比如 500 页面源码），就直接返回纯文本
+// If the backend response is not JSON (e.g., 500 page source code), return as plain text
 
         return text;
 
@@ -26,11 +26,11 @@ async function parseError(response) {
 
 
 
-// 2. 现代化悬浮提示框 (彻底替代丑陋的 window.alert)
+// 2. Modern floating toast notification (completely replaces the ugly window.alert)
 
 window.showToast = function(message, type = 'error') {
 
-// 检查页面上有没有装提示框的容器，没有就建一个
+// Check if a container for toast notifications exists; if not, create one
 
     let container = document.getElementById('toast-container');
 
@@ -48,7 +48,7 @@ window.showToast = function(message, type = 'error') {
 
 
 
-// 设置不同状态的颜色和图标
+// Set colors and icons for different status types
 
     const bgColor = type === 'success' ? '#10b981' : (type === 'warning' ? '#f59e0b' : '#ef4444');
 
@@ -56,7 +56,7 @@ window.showToast = function(message, type = 'error') {
 
 
 
-// 创建一条提示
+// Create a toast notification element
 
     const toast = document.createElement('div');
 
@@ -70,7 +70,7 @@ window.showToast = function(message, type = 'error') {
 
 
 
-// 动画：滑入显示
+// Animation: Slide in and display
 
     requestAnimationFrame(() => {
 
@@ -82,7 +82,7 @@ window.showToast = function(message, type = 'error') {
 
 
 
-// 动画：3秒后自动消失
+// Animation: Automatically disappear after 3 seconds
 
     setTimeout(() => {
 
@@ -98,15 +98,15 @@ window.showToast = function(message, type = 'error') {
 
 window.showConfirm = function(message) {
     return new Promise((resolve) => {
-        // 1. 创建全屏半透明遮罩
+        // 1. Create a full-screen semi-transparent overlay
         const overlay = document.createElement('div');
         overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px); display: flex; justify-content: center; align-items: center; z-index: 10000; opacity: 0; transition: opacity 0.2s ease;';
 
-        // 2. 创建弹窗主体
+        // 2. Create the modal body
         const box = document.createElement('div');
         box.style.cssText = 'background: white; width: 360px; padding: 24px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); transform: scale(0.95); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);';
 
-        // 3. 填充 HTML 结构 (标题、内容、两个按钮)
+        // 3. Fill HTML structure (Title, Content, two Buttons)
         box.innerHTML = `
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: #1f2937;">
                 <i class="bi bi-question-circle-fill text-primary" style="font-size: 1.5rem;"></i>
@@ -122,30 +122,30 @@ window.showConfirm = function(message) {
         overlay.appendChild(box);
         document.body.appendChild(overlay);
 
-        // 4. 进场动画
+        // 4. Entrance animation
         requestAnimationFrame(() => {
             overlay.style.opacity = '1';
             box.style.transform = 'scale(1)';
         });
 
-        // 5. 绑定点击事件 (核心：点击后把 Promise resolve 掉)
+        // 5. Bind click events (Core: resolve the Promise after clicking)
         const btnCancel = box.querySelector('#custom-confirm-cancel');
         const btnOk = box.querySelector('#custom-confirm-ok');
 
-        // 悬浮变色小交互
+        // Hover effect interactions
         btnCancel.onmouseover = () => btnCancel.style.background = '#f3f4f6';
         btnCancel.onmouseout = () => btnCancel.style.background = 'white';
         btnOk.onmouseover = () => btnOk.style.background = '#2563eb';
         btnOk.onmouseout = () => btnOk.style.background = '#3b82f6';
 
-        // 点击取消 -> 返回 false，并销毁弹窗
+        // Click Cancel -> return false, and destroy modal
         btnCancel.onclick = () => {
             overlay.style.opacity = '0';
             setTimeout(() => overlay.remove(), 200);
             resolve(false);
         };
 
-        // 点击确认 -> 返回 true，并销毁弹窗
+        // Click Confirm -> return true, and destroy modal
         btnOk.onclick = () => {
             overlay.style.opacity = '0';
             setTimeout(() => overlay.remove(), 200);
@@ -153,11 +153,11 @@ window.showConfirm = function(message) {
         };
     });
 };
-window.originalAlert = window.alert; // 把丑陋的老 alert 备份一下（以防万一）
+window.originalAlert = window.alert; // Backup the native alert just in case
 
 window.alert = function(message) {
-    // 智能判断应该用什么颜色
-    let type = 'error'; // 默认当报错处理
+    // Intelligently determine which color/status to use
+    let type = 'error'; // Default to error
     let msgStr = String(message).toLowerCase();
 
     if (msgStr.includes('success') || msgStr.includes('updated') || msgStr.includes('approved') || msgStr.includes('成功')) {
@@ -166,15 +166,15 @@ window.alert = function(message) {
         type = 'warning';
     }
 
-    // 调用我们自己写的神级弹窗！
+    // Call our custom high-end toast notification!
     showToast(message, type);
 };
-//匹配头像逻辑
+// Avatar matching logic
 function getAvatar(username, realName = '') {
-// 1. 先去本地缓存里找找看，这个账号有没有自己上传过头像？
+// 1. First, check local storage: has this account uploaded a custom avatar?
     const customAvatar = localStorage.getItem(`custom_avatar_${username}`);
     if (customAvatar) {
-        return customAvatar; // 如果有，直接返回用户上传的（Base64编码）
+        return customAvatar; // If yes, return the user-uploaded avatar (Base64 encoded)
     }
 
 
@@ -188,6 +188,6 @@ function getAvatar(username, realName = '') {
     if (username === 'Faker' ) return `images/faker.jpg`;
     if (username === 'Qlin') return `images/qlin.jpg`;
 
-    // 兜底：如果都没有匹配上，就用自动生成的头像
+    // Fallback: If no matches, use an automatically generated initials avatar
     return `https://api.dicebear.com/7.x/initials/svg?seed=${username}`;
 }

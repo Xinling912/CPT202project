@@ -10,7 +10,7 @@ function getDefaultProfile() {
         category: 'Uncategorized',
         fee: '0.00',
         resume: 'Please update your professional resume...',
-        // 这里完美接回咱们的头像匹配逻辑！
+        // Perfectly reconnects to our avatar matching logic!
         photo: getAvatar(currentName)
     };
 }
@@ -69,7 +69,7 @@ window.loadSpecialistOrders = function() {
             }
 
             orders.forEach(o => {
-                //  核心防雷：兼容所有后端可能返回的名字 (DTO 或 嵌套)
+                // Core protection: Compatible with all names returned by the backend (DTO or nested)
                 const custName = o.customerName || (o.customer && o.customer.username) || 'Customer';
                 const dateStr = o.slotDate || o.date || (o.timeSlot && o.timeSlot.slotDate) || 'Unknown Date';
                 const startStr = o.startTime ? o.startTime.substring(0,5) : (o.timeSlot && o.timeSlot.startTime ? o.timeSlot.startTime.substring(0,5) : '--:--');
@@ -78,7 +78,7 @@ window.loadSpecialistOrders = function() {
                 const timeStr = `${dateStr} | ${startStr} - ${endStr}`;
                 let statusBadge = o.status === 'CONFIRMED' ? 'text-success' : (o.status === 'CANCELLED' || o.status === 'CANCELED' ? 'text-danger' : 'text-warning');
 
-                //  动态渲染操作按钮
+                // Dynamically render operation buttons
                 let actionHtml = '';
                 if (o.status === 'PENDING') {
                     actionHtml = `
@@ -167,13 +167,13 @@ window.openChangePasswordModal = function() {
         const newPw = $('#newPassword').val();
         const confirmPw = $('#confirmNewPassword').val();
 
-        // 校验 1：是否填完
+        // Check 1: Is it all filled in?
         if(!oldPw || !newPw || !confirmPw) {
             alert("Please fill in all fields!");
             return;
         }
 
-        // 校验 2：两次新密码是否一致
+        // Check 2: Do the two new passwords match?
         if(newPw !== confirmPw) {
             alert("The new passwords do not match. Please try again!");
             return;
@@ -194,7 +194,7 @@ window.openChangePasswordModal = function() {
                 alert("Password updated successfully! Please login again with your new password.");
                 $('#changePasswordModal').modal('hide');
 
-                //  核心修改：不调 logout() 询问，直接清空 Token 并强制踢回 login.html
+                // Core Modification: Do not call logout() to ask, directly clear Token and force kick back to login.html
                 localStorage.clear();
                 window.location.href = 'login.html';
             } else {
@@ -317,7 +317,7 @@ function renderRealSchedule(flatSchedule) {
             if (displayStatus === 'CONFIRMED') cardType = 'card-confirmed';
             if (displayStatus === 'CANCELED' || displayStatus === 'CANCELLED') cardType = 'card-canceled';
         } else if (slot.timeSlotStatus === 'DISABLED') {
-            // 核心魔法：只要是 DISABLED，统统穿上红色的衣服，标上 Cancelled！
+            // Core magic: As long as it is DISABLED, put on red clothes and label it Cancelled!
             cardType = 'card-canceled';
             title = 'Cancelled';
             displayStatus = 'DISABLED';
@@ -407,7 +407,7 @@ window.handleAptAction = function(bookingId, action, requiresReason = false) {
                 loadSpecialistOrders();
             }
         } else {
-            //  核心优化：解析后端的 JSON 报错，并进行“人性化翻译”
+            // Core Optimization: Parse backend JSON error and provide "human-friendly translation"
             const errorText = await res.text();
             let errorMessage = errorText;
 
@@ -452,7 +452,7 @@ function renderBlocks() {
                             ${b.statusTitle} ${b.s}:00-${b.e}:00
                         </div>`);
                 } else if (b.isDisabled) {
-                    //  核心魔法：使用 Bootstrap 自带的 bg-danger 让它变红！
+                    // Core magic: Use Bootstrap's own bg-danger to make it red!
                     col.find(`[data-hour="${b.s}"]`).append(`
                         <div class="drag-block bg-danger text-white border-0 shadow-sm" style="height:${h-4}px; opacity: 0.9; cursor: not-allowed;" title="Cancelled by Specialist">
                             <i class="bi bi-x-octagon-fill mb-1"></i>
@@ -482,9 +482,9 @@ window.removeB = async function(e, d, i) {
     if (block.locked) return;
 
     if (block.id) {
-        // 2. 换成高级弹窗并 await
+        // 2. Replaced with advanced modal and await
         const isConfirmed = await showConfirm("This slot is already saved. Delete it permanently from database?");
-        if (!isConfirmed) return; // 如果点了取消，直接退出
+        if (!isConfirmed) return; // If cancelled, exit directly
 
         fetch(`${API_BASE}/api/timeslots/${block.id}`, {
             method: 'DELETE',
@@ -495,7 +495,7 @@ window.removeB = async function(e, d, i) {
                 renderBlocks();
                 loadMySchedule();
             } else {
-                // 顺手把这里的 alert 也优化成红色的 Toast！
+                // By the way, optimize the alert here into a red Toast!
                 showToast("Cannot delete a booked slot.", 'error');
             }
         });
@@ -529,7 +529,7 @@ $(document).ready(() => {
                 const currentUsername = localStorage.getItem('username') || 'Specialist';
                 localStorage.setItem(`custom_avatar_${currentUsername}`, uploadedImageSrc);
 
-                // 顺手把页面左上角和右上角的头像也立刻换掉
+                // Update avatars in the top-left and top-right of the page immediately
                 $('#display-photo').attr('src', uploadedImageSrc);
                 $('#header-avatar').attr('src', uploadedImageSrc);
             };
@@ -537,30 +537,30 @@ $(document).ready(() => {
         }
     });
 
-    // 提交修改资料 (防呆验证 + 自动刷新)
+    // Submit profile modification (fool-proof verification + auto refresh)
     $('#save-profile-btn').off('click').on('click', function() {
-        // 1. 获取输入框里的新值
+        // 1. Get new values from the input boxes
         const newName = $('#edit-name').val().trim();
-        // 🌟 核心修复 1：拿到下拉框选中的【纯文本】（如“电子竞技”），而不是 ID（"10"）
+        // Core fix 1: Get the [plain text] selected in the dropdown (e.g., "Esports"), instead of the ID ("10")
         const newCategoryText = $('#edit-category option:selected').text().trim();
-        // 🌟 核心修复 2：把金额统一转成数字比对，防止 "9999" 和 "9999.00" 误判
+        // Core fix 2: Convert the amount to a number for comparison to prevent false negatives between "9999" and "9999.00"
         const newFee = parseFloat($('#edit-fee').val()) || 0;
         const newResume = $('#edit-resume').val().trim();
 
-        // 2. 获取页面上展示的旧值
+        // 2. Get old values displayed on the page
         const oldName = $('#display-name').text().trim();
         const oldCategoryText = $('#display-category').text().trim();
         const oldFee = parseFloat($('#display-fee').text()) || 0;
         const oldResume = $('#display-resume').text().trim();
 
-        // 3. 找不同！现在是真正的【完全对齐比对】！
+        // 3. Find differences! Now it is a true [complete alignment comparison]!
         if (newName === oldName &&
             newCategoryText === oldCategoryText &&
             newFee === oldFee &&
             newResume === oldResume) {
 
-            alert("You haven't made any changes! (请先修改资料再提交)");
-            return; // 直接退出函数，绝不发送无用请求！
+            alert("You haven't made any changes! (Please modify your info before submitting)");
+            return; // Exit function directly, never send useless requests!
         }
         const selectedCategoryId = parseInt($('#edit-category').val());
         const selectedLevel = $('#edit-level').val();
@@ -578,8 +578,8 @@ $(document).ready(() => {
             newLevel: selectedLevel
         };
 
-        // 防浏览器缓存神器：在 F12 控制台打印出来，确保代码真更新了！
-        console.log(" 准备发送给后端的终极 Payload:", payload);
+        // Anti-browser caching tool: Print to F12 console to ensure code is truly updated!
+        console.log(" Ultimate Payload prepared to send to backend:", payload);
         const token = localStorage.getItem('token');
         const btn = $(this);
         btn.prop('disabled', true).text('Submitting...');
@@ -680,14 +680,14 @@ $(document).ready(() => {
 
             const isTimeLocked = slotDateTime < thresholdTime;
             const isBooked = slot.timeSlotStatus === 'BOOKED';
-            const isDisabled = slot.timeSlotStatus === 'DISABLED'; //  新增判断
+            const isDisabled = slot.timeSlotStatus === 'DISABLED'; // New judgment
 
 
             const isLocked = isTimeLocked || isBooked || isDisabled;
 
             let statusTitle = 'VACANT';
             if (isBooked) statusTitle = slot.bookingStatus || 'BOOKED';
-            if (isDisabled) statusTitle = 'DISABLED'; //  名字改成 Disabled
+            if (isDisabled) statusTitle = 'DISABLED'; // Name changed to Disabled
 
             cacheData[dayKey].push({
                 s: startH,
@@ -796,11 +796,11 @@ $(document).ready(() => {
         }
         $('.drag-slot').removeClass('selecting');
     });
-// 页面加载完直接去查一次钱！
+    // Check earnings immediately after page load!
     loadEarnings();
 
     $('.nav-link').on('click', function() {
-        // 如果点的是 earnings 那个按钮
+        // If the earnings button is clicked
         if ($(this).attr('onclick').includes('earnings')) {
             loadEarnings();
         }
@@ -808,13 +808,13 @@ $(document).ready(() => {
 
 });
 
-// 获取专家总收入 ( 完美匹配后端的 JSON 字段)
+// Get total earnings of specialist (perfectly matches backend JSON fields)
 function loadEarnings() {
     const token = localStorage.getItem('token');
     if (!token) return;
 
     const displayElement = $('#total-earnings-display');
-    const currencyElement = $('#currency-display'); // 顺手把右上角的货币单位也动态更新了
+    const currencyElement = $('#currency-display'); // Update currency unit dynamically as well
     displayElement.text('Loading...');
 
     fetch(`${API_BASE}/api/specialists/earnings`, {
@@ -825,20 +825,20 @@ function loadEarnings() {
     })
         .then(async res => {
             if (res.ok) {
-                // 直接用 .json() 解析，不用 .text() 那么麻烦了
+                // Direct parse with .json()
                 const data = await res.json();
 
-                // 精准抓取杜姐后端的字段：totalEarnings
+                // Accurately capture backend field: totalEarnings
                 const amount = data.totalEarnings;
                 const currency = data.currency || "CNY";
 
                 if (amount !== undefined && amount !== null) {
-                    // 完美格式化：强制保留两位小数，比如 0.00，显得非常专业
+                    // Perfect formatting: Force 2 decimal places (e.g., 0.00) for professionalism
                     displayElement.text(parseFloat(amount).toLocaleString('en-US', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2
                     }));
-                    // 顺手更新货币符号
+                    // Update currency symbol
                     if(currencyElement.length) currencyElement.text(currency);
                 } else {
                     displayElement.text('0.00');
@@ -854,13 +854,13 @@ function loadEarnings() {
         });
 }
 // ==========================================
-// Profile 历史与审核核心逻辑
+// Profile History and Audit Core Logic
 // ==========================================
 // ==========================================
-// Profile 真实对接后端数据库的逻辑
+// Profile Logic connecting to Backend Database
 // ==========================================
 // ==========================================
-// Profile 真实对接后端数据库的逻辑
+// Profile Logic connecting to Backend Database
 // ==========================================
 //
 async function initProfilePage() {
@@ -868,7 +868,7 @@ async function initProfilePage() {
     if (!token) return;
 
     try {
-        // 第一步：去后端拉取所有的专业和等级字典
+        // Step 1: Pull all expertise and level dictionaries from the backend
         const filterRes = await fetch(`${API_BASE}/api/specialists/filters`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -876,7 +876,7 @@ async function initProfilePage() {
         if (filterRes.ok) {
             const filterData = await filterRes.json();
 
-            // 渲染专业分类
+            // Render expertise categories
             const categorySelect = $('#edit-category').empty();
             if (filterData.expertises) {
                 filterData.expertises.forEach(exp => {
@@ -884,7 +884,7 @@ async function initProfilePage() {
                 });
             }
 
-            // 渲染等级
+            // Render levels
             const levelSelect = $('#edit-level').empty();
             if (filterData.levels) {
                 filterData.levels.forEach(lvl => {
@@ -895,32 +895,32 @@ async function initProfilePage() {
                 });
             }
         } else {
-            console.error("⚠️ 警告: 拉取字典失败，可能是后端接口权限问题", await filterRes.text());
+            console.error("⚠️ Warning: Failed to pull dictionary, likely a backend interface permission issue", await filterRes.text());
         }
 
-        // 第二步：再去拉取该专家个人的真实资料
+        // Step 2: Pull real profile data for the specialist
         const profileRes = await fetch(`${API_BASE}/api/specialists/profile`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (!profileRes.ok) throw new Error("无法获取个人资料");
+        if (!profileRes.ok) throw new Error("Unable to get personal profile");
 
         const profileJson = await profileRes.json();
         const realProfile = profileJson.data || profileJson;
 
         if(!realProfile) return;
 
-        // 提取个人数据
+        // Extract personal data
         currentSpecialistLevel = realProfile.level || 'EXPERT';
         const realName = realProfile.realName || realProfile.user?.username || 'Unknown';
-        const expName = realProfile.expertise ? realProfile.expertise.name : '未分类';
+        const expName = realProfile.expertise ? realProfile.expertise.name : 'Uncategorized';
         const expId = realProfile.expertise ? realProfile.expertise.id : null;
         const hourlyFee = realProfile.hourlyFee || '0.00';
         const resumeText = realProfile.resume || 'Please update your About Me...';
 
         const avatarUrl = getAvatar(realProfile.user?.username || '', realName);
 
-        // 🌟 恢复展示界面的数据 (Profile Display Mode)
+        // Restore data for Display Mode
         $('#display-name').text(realName);
         $('#display-category').text(expName);
         $('#display-fee').text(hourlyFee);
@@ -928,13 +928,13 @@ async function initProfilePage() {
         $('#display-photo').attr('src', avatarUrl);
         $('#header-avatar').attr('src', avatarUrl);
 
-        // 🌟 恢复编辑界面的数据并自动选中下拉框 (Profile Edit Mode)
+        // Restore data for Edit Mode and auto-select dropdowns
         $('#edit-name').val(realName);
         $('#edit-fee').val(hourlyFee);
         $('#edit-resume').val(resumeText);
         $('#profile-photo-preview').attr('src', avatarUrl);
 
-        // 稍微延迟 50 毫秒，确保前面的下拉框 option 已经塞进 HTML 里了再选中
+        // Slight delay of 50ms to ensure dropdown options are injected into HTML before selection
         setTimeout(() => {
             $('#edit-level').val(currentSpecialistLevel);
             if(expId) $('#edit-category').val(expId);
@@ -943,12 +943,12 @@ async function initProfilePage() {
 
 
 
-        // 渲染历史记录
+        // Render history
         renderHistory();
 
     } catch (err) {
         console.error("Initialization Failed:", err);
-        $('#display-resume').text("Backend connection failed. 可能是 Token 过期或后端没开。");
+        $('#display-resume').text("Backend connection failed. Token might be expired or backend is down.");
     }
 }
 function renderHistory() {
@@ -1030,7 +1030,7 @@ window.viewHistoryDetail = function(index) {
     document.getElementById('expertModalOverlay').style.display = 'flex';
 };
 // ==========================================
-//  检查状态 (附带“阅后即焚”的绿色成功提示框)
+// Check status (with "self-destructing" green success alert)
 // ==========================================
 function checkProfileStatus() {
     const token = localStorage.getItem('token');
@@ -1048,11 +1048,11 @@ function checkProfileStatus() {
             const alertBox = $('#pending-alert');
             const editBtn = $('button[onclick="toggleProfileEdit()"]');
 
-            // 先把乱七八糟的颜色全洗掉
+            // Clear all alert styles first
             alertBox.removeClass('d-none alert-warning alert-danger alert-success border-warning border-danger border-success alert-dismissible fade show');
 
             if (status === 'EDIT_PENDING' || status === 'APPLY_PENDING') {
-                //  重点：只要重新进入审核，就把之前隐藏绿条的记录删掉，保证下次同意时绿条能再次弹出来！
+                // Focus: Whenever re-entering review, delete the "dismissed" record to ensure the green bar pops up next time it is approved!
                 localStorage.removeItem('hide_approved_banner');
 
                 alertBox.addClass('alert-warning border-warning');
@@ -1065,11 +1065,11 @@ function checkProfileStatus() {
                 editBtn.prop('disabled', false).html('<i class="bi bi-pencil-square me-2"></i>Edit Again');
 
             } else if (status === 'EDIT_APPROVED') {
-                // 检查记事本，如果有“已阅”标记，直接隐藏
+                // Check notebook; if "Read" mark exists, hide directly
                 if (localStorage.getItem('hide_approved_banner') === 'true') {
                     alertBox.addClass('d-none');
                 } else {
-                    // 没点过关闭，就展示绿条，并附带一个 ✖️ 按钮
+                    // Not dismissed yet: show green bar with a ✖️ button
                     alertBox.addClass('alert-success border-success alert-dismissible fade show d-flex align-items-center');
                     alertBox.html(`
                     <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
@@ -1080,10 +1080,10 @@ function checkProfileStatus() {
                     <button type="button" class="btn-close" style="margin-left:auto;" onclick="$(this).closest('.alert').addClass('d-none');"></button>
                 `);
 
-                    // 【绝杀1】：只要展示过一次，代码立刻在后台刻上“已阅”！你再刷新绝对不弹！
+                    // [Finisher 1]: Once displayed, mark as "Read" in the background immediately! It won't pop up again on refresh!
                     localStorage.setItem('hide_approved_banner', 'true');
 
-                    // 【绝杀2】：5秒钟后自动淡出消失，彻底解放双手！
+                    // [Finisher 2]: Fade out automatically after 5 seconds!
                     setTimeout(() => {
                         alertBox.fadeOut('slow', function() { $(this).addClass('d-none'); });
                     }, 5000);
@@ -1097,12 +1097,12 @@ function checkProfileStatus() {
         })
         .catch(err => console.error("Status Check Failed:", err));
 }
-//  完美排队执行，彻底告别打架！
+// Queued execution to avoid conflicts!
 $(document).ready(function() {
-    // 先去拉取真实资料渲染页面
+    // Fetch real info to render page first
     initProfilePage().then(() => {
-        //  必须等资料拉取完了 再去问后端当前的状态 是吧 我不知道
-        // 如果在审核中，这个函数会绝对权威地把你的按钮锁死
+        // Must wait for data fetch before asking for current status
+        // If under review, this function authoritatively locks your button
         checkProfileStatus();
     });
 });

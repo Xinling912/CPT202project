@@ -1,8 +1,7 @@
-
 $(document).ready(function() {
 
     // ==========================================
-    // 大招一：发送验证码与 60 秒倒计时
+    // Feature 1: Send Verification Code with 60s Countdown
     // ==========================================
     $('#sendCodeBtn').on('click', function() {
         const emailInput = $('#reg-email').val();
@@ -15,7 +14,7 @@ $(document).ready(function() {
         const btn = $(this);
         let timeLeft = 60;
 
-        // 按钮变灰，开始倒计时
+        // Disable button and start countdown
         btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed');
 
         const timer = setInterval(() => {
@@ -28,7 +27,7 @@ $(document).ready(function() {
             }
         }, 1000);
 
-        // 呼叫杜姐的发送验证码接口！
+        // Call the verification code interface
         fetch('http://localhost:8080/api/users/verify-code', {
             method: 'POST',
             headers: {
@@ -38,29 +37,29 @@ $(document).ready(function() {
         })
             .then(response => response.json())
             .then(data => {
-                // 杜姐后端返回的提示语 (比如: "验证码已发送到邮箱")
+                // Backend return message (e.g., "Verification code sent to email")
                 console.log(data.message);
-                // 你也可以换成 alert(data.message); 提醒用户去查看邮箱
+                // alert(data.message); could be used here to notify the user
             })
             .catch(error => {
-                console.error('发送验证码失败:', error);
+                console.error('Failed to send verification code:', error);
                 alert("Failed to send verification code. Check server.");
             });
     });
 
 
     // ==========================================
-    // 大招二：提交完整的注册信息
+    // Feature 2: Submit Complete Registration Info
     // ==========================================
     $('#registerForm').on('submit', function(e) {
         e.preventDefault();
 
         const btn = $('#registerBtn');
-        const username = $('#reg-username').val(); // 新增：获取用户名
+        const username = $('#reg-username').val(); // Added: get username
         const email = $('#reg-email').val();
         const pwd = $('#reg-password').val();
         const confirm = $('#reg-confirm').val();
-        const verifyCode = $('#reg-code').val();   // 新增：获取验证码
+        const verifyCode = $('#reg-code').val();   // Added: get verification code
 
         if (pwd !== confirm) {
             alert("Passwords do not match!");
@@ -72,16 +71,16 @@ $(document).ready(function() {
             .prop('disabled', true)
             .addClass('opacity-70 cursor-not-allowed');
 
-        // 严格按照杜姐定义的 RegisterRequest 组装数据
+        // Assemble data strictly according to the RegisterRequest defined in the backend
         const userData = {
             username: username,
             password: pwd,
             email: email,
-            role: "CUSTOMER", // 角色写死为普通客户
+            role: "CUSTOMER", // Role hardcoded as normal customer
             verifyCode: verifyCode
         };
 
-        // 呼叫小杜的正式注册接口..
+        // Call the formal registration interface
         fetch('http://localhost:8080/api/users/register', {
             method: 'POST',
             headers: {
@@ -90,15 +89,15 @@ $(document).ready(function() {
             body: JSON.stringify(userData)
         })
             .then(async response => {
-                const data = await response.json(); // 解析后端传回的 JSON 信息
+                const data = await response.json(); // Parse the returned JSON info
 
                 if (response.ok) {
-                    // HTTP 状态码是 200 或 201，注册成功！
+                    // HTTP status code 200 or 201, registration successful!
                     btn.text('Register Account').prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
-                    alert(data.message); // 弹出 "注册成功"
-                    window.location.href = 'login.html'; // 注册完直接跳去登录页
+                    alert(data.message); // Pop up "Registration successful"
+                    window.location.href = 'login.html'; // Redirect to login page immediately
                 } else {
-                    // 注册失败（比如验证码错误、邮箱被占用）
+                    // Registration failed (e.g., incorrect code, email already taken)
                     alert("Registration failed: " + data.message);
                     btn.text('Register Account').prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
                 }
@@ -110,7 +109,7 @@ $(document).ready(function() {
             });
     });
 
-    // 返回登录页按钮逻辑
+    // Back to login page button logic
     $('#go-to-login').on('click', function() {
         window.location.href = 'login.html';
     });

@@ -1,73 +1,70 @@
 =================================================
-  SAS (Specialist Administration System) 测试账号本
-  统一测试密码: Yasuo123..
-=================================================
+SAS (Specialist Administration System) Test Accounts
+Unified Test Password: Yasuo123..
 
-👑 【第一类：管理员 Admin】
-(权限：审批专家入驻、审批资料修改、处理举报、封号、管理专业分类)
--------------------------------------------------
+👑 【Category 1: Admins】
+(Permissions: Approve specialist applications, approve profile edits, handle reports, ban accounts, manage expertise categories)
+
 Username: God
-Email:    admin@qq.com
-Role:     ADMIN
+Email: admin@qq.com
+Role: ADMIN
 
+🎓 【Category 2: Specialists】
+(Permissions: Publish schedules, edit professional resumes, accept orders, manage bookings)
 
-🎓 【第二类：专家 Specialists】
-(权限：发布排班、修改个人履历、接单、处理订单)
--------------------------------------------------
 1. Username: Wanfeng
-   Email:    expert@qq.com
-   Role:     SPECIALIST
-   [备注: 后端开发]
+Email: expert@qq.com
+Role: SPECIALIST
+[Note: Backend Development]
 
 2. Username: ShenShaohui
-   Email:    ssh@expert.com
-   Role:     SPECIALIST
-   [备注: 心理健康/情感]
+Email: ssh@expert.com
+Role: SPECIALIST
+[Note: Mental Health/Emotional Wellness]
 
 3. Username: XingjianWu
-   Email:    wu@expert.com
-   Role:     SPECIALIST
-   [备注: 法律服务]
+Email: wu@expert.com
+Role: SPECIALIST
+[Note: Legal Services]
 
 4. Username: XinlingDu
-   Email:    du@expert.com
-   Role:     SPECIALIST
-   [备注: 音乐/歌唱指导]
+Email: du@expert.com
+Role: SPECIALIST
+[Note: Music/Singing Guidance]
 
 5. Username: Sarah_IELTS
-   Email:    sarah@expert.com
-   Role:     SPECIALIST
-   [备注: 雅思外语]
+Email: sarah@expert.com
+Role: SPECIALIST
+[Note: IELTS Foreign Language]
 
 6. Username: Jessica_Design
-   Email:    jessica@expert.com
-   Role:     SPECIALIST
-   [备注: 艺术设计]
+Email: jessica@expert.com
+Role: SPECIALIST
+[Note: Art and Design]
 
 7. Username: zhangjuyi
-   Email:    zjy@expert.com
-   Role:     SPECIALIST
-   [备注: 影视表演]
+Email: zjy@expert.com
+Role: SPECIALIST
+[Note: Film and Television Acting]
 
 8. Username: Faker
-   Email:    faker@expert.com
-   Role:     SPECIALIST
-   [备注: 电子竞技]
+Email: faker@expert.com
+Role: SPECIALIST
+[Note: Esports]
 
+🛍️ 【Category 3: Customers】
+(Permissions: Browse hall, filter specialists, book appointments, cancel orders, submit reports)
 
-🛍️ 【第三类：顾客 Customers】
-(权限：大厅浏览、筛选专家、预约下单、取消订单、提交举报)
--------------------------------------------------
 1. Username: Carrot
-   Email:    carrot@qq.com
-   Role:     CUSTOMER
+Email:    carrot@qq.com
+Role:     CUSTOMER
 
 2. Username: Qlin
-   Email:    Qlin@qq.com
-   Role:     CUSTOMER
+Email:    Qlin@qq.com
+Role:     CUSTOMER
 
 3. Username: Tudou
-   Email:    Tudou@qq.com
-   Role:     CUSTOMER
+Email:    Tudou@qq.com
+Role:     CUSTOMER
 
 =================================================

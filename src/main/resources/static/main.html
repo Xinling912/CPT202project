@@ -19,7 +19,7 @@
         .page-active { display: block; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 原有样式保持不动 */
+        /* Existing styles remain unchanged */
         .expert-card { background: white; border-radius: 32px; border: 1px solid #e4e4e7; padding: 35px; transition: 0.4s; cursor: pointer; height: 100%; display: flex; flex-direction: column; }
         .expert-card:hover { transform: translateY(-8px); border-color: var(--brand); box-shadow: 0 24px 48px rgba(0,0,0,0.06); }
         .card-level-tag { background: #f0f7ff; color: var(--brand); font-size: 0.7rem; font-weight: 800; padding: 6px 14px; border-radius: 100px; margin-bottom: 20px; display: inline-block; width: fit-content; }
@@ -118,7 +118,7 @@
     let allSlots = [];
 
     // ==========================================
-    //  JWT Token 拦截器配置 (根据小组成员代码同步)
+    //  JWT Token Interceptor Configuration (Sync with team member code)
     // ==========================================
     $.ajaxSetup({
         beforeSend: function(xhr) {
@@ -129,19 +129,19 @@
         }
     });
 
-    // 辅助函数：检查登录状态
+    // Helper function: Check login status
     function checkLogin() {
         const token = localStorage.getItem('token');
         if (!token) {
             alert("Please log in first!");
-            // 这里根据你们项目的登录页面文件名修改，比如 login.html
+            // Change according to your project's login page filename, e.g., login.html
             window.location.href = 'login.html';
             return false;
         }
         return true;
     }
 
-    // 处理需要登录才能查看的页面
+    // Handle pages that require login to view
     function handleProtectedView(pageId, specialistId = null) {
         if (checkLogin()) {
             if (pageId === 'specialist-dashboard') {

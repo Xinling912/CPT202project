@@ -9,14 +9,14 @@ $(document).ready(function() {
         return;
     }
 
-    //  1. 进页面第一件事：向少辉请示当前申请状态！
+    // 1. First thing after entering the page: Request current application status from Shaohui!
     checkApplyStatus();
 
-    //  2. 动态加载数据库里真实的专业列表！
+    // 2. Dynamically load the real expertise list from the database!
     loadExpertiseCategories();
 
 
-    // 处理专业领域下拉框变化
+    // Handle changes in the expertise domain dropdown
     $('#exp-domain-select').on('change', function() {
         const selectedValue = $(this).val();
         const $otherInput = $('#exp-domain-input');
@@ -38,7 +38,7 @@ $(document).ready(function() {
         window.history.back();
     });
 
-    // 处理表单提交
+    // Handle form submission
     $('#expertForm').on('submit', function(e) {
         e.preventDefault();
 
@@ -55,7 +55,7 @@ $(document).ready(function() {
             hourlyFee: Number($('#exp-fee').val()),
             resume: $('#exp-resume').val().trim(),
             expertiseId: isOther ? null : Number(domainSelectValue),
-            // 核心：如果是Other，就把输入的文本发过去，后端会自动创建新专业(并非自动 成功录取该专家后才会创建新的专业)
+            // Core: If "Other", send the input text; the backend will automatically create a new expertise (not automatic; only created after successful enrollment)
             newExpertiseName: isOther ? $('#exp-domain-input').val().trim() : null
         };
 
@@ -70,7 +70,7 @@ $(document).ready(function() {
             .then(async response => {
                 if (response.ok) {
                     alert("Application submitted successfully! Please wait for admin review.");
-                    // 提交成功后，直接刷新当前页面，页面会自动变成黄色的“审核中”状态！
+                    // After successful submission, refresh current page; it will automatically turn into the yellow "Under Review" state!
                     window.location.reload();
                 } else if (response.status === 401) {
                     alert("Session expired. Please log in again.");
@@ -96,7 +96,7 @@ $(document).ready(function() {
 });
 
 // ==========================================
-// 核心功能 1：获取真实专业列表
+// Core Function 1: Fetch Real Expertise List
 // ==========================================
 function loadExpertiseCategories() {
     fetch(`${API_BASE}/api/expertise/list`, {
@@ -110,19 +110,19 @@ function loadExpertiseCategories() {
             select.empty();
             select.append('<option value="" disabled selected>Please select your professional field.</option>');
 
-            // 动态把数据库里的专业塞进去
+            // Dynamically inject expertise from the database
             list.forEach(exp => {
                 select.append(`<option value="${exp.id}">${exp.name}</option>`);
             });
 
-            // 最后加上 Other 选项
-            select.append('<option value="other">Other (自定义新专业)...</option>');
+            // Finally, add the "Other" option
+            select.append('<option value="other">Other (Custom New Expertise)...</option>');
         })
         .catch(err => console.error("Failed to load expertise:", err));
 }
 
 // ==========================================
-// 核心功能 2：追踪用户申请状态
+// Core Function 2: Track User Application Status
 // ==========================================
 function checkApplyStatus() {
     fetch(`${API_BASE}/api/specialists/apply-status`, {
@@ -137,25 +137,25 @@ function checkApplyStatus() {
             const form = $('#expertForm');
 
             if (status === 'APPLY_PENDING') {
-                // 审核中：显示黄条，隐藏表单
+                // Under Review: Show yellow banner, hide form
                 banner.css({'display': 'block', 'background': '#fef3c7', 'color': '#92400e', 'border': '1px solid #f59e0b'});
                 banner.html(`⏳ Update Under Review: ${msg}`);
                 form.hide();
 
-                //  修复点：这里必须用 else if 隔开！！！
+                // Fix point: Must use "else if" here!!!
             } else if (status === 'APPLY_REJECTED') {
-                // 被驳回：显示红条，保留表单
+                // Rejected: Show red banner, keep form
                 banner.css({'display': 'block', 'background': '#fee2e2', 'color': '#b91c1c', 'border': '1px solid #ef4444'});
                 banner.html(`
                 <div style="display:flex; align-items:center;">
                     <i class="bi bi-x-circle-fill" style="font-size:1.5rem; margin-right:10px;"></i>
                     <div>
-                        <div style="font-size:1.1rem;">Application Rejected (申请被驳回)</div>
-                        <div style="font-weight:normal; font-size:0.85rem; margin-top:3px;">Reason: ${msg}。Please modify your information below and submit again. (请修改下方信息后重新提交)</div>
+                        <div style="font-size:1.1rem;">Application Rejected</div>
+                        <div style="font-weight:normal; font-size:0.85rem; margin-top:3px;">Reason: ${msg}. Please modify your information below and submit again.</div>
                     </div>
                 </div>
                 `);
-                form.show(); // 确保表单让他重新填
+                form.show(); // Ensure the form is shown for re-filling
 
             } else if (status === 'IS_ACTIVE_SPECIALIST' || status.startsWith('EDIT_')) {
                 window.location.href = 'specialist.html';

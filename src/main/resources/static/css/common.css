@@ -1,5 +1,5 @@
 /* ==========================================
-   页面基础重置
+   Page Base Reset
    ========================================== */
 body {
     font-family: 'Inter', sans-serif;
@@ -11,7 +11,7 @@ body {
     overflow-x: hidden;
 }
 
-/* === 渐显动画 === */
+/* === Fade-in Animation === */
 .fade-in {
     animation: fadeIn 0.3s ease-in-out forwards;
 }
@@ -21,7 +21,7 @@ body {
 }
 
 /* ==========================================
-   核心布局
+   Core Layout
    ========================================== */
 #app {
     position: relative;
@@ -33,7 +33,7 @@ body {
 }
 
 /* ==========================================
-   背景层 & 无缝圆环 (Figma 还原版)
+   Background Layer & Seamless Rings (Figma Restoration)
    ========================================== */
 #auth-bg {
     position: fixed;
@@ -76,7 +76,7 @@ body {
 }
 
 /* ==========================================
-   Welcome 标题
+   Welcome Title
    ========================================== */
 .welcome-container {
     position: absolute;
@@ -97,7 +97,7 @@ body {
 }
 
 /* ==========================================
-   登录/注册 白色卡片层
+   Login/Register White Card Layer
    ========================================== */
 #view-container {
     position: relative;
@@ -126,7 +126,7 @@ body {
 }
 
 /* ==========================================
-   表单内部元素
+   Form Internal Elements
    ========================================== */
 .form-group {
     margin-bottom: 1.25rem;
@@ -165,26 +165,26 @@ body {
     margin-bottom: 0.75rem;
 }
 
-/* === 新增：验证码左右并排布局 === */
+/* === New: Verification Code Side-by-Side Layout === */
 .verify-row {
     display: flex;
-    gap: 10px; /* 输入框和按钮之间的间距 */
-    align-items: stretch; /* 保证输入框和按钮高度绝对一致 */
+    gap: 10px; /* Space between input box and button */
+    align-items: stretch; /* Ensure input and button heights match perfectly */
     width: 100%;
 }
 
 .verify-row .figma-input {
-    flex: 1; /* 核心：让输入框自动撑满所有剩余的广阔空间 */
+    flex: 1; /* Core: Allows the input box to automatically fill the remaining space */
     margin-bottom: 0;
 }
 
 .send-btn {
-    flex: 0 0 100px; /* 核心紧箍咒：死死固定 Send 按钮的宽度为 100px，绝不允许变大 */
-    width: 100px !important; /* 强制镇压 .submit-btn 的 100% 属性 */
+    flex: 0 0 100px; /* Core Constraint: Fixes the Send button width to exactly 100px */
+    width: 100px !important; /* Forces suppression of the .submit-btn 100% attribute */
     margin-top: 0 !important;
     padding: 0 !important;
 }
-/* 按钮样式 */
+/* Button Styles */
 .submit-btn {
     width: 100%;
     background-color: #54a0ff;
@@ -206,7 +206,7 @@ body {
 }
 
 /* ==========================================
-   底部链接
+   Footer Links
    ========================================== */
 .footer-links {
     text-align: center;
@@ -227,7 +227,7 @@ body {
 }
 
 /* ==========================================
-   📱 移动端适配
+   📱 Mobile Adaptation
    ========================================== */
 @media (max-width: 768px) {
     .welcome-text {

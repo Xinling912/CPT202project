@@ -8,11 +8,12 @@ let selectedExpertId = null;
 let currentSelectedSlotId = null;
 let currentMyOrders = [];
 // ==========================================
-//报错弹窗武器库 因为报错弹窗太多了 懒得一个一个找了 带给他们梅花一下吧
+// Error modal repository. Because there are too many error modals,
+// I'm too lazy to find them one by one. Let's beautify them together.
 // ==========================================
 
 
-// --- 1. 全局配置 ---
+// --- 1. Global Configuration ---
 $.ajaxSetup({
     beforeSend: function(xhr) {
         const token = localStorage.getItem('token');
@@ -29,24 +30,24 @@ function checkLogin() {
     return true;
 }
 
-// 1. 加上 async
+// 1. Added async
 async function logout() {
-    // 2. 换成高级弹窗并 await
+    // 2. Switched to advanced modal and await
     const isConfirmed = await showConfirm("Are you sure you want to log out?");
 
-    // 3. 如果确认了，执行清理和跳转
+    // 3. If confirmed, perform cleanup and redirection
     if (isConfirmed) {
-        localStorage.clear(); // 清除 Token
+        localStorage.clear(); // Clear Token
         window.location.href = 'landingpage.html';
     }
 }
 
-// --- 2. 页面初始化 ---
+// --- 2. Page Initialization ---
 $(document).ready(() => {
     if (checkLogin()) {
         initList();
-        loadFilterData();//新增：页面一加载，就去后端拉取真实的专业和等级数据！
-        //  核心：页面一加载，就把右上角的用户名和头像替换成当前登录人的信息
+        loadFilterData();// New: Load real expertise and level data from backend upon page load!
+        // Core: Replace username and avatar in the top right corner with current login user info
         const currentUsername = localStorage.getItem('username') || 'User';
         $('#current-user-display').text(currentUsername);
         $('#nav-user-avatar').attr('src', getAvatar(currentUsername));
@@ -54,7 +55,7 @@ $(document).ready(() => {
 });
 function loadFilterData() {
     $.get(`${API_BASE}/api/specialists/filters`, (res) => {
-        // 1. 动态渲染 Category 下拉框
+        // 1. Dynamically render Category dropdown
         const categorySelect = $('#search-category');
         if (res.expertises && res.expertises.length > 0) {
             res.expertises.forEach(exp => {
@@ -62,11 +63,11 @@ function loadFilterData() {
             });
         }
 
-        // 2. 动态渲染 Level 下拉框
+        // 2. Dynamically render Level dropdown
         const levelSelect = $('#search-level');
         if (res.levels && res.levels.length > 0) {
             res.levels.forEach(lvl => {
-                // 做一个人性化的文本转换
+                // User-friendly text conversion
                 let displayLvl = lvl === 'JUNIOR' ? 'Junior Specialist' :
                     lvl === 'SENIOR' ? 'Senior Specialist' :
                         lvl === 'EXPERT' ? 'Expert Specialist' : lvl;
@@ -78,16 +79,16 @@ function loadFilterData() {
     });
 }
 
-// --- 搜索触发逻辑 ---
+// --- Search Trigger Logic ---
 function handleSearch() {
     const keyword = $('#search-input').val().trim();
-    const categoryId = $('#search-category').val(); // 拿到的绝对是真实的 ID
-    const level = $('#search-level').val();         // 拿到的绝对是 JUNIOR/SENIOR/EXPERT
+    const categoryId = $('#search-category').val(); // This will definitely be the real ID
+    const level = $('#search-level').val();         // This will definitely be JUNIOR/SENIOR/EXPERT
 
     initList(keyword, categoryId, level);
 }
 
-// --- 带参数发送给的后端接口 ---
+// --- Send parameters to the backend interface ---
 function initList(keyword = '', categoryId = '', level = '') {
     let url = `${API_BASE}/api/specialists`;
     let queryParams = [];
@@ -133,7 +134,7 @@ function initList(keyword = '', categoryId = '', level = '') {
 function handleProtectedView(pageId) {
     if (checkLogin()) {
         showPage(pageId);
-        if (pageId === 'user-orders-page') loadMyOrders(); // 切换到订单页时拉取数据
+        if (pageId === 'user-orders-page') loadMyOrders(); // Fetch data when switching to orders page
     }
 }
 
@@ -141,45 +142,45 @@ function showJoinUs() {
     window.location.href = 'expert_apply.html';
 }
 
-//  修复：搜索功能触发逻辑
+// Fix: Search function trigger logic
 function handleSearch() {
-    // 抓取输入框的名字
+    // Grab keyword from input
     const keyword = $('#search-input').val().trim();
 
-    // 抓取下拉框的分类 ID (确保你 HTML 里分类下拉框的 ID 叫 search-category)
+    // Grab Category ID from dropdown (ensure HTML ID is search-category)
     const categoryId = $('#search-category').val();
 
-    // 抓取下拉框的等级 (确保你 HTML 里等级下拉框的 ID 叫 search-level)
+    // Grab Level from dropdown (ensure HTML ID is search-level)
     const level = $('#search-level').val();
 
-    // 把这三个参数一起传给 initList
+    // Pass all three parameters to initList
     initList(keyword, categoryId, level);
 }
 function initList(keyword = '', categoryId = '', level = '') {
     let url = `${API_BASE}/api/specialists`;
     let queryParams = [];
 
-    // 1. 如果有关键字，加进去
+    // 1. If keyword exists, add it
     if (keyword) {
         queryParams.push(`keyword=${encodeURIComponent(keyword)}`);
     }
-    // 2. 如果选了分类且不是“全部分类/空”，把分类 ID 传给 expertiseId
+    // 2. If category is selected and not "All/Empty", pass category ID to expertiseId
     if (categoryId && categoryId !== '' && categoryId !== 'ALL') {
         queryParams.push(`expertiseId=${categoryId}`);
     }
-    // 3. 如果选了等级且不是“全部等级/空”，把等级传给 level
+    // 3. If level is selected and not "All/Empty", pass level to level
     if (level && level !== '' && level !== 'ALL') {
         queryParams.push(`level=${level}`);
     }
 
-    // 智能拼接 URL
+    // Smart URL concatenation
     if (queryParams.length > 0) {
         url += '?' + queryParams.join('&');
     }
 
-    console.log("打印表演一下小杜的超强搜索功能 哈哈 调侃一下 URL:", url); // 你可以按 F12 看看这句打印
+    console.log("Demonstrating the powerful search URL:", url); // Check console (F12) to view this
 
-    // 下面的 $.get 渲染逻辑完全不用动！保持你原来的样子！
+    // The $.get rendering logic remains unchanged
     $.get(url, (res) => {
         const grid = $('#expert-grid').empty();
         const content = res.content || res || [];
@@ -223,11 +224,11 @@ function goToProfile(id) {
     });
 }
 
-// --- 4. 预约与日历逻辑 (全新动态双月升级版 + 防穿透提取) ---
+// --- 4. Booking and Calendar Logic (New dynamic dual-month upgrade + penetration prevention) ---
 function goToCalendar() {
     $.get(`${API_BASE}/api/timeslots/specialist/${selectedExpertId}/available-dates`, (data) => {
 
-        //  核心破案 1：完美兼容后端 {"data": [...]} 的包装盒！
+        // Core Fix 1: Compatible with backend's {"data": [...]} wrapper!
         let dates = [];
         if (Array.isArray(data)) dates = data;
         else if (data.data && Array.isArray(data.data)) dates = data.data;
@@ -235,20 +236,20 @@ function goToCalendar() {
 
         const body = $('#calendar-body').empty();
 
-        // 1. 渲染星期表头
+        // 1. Render day headers
         ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].forEach(day => body.append(`<div class="cal-header-day">${day}</div>`));
 
-        // 2. 获取当前系统真实的年和月
+        // 2. Get current system Year and Month
         const today = new Date();
         let currentYear = today.getFullYear();
         let currentMonth = today.getMonth();
 
-        //  3. 核心魔法：循环渲染 2 个月（本月 m=0，下个月 m=1）
+        // 3. Core Magic: Loop to render 2 months (current m=0, next month m=1)
         for (let m = 0; m < 2; m++) {
             let renderMonth = currentMonth + m;
             let renderYear = currentYear;
 
-            // 自动进位跨年逻辑
+            // Handle year crossover logic
             if (renderMonth > 11) {
                 renderMonth -= 12;
                 renderYear += 1;
@@ -257,25 +258,25 @@ function goToCalendar() {
             const firstDay = new Date(renderYear, renderMonth, 1).getDay();
             const daysInMonth = new Date(renderYear, renderMonth + 1, 0).getDate();
 
-            // 插入绚丽的月份分割线
+            // Insert month divider
             body.append(`
                 <div style="grid-column: span 7; text-align: center; font-weight: 800; color: #3b82f6; margin-top: 15px; margin-bottom: 5px; font-size: 1.1rem;">
                     ${renderYear} - ${String(renderMonth + 1).padStart(2, '0')}
                 </div>
             `);
 
-            // 渲染1号之前的空白占位符
+            // Render empty slots before the 1st day
             for (let i = 0; i < firstDay; i++) {
                 body.append(`<div></div>`);
             }
 
-            // 渲染这一个月的真实格子
+            // Render the actual days of the month
             for (let i = 1; i <= daysInMonth; i++) {
                 const monthStr = String(renderMonth + 1).padStart(2, '0');
                 const dayStr = String(i).padStart(2, '0');
                 const dateStr = `${renderYear}-${monthStr}-${dayStr}`;
 
-                //  模糊匹配：不管后端给的日期带不带时间戳，只要开头匹配就亮起！
+                // Fuzzy match: Regardless of timestamp, highlight if the start matches!
                 const isAvail = JSON.stringify(dates).includes(dateStr);
 
                 body.append(`
@@ -298,18 +299,18 @@ function showSlots(dateStr) {
 
     $.get(`${API_BASE}/api/timeslots/specialist/${selectedExpertId}/available-times?date=${dateStr}`, (res) => {
 
-        //  核心破案 2：同样兼容时间段接口的 JSON 包装盒！
+        // Core Fix 2: Compatible with timeslot interface JSON wrapper!
         let slots = [];
         if (Array.isArray(res)) slots = res;
         else if (res.data && Array.isArray(res.data)) slots = res.data;
         else if (res.timeSlots) slots = res.timeSlots;
 
-        //  核心破案 3：智能时间提取器 (专治 "2026-05-05 09:00:00" 切割乱码)
+        // Core Fix 3: Smart time extractor (prevents "2026-05-05 09:00:00" slicing errors)
         const safeExtractTime = (timeStr) => {
             if (!timeStr) return '--:--';
             if (timeStr.includes('T')) return timeStr.split('T')[1].substring(0, 5);
             if (timeStr.includes(' ')) return timeStr.split(' ')[1].substring(0, 5);
-            return timeStr.substring(0, 5); // 兜底正常的 "09:00:00"
+            return timeStr.substring(0, 5); // Fallback for normal "09:00:00"
         };
 
         if (slots.length === 0) {
@@ -339,20 +340,19 @@ window.selectSlot = function(slotId) {
 }
 
 $('#confirm-btn').off('click').on('click', function() {
-    // 1. 从详情页抓取当前专家的信息
+    // 1. Grab current specialist info from detail page
     const specName = $('#pName').text();
     const specProf = $('#pExpertise').text();
     const avatarSrc = $('#pAvatar').attr('src');
     const dateStr = $('#display-date').text();
 
-    // 抓取选中的时间段 (比如从 "12:00 - 15:00" 这个卡片上拿文本)
+    // Grab selected time range text from card
     const timeStr = $(`#slot-card-${currentSelectedSlotId} .slot-time`).text();
 
-    // 2. 获取费率并计算总价 (假设按你参考图里的 Charon Coin 结算)
-    // 这里的 replace 是为了把 "$888" 提取成数字 888
+    // 2. Get rate and calculate total price
     const hourlyFee = parseFloat($('#pRate').text().replace(/[^0-9.]/g, '')) || 0;
 
-    // 简单计算一下时长：提取 12 和 15 算出差值 3 小时
+    // Simple duration calculation: extract difference between hours
     let hours = 1;
     try {
         const startH = parseInt(timeStr.split('-')[0].trim().split(':')[0]);
@@ -371,10 +371,10 @@ $('#confirm-btn').off('click').on('click', function() {
     $('#confirm-fee-rate').text(`${hourlyFee} Yuan`);
     $('#confirm-total-fee').text(`${totalFee} Yuan`);
 
-    // 清空上次留下的备注
+    // Clear previous notes
     $('#booking-notes').val('');
 
-    // 4. 弹出收银台！
+    // 4. Pop up the checkout modal!
     $('#customerConfirmModal').modal('show');
 });
 
@@ -382,10 +382,10 @@ $('#final-submit-booking-btn').off('click').on('click', function() {
     const btn = $(this);
     const notes = $('#booking-notes').val().trim() || "Web Booking.";
 
-    // 按钮变灰防止连点
+    // Disable button to prevent double clicks
     btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
 
-    //  这里把真正的 Token 和数据带上，后端绝对马上放行！
+    // Carry real Token and data for backend authorization
     fetch(`${API_BASE}/api/bookings/create`, {
         method: 'POST',
         headers: {
@@ -403,21 +403,21 @@ $('#final-submit-booking-btn').off('click').on('click', function() {
             $('#customerConfirmModal').modal('hide');
             handleProtectedView('user-orders-page');
         } else {
-            // 获取后端的报错文本
+            // Get error text from backend
             const errText = await res.text();
 
             if (res.status === 409) {
-                alert("Action Failed:Sorry, this schedule has been reserved by others.");
+                alert("Action Failed: Sorry, this schedule has been reserved by others.");
                 $('#customerConfirmModal').modal('hide');
                 showSlots($('#display-date').text());
             }
-            //  核心拦截：捕获 500 数据库重复报错，进行人性化翻译！
+            // Core intercept: Capture 500 DB duplicate errors for user-friendly translation
             else if (res.status === 500 && (errText.includes('Duplicate entry') || errText.includes('Constraint'))) {
                 alert("Action Failed: You have recently cancelled an appointment for this time slot. The system does not allow immediate re-booking of the same slot to prevent spam. Please choose another time!");
                 $('#customerConfirmModal').modal('hide');
             }
             else {
-                // 尝试解析其他正常的 JSON 报错 (比如每月限购)
+                // Try parsing other normal JSON errors
                 try {
                     const errData = JSON.parse(errText);
                     alert(`Booking Failed: ${errData.message}`);
@@ -497,7 +497,7 @@ window.loadMyOrders = function() {
         });
 };
 
-// --- 举报逻辑：弹出 Modal ---
+// --- Report Logic: Pop up Modal ---
 let currentReportBookingId = null;
 window.openReportModal = function(bookingId, specName) {
     currentReportBookingId = bookingId;
@@ -512,7 +512,7 @@ window.submitFinalReport = function() {
     if (!reason) return alert("Please enter a reason.");
 
     const btn = $('#submit-report-btn');
-    //  记录原始状态，防止卡死
+    // Record original state to prevent freezing
     btn.prop('disabled', true).text('Submitting...');
 
     fetch(`${API_BASE}/api/complaints/report?bookingId=${currentReportBookingId}&reason=${encodeURIComponent(reason)}`, {
@@ -526,7 +526,7 @@ window.submitFinalReport = function() {
                 $('#reportModal').modal('hide');
                 loadMyOrders();
             } else {
-                //  重点：如果是 400 (如重复举报)，直接显示后端给的中文错误
+                // Focus: If 400 (e.g. duplicate report), show error from backend
                 alert("Action Failed: " + (resData.error || "Submit error"));
             }
         })
@@ -535,7 +535,7 @@ window.submitFinalReport = function() {
             alert("Network Error: Backend is down or unreachable.");
         })
         .finally(() => {
-            //  无论成功失败，都把按钮还给人家
+            // Restore button status regardless of result
             btn.prop('disabled', false).text('Submit Report');
         });
 };
@@ -695,7 +695,7 @@ window.openChangePasswordModal = function() {
                 alert("Password updated successfully! Please login again with your new password.");
                 $('#changePasswordModal').modal('hide');
 
-                //  核心修改：不调 logout() 询问，直接清空 Token 并强制踢回 login.html
+                // Core Modification: Don't ask via logout(), clear Token directly and force kick back to login.html
                 localStorage.clear();
                 window.location.href = 'login.html';
             } else {

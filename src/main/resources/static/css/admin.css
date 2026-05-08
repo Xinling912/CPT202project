@@ -1,4 +1,4 @@
-/* 统一项目全局色彩变量 */
+/* Global Color Variables */
 :root {
     --brand: #0062ff;
     --brand-light: #e0f2fe;
@@ -18,7 +18,7 @@
 body { background-color: var(--bg); color: var(--text-main); }
 .admin-container { display: flex; min-height: 100vh; }
 
-/* ---  升级版可缩放 Sidebar --- */
+/* --- Upgraded Scalable Sidebar --- */
 .sidebar {
     width: var(--sidebar-w);
     height: 100vh;
@@ -30,48 +30,48 @@ body { background-color: var(--bg); color: var(--text-main); }
     white-space: nowrap;
 }
 
-/* ---  升级后的折叠状态样式 --- */
+/* --- Upgraded Collapsed State Style --- */
 .sidebar.collapsed {
     width: 85px;
 }
 
-/* 隐藏 Logo 旁边的 SAS 文字 */
+/* Hide SAS text next to Logo */
 .sidebar.collapsed .logo-text span {
     display: none;
 }
 
-/* Logo 居中 */
+/* Center Logo */
 .sidebar.collapsed .logo-text {
     justify-content: center;
     padding-left: 0;
     padding-right: 0;
 }
 
-/* 重点：隐藏导航栏的所有文字和右侧箭头 */
+/* Important: Hide all navigation text, right arrows, submenus, and submenu items */
 .sidebar.collapsed .nav-text,
 .sidebar.collapsed .arrow,
-.sidebar.collapsed .submenu,        /* 隐藏展开的子菜单 */
-.sidebar.collapsed .submenu-item {  /* 隐藏子菜单文字 */
+.sidebar.collapsed .submenu,        /* Hide expanded submenus */
+.sidebar.collapsed .submenu-item {  /* Hide submenu text */
     display: none !important;
 }
 
-/* 让按钮在折叠时也居中 */
+/* Center buttons when collapsed */
 .sidebar.collapsed .nav-btn {
     justify-content: center;
     padding: 12px 0;
 }
 
-/* 让图标稍微变大一点点，看起来更协调 */
+/* Scale up icons slightly for better appearance */
 .sidebar.collapsed .nav-btn .icon {
     margin-right: 0;
     font-size: 22px;
 }
 
-/*  侧边栏缩放控制按钮 (已修复位置) */
+/* Sidebar Toggle Control Button (Fixed Position) */
 .btn-toggle-custom {
     position: absolute;
     right: -16px;
-    top: 260px; /*  完美移到了 System Log 下方 */
+    top: 260px; /* Perfectly moved below System Log */
     width: 32px;
     height: 32px;
     background-color: var(--brand-light);
@@ -120,7 +120,7 @@ body { background-color: var(--bg); color: var(--text-main); }
     transition: 0.2s;
 }
 
-/*  修复：区分 hover、激活(active) 和 仅仅展开(expanded) 的发光状态 */
+/* Fix: Distinguish glow states between hover, active, and merely expanded */
 .nav-btn:hover { background-color: var(--brand-light); color: var(--brand); }
 .nav-btn.active { background-color: var(--brand-light) !important; color: var(--brand) !important; }
 .nav-btn.expanded:not(.active) { background-color: transparent; color: var(--text-muted); }
@@ -148,7 +148,7 @@ body { background-color: var(--bg); color: var(--text-main); }
 .submenu-level2-item:hover { color: var(--brand); }
 .submenu-level2-item.active { color: var(--brand); font-weight: 700; border-left-color: var(--brand);}
 
-/* --- 响应式 Main content --- */
+/* --- Responsive Main Content --- */
 .main-content {
     flex: 1;
     display: flex;
@@ -169,7 +169,7 @@ body { background-color: var(--bg); color: var(--text-main); }
 }
 .top-header-title { font-size: 1.5rem; font-weight: 800; color: var(--text-main); }
 
-/* 右上角头像与悬浮菜单样式 */
+/* Top Right Profile Avatar and Hover Menu Styles */
 .user-profile { display: flex; align-items: center; gap: 12px; cursor: pointer; position: relative; z-index: 1050; }
 .user-info { text-align: right; }
 .user-name { font-weight: 800; font-size: 15px; color: var(--text-main); margin-bottom: 2px; }
@@ -250,7 +250,7 @@ body { background-color: var(--bg); color: var(--text-main); }
 .empty-page { text-align: center; color: var(--text-muted); padding: 80px 20px;}
 
 /* ==========================================
-
+ * Expertise Category Management Page Styles
  * ========================================== */
 .custom-table th { font-size: 12px; letter-spacing: 1px; color: #94a3b8; border-bottom: 2px solid #f1f5f9; padding: 16px; }
 .custom-table td { padding: 16px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
@@ -259,8 +259,9 @@ body { background-color: var(--bg); color: var(--text-main); }
 .btn-edit:hover { background: var(--brand-light); }
 .btn-del { color: #ef4444; }
 .btn-del:hover { background: #fef2f2; }
-/* ==========================================
 
+/* ==========================================
+ * Profile Change Comparison Box Styles
  * ========================================== */
 .diff-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px; background: #f8fafc; }
 .diff-label { font-weight: 700; color: #475569; margin-bottom: 8px; font-size: 0.9rem; }
