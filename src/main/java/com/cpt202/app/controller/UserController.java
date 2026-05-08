@@ -41,7 +41,7 @@ public class UserController {
                     request.verifyCode()
             );
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                    "message", "注册成功",
+                    "message", "Registration successful",
                     "userId", created.getId()
             ));
         } catch (IllegalArgumentException e) {
@@ -52,40 +52,40 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            // 1. 判空 (使用 Record 的方法名)
+            // 1. Check for null (using Record's method name)
             if (request.usernameOrEmail() == null || request.password() == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "账号或密码不能为空"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Username or password cannot be empty"));
             }
 
             String loginInput = request.usernameOrEmail().trim();
             String username = loginInput;
 
-            // 2. 如果输入的是邮箱，我们需要拿到真正的 username，因为 AuthenticationManager 默认是用 username 比对的
+            // 2. If the input is an email, we need to get the real username, because AuthenticationManager uses username for comparison by default
             if (loginInput.contains("@")) {
                 try {
                     User userByEmail = userService.getByEmail(loginInput);
                     username = userByEmail.getUsername();
                 } catch (Exception e) {
-                    // 邮箱查不到用户，直接抛出认证异常，不要让系统挂掉
-                    throw new BadCredentialsException("账号或密码错误");
+                    // User not found by email, throw authentication exception directly, do not let the system crash
+                    throw new BadCredentialsException("Incorrect username or password");
                 }
             }
 
-            // 3. 调用 Spring Security 标准认证流程
-            // 注意：这里会去调用你的 CustomUserDetailsService.loadUserByUsername
+            // 3. Call the standard Spring Security authentication process
+            // Note: This will call your CustomUserDetailsService.loadUserByUsername
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, request.password())
             );
 
-            // 4. 认证成功，生成 Token
+            // 4. Authentication successful, generate Token
             String authenticatedUsername = authentication.getName();
             String token = jwtUtils.generateToken(authenticatedUsername);
 
-            // 5. 此时再获取用户信息返回给前端
+            // 5. At this time, get user information again and return it to the frontend
             User user = userService.getByUsername(authenticatedUsername);
 
             return ResponseEntity.ok(Map.of(
-                    "message", "登录成功",
+                    "message", "Login successful",
                     "token", token,
                     "tokenType", "Bearer",
                     "userId", user.getId(),
@@ -95,12 +95,12 @@ public class UserController {
             ));
 
         } catch (AuthenticationException e) {
-            // 捕获所有认证相关的异常（账号不存在、密码错误、被锁定等）
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "账号或密码错误"));
+            // Catch all authentication-related exceptions (account does not exist, incorrect password, locked, etc.)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Incorrect username or password"));
         } catch (Exception e) {
-            // 【核心】捕获所有意料之外的错误，防止 Socket Hang Up
-            e.printStackTrace(); // 在控制台打印具体的堆栈信息
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "服务器内部错误"));
+            // [Core] Catch all unexpected errors to prevent Socket Hang Up
+            e.printStackTrace(); // Print specific stack trace information in the console
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Internal server error"));
         }
     }
 
@@ -108,7 +108,7 @@ public class UserController {
     public ResponseEntity<?> sendVerifyCode(@RequestBody SendCodeRequest request) {
         try {
             userService.sendVerifyCode(request.email());
-            return ResponseEntity.ok(Map.of("message", "验证码已发送到邮箱"));
+            return ResponseEntity.ok(Map.of("message", "Verification code has been sent to the email"));
         } catch (IllegalStateException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -118,21 +118,21 @@ public class UserController {
         }
     }
 
-    //必须携带token
+    // Must carry token
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(
             Authentication authentication,
-            @RequestBody Map<String, String> request) { // 你也可以用专门的 Request DTO
+            @RequestBody Map<String, String> request) { // You can also use a dedicated Request DTO
         try {
             String oldPassword = request.get("oldPassword");
             String newPassword = request.get("newPassword");
 
-            // 从 JWT (Security 上下文) 中提取当前用户名
+            // Extract the current username from JWT (Security context)
             String currentUsername = authentication.getName();
 
             userService.changePassword(currentUsername, oldPassword, newPassword);
 
-            return ResponseEntity.ok(Map.of("message", "密码修改成功，请使用新密码重新登录"));
+            return ResponseEntity.ok(Map.of("message", "Password changed successfully, please log in again with the new password"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
@@ -142,7 +142,7 @@ public class UserController {
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         try {
             userService.forgotPassword(request.email(), request.verifyCode(), request.newPassword());
-            return ResponseEntity.ok(Map.of("message", "忘记密码重置成功"));
+            return ResponseEntity.ok(Map.of("message", "Forgot password reset successful"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }

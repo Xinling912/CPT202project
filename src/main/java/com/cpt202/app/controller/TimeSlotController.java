@@ -47,8 +47,8 @@ public class TimeSlotController {
     private UserService userService;
 
     /**
-     * 【需求一：用户视角】
-     * 1. 获取专家未来两周内有空闲时间段的日期列表 (用于点亮日历)
+     * [Requirement 1: User Perspective]
+     * 1. Get a list of dates with available time slots for the specialist in the next two weeks (used to highlight the calendar)
      */
     @GetMapping("/specialist/{specialistId}/available-dates")
     public Map<String, Object> getAvailableDates(@PathVariable Long specialistId) {
@@ -59,8 +59,8 @@ public class TimeSlotController {
     }
 
     /**
-     * 【需求一：用户视角】
-     * 2. 当用户点击某一天时，获取该专家这一天的所有可用时间段 (用于展示具体可选时间)
+     * [Requirement 1: User Perspective]
+     * 2. When a user clicks on a specific day, get all available time slots for that specialist on that day (used to display specific selectable times)
      */
     @GetMapping("/specialist/{specialistId}/available-times")
     public Map<String, Object> getAvailableTimeSlots(
@@ -74,8 +74,8 @@ public class TimeSlotController {
     }
 
     /**
-     * 【需求二：专家视角】
-     * 3. 专家查看专家查看指定周（或默认本周）的排班表（包含空闲时间段和已有订单的详细信息）
+     * [Requirement 2: Specialist Perspective]
+     * 3. Specialist views the schedule for a specified week (or current week by default) (including available time slots and detailed information of existing bookings)
      */
     @GetMapping("/my-schedule")
     public Map<String, Object> getMySchedule(
@@ -83,33 +83,33 @@ public class TimeSlotController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
-        // 0. 从 JWT 获取当前用户，并连表查出专家的真实 Profile ID
+        // 0. Get the current user from JWT, and join tables to find the real Profile ID of the specialist
         Long actualSpecialistId = getAuthenticatedSpecialistId(authentication);
 
         Map<String, Object> response = new HashMap<>();
 
-        // 1. 智能计算“本周”范围：如果前端没传日期，后端自动计算当前的周一到周日
+        // 1. Smart calculation of the "current week" range: If the frontend does not pass dates, the backend automatically calculates the current Monday to Sunday
         if (startDate == null || endDate == null) {
             LocalDate today = LocalDate.now();
             startDate = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
             endDate = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
         }
 
-        // 2. 获取这 7 天内的所有排班格子 (TimeSlot)
+        // 2. Get all time slots (TimeSlot) within these 7 days
         List<TimeSlot> timeSlots = timeSlotService.getSpecialistScheduleByDateRange(actualSpecialistId, startDate, endDate);
 
-        // 3. 获取这 7 天内相关的有效订单 (Booking)
-        // 直接用 booking.specialist_id 查
+        // 3. Get related valid bookings within these 7 days
+        // Query directly using booking.specialist_id
         List<Booking> bookings = bookingRepository.findBySpecialistIdAndStatusIn(
                 actualSpecialistId,
                 List.of(BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.COMPLETED)
         );
 
-        // 4. 将订单转为字典(Map)进行缝合
+        // 4. Convert bookings to a dictionary (Map) for stitching
         Map<Long, Booking> bookingMap = bookings.stream()
                 .collect(Collectors.toMap(b -> b.getTimeSlot().getId(), b -> b));
 
-        // 5. 组装成包含完整状态的 DTO 列表 (使用 Record)
+        // 5. Assemble into a DTO list containing complete status (using Record)
         List<TimeSlotWithBookingDTO> scheduleDTOs = timeSlots.stream()
                 .map(timeSlot -> {
                     Booking booking = bookingMap.get(timeSlot.getId());
@@ -127,11 +127,11 @@ public class TimeSlotController {
                 })
                 .collect(Collectors.toList());
 
-        // 6. 按日期分组 (备选数据结构)
+        // 6. Group by date (alternative data structure)
         Map<LocalDate, List<TimeSlotWithBookingDTO>> scheduleByDate = scheduleDTOs.stream()
                 .collect(Collectors.groupingBy(TimeSlotWithBookingDTO::slotDate));
 
-        // 7. 返回日历组件最爱的扁平数组，同时告知当前渲染的周范围
+        // 7. Return a flat array preferred by the calendar component, and also indicate the current rendered week range
         response.put("flatSchedule", scheduleDTOs);
         response.put("scheduleGrouped", scheduleByDate);
         response.put("currentWeekStart", startDate);
@@ -141,8 +141,8 @@ public class TimeSlotController {
     }
 
     /**
-     * 【专家面板】
-     * 4. 获取专家排班和预约的全局数据统计 (可用于前端仪表盘展示)
+     * [Specialist Dashboard]
+     * 4. Get global data statistics of specialist schedules and bookings (can be used for frontend dashboard display)
      */
     @GetMapping("/my-schedule-summary")
     public Map<String, Object> getMyScheduleSummary(
@@ -153,7 +153,7 @@ public class TimeSlotController {
         Long actualSpecialistId = getAuthenticatedSpecialistId(authentication);
         Map<String, Object> response = new HashMap<>();
 
-        // 统计面板的日期计算逻辑同步
+        // Sync date calculation logic for the statistics panel
         if (startDate == null || endDate == null) {
             LocalDate today = LocalDate.now();
             startDate = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
@@ -187,53 +187,53 @@ public class TimeSlotController {
         return response;
     }
     /**
-     * 【需求三：专家视角】
-     * 5. 专家发布/增加排班 (支持批量，也支持单条增加)
-     * 接口路径: POST /api/timeslots/publish
+     * [Requirement 3: Specialist Perspective]
+     * 5. Specialist publishes/adds schedules (supports batch and single addition)
+     * Endpoint path: POST /api/timeslots/publish
      */
     @PostMapping("/publish")
     @PreAuthorize("hasRole('SPECIALIST')")
     public ResponseEntity<?> publishSchedule(@RequestBody TimeSlotBatchRequest request, Authentication auth) {
         try {
             timeSlotService.batchCreateSlots(auth.getName(), request);
-            return ResponseEntity.ok(Map.of("message", "排班发布成功！"));
+            return ResponseEntity.ok(Map.of("message", "Schedule published successfully!"));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "发布失败：" + e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "Publish failed: " + e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("error", "服务器发生错误，请稍后再试"));
+            return ResponseEntity.internalServerError().body(Map.of("error", "A server error occurred, please try again later"));
         }
     }
 
     /**
-     * 【需求三：专家视角】
-     * 6. 专家删除未预约的时间段
-     * 接口路径: DELETE /api/timeslots/{slotId}
+     * [Requirement 3: Specialist Perspective]
+     * 6. Specialist deletes unbooked time slots
+     * Endpoint path: DELETE /api/timeslots/{slotId}
      */
     @DeleteMapping("/{slotId}")
     @PreAuthorize("hasRole('SPECIALIST')")
     public ResponseEntity<?> deleteTimeSlot(@PathVariable Long slotId, Authentication auth) {
         try {
             timeSlotService.deleteTimeSlot(auth.getName(), slotId);
-            return ResponseEntity.ok(Map.of("message", "时间段已成功删除！"));
+            return ResponseEntity.ok(Map.of("message", "Time slot deleted successfully!"));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "删除失败：" + e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "Delete failed: " + e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("error", "服务器发生错误，请稍后再试"));
+            return ResponseEntity.internalServerError().body(Map.of("error", "A server error occurred, please try again later"));
         }
     }
     /**
-     * 内部核心安全方法：从 JWT 中提取身份，校验专家角色，并查出真实的 Profile ID
+     * Internal core security method: Extract identity from JWT, verify specialist role, and find the real Profile ID
      */
     private Long getAuthenticatedSpecialistId(Authentication authentication) {
         String currentUsername = authentication.getName();
         User currentUser = userService.getByUsername(currentUsername);
 
         if (currentUser.getRole() != UserRole.SPECIALIST) {
-            throw new AccessDeniedException("访问被拒绝：当前用户不是专家身份");
+            throw new AccessDeniedException("Access denied: Current user is not a specialist");
         }
 
         SpecialistProfile profile = specialistProfileRepository.findByUserId(currentUser.getId())
-                .orElseThrow(() -> new IllegalArgumentException("数据异常：未找到该账号关联的专家档案"));
+                .orElseThrow(() -> new IllegalArgumentException("Data error: Specialist profile associated with this account not found"));
 
         return profile.getId();
     }

@@ -136,7 +136,7 @@ class TimeSlotServiceTest {
         Exception e = assertThrows(RuntimeException.class, () -> {
             timeSlotService.batchCreateSlots(testUser.getUsername(), request);
         });
-        assertTrue(e.getMessage().contains("不能发布过去的排班"));
+        assertTrue(e.getMessage().contains("Cannot publish past schedules"));
         verify(timeSlotRepository, never()).saveAll(any());
     }
 
@@ -155,7 +155,7 @@ class TimeSlotServiceTest {
         Exception e = assertThrows(RuntimeException.class, () -> {
             timeSlotService.batchCreateSlots(testUser.getUsername(), request);
         });
-        assertTrue(e.getMessage().contains("时间段发生重叠"));
+        assertTrue(e.getMessage().contains("Time slots overlap"));
     }
 
     // ==========================================
@@ -197,7 +197,7 @@ class TimeSlotServiceTest {
         Exception e = assertThrows(RuntimeException.class, () -> {
             timeSlotService.deleteTimeSlot(testUser.getUsername(), 1L);
         });
-        assertEquals("无权操作他人的排班", e.getMessage());
+        assertEquals("Unauthorized to operate on others' schedules", e.getMessage());
         verify(timeSlotRepository, never()).delete(any());
     }
 
@@ -215,7 +215,7 @@ class TimeSlotServiceTest {
         Exception e = assertThrows(RuntimeException.class, () -> {
             timeSlotService.deleteTimeSlot(testUser.getUsername(), 1L);
         });
-        assertTrue(e.getMessage().contains("已被预约或锁定"));
+        assertTrue(e.getMessage().contains("has been booked or locked"));
         verify(timeSlotRepository, never()).delete(any());
     }
 
@@ -263,7 +263,7 @@ class TimeSlotServiceTest {
     }
 
     @Test
-    void getSpecialistScheduleByDateRange_ShouldReturnSlotsFromRepository() {
+    void getSpecialistScheduleByDateRange_ShouldReturnSlotsfromRepository() {
         // Arrange: This method directly calls the repository, so we just mock the repository call
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusDays(7);

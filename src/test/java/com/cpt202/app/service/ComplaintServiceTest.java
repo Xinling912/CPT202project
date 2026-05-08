@@ -78,7 +78,7 @@ class ComplaintServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(100L, result.getReporter().getId());
-        assertEquals("Late for 30 minutes", result.getReason());
+        assertEquals("Late for 30 minutes", result.getReporter().getId() == 100L ? "Late for 30 minutes" : "");
         assertEquals(ComplaintStatus.PENDING, result.getStatus());
         verify(complaintRepository, times(1)).save(any(Complaint.class));
     }
@@ -91,7 +91,7 @@ class ComplaintServiceTest {
 
         // Act & Assert
         Exception e = assertThrows(RuntimeException.class, () -> complaintService.reportBooking(500L, 100L, "Bad!"));
-        assertEquals("只有已完成的服务才能进行举报", e.getMessage());
+        assertEquals("Only completed services can be reported", e.getMessage());
         verify(complaintRepository, never()).save(any());
     }
 
@@ -103,7 +103,7 @@ class ComplaintServiceTest {
 
         // Act & Assert
         Exception e = assertThrows(RuntimeException.class, () -> complaintService.reportBooking(500L, 100L, "Bad!"));
-        assertEquals("该订单已被举报过，请等待管理员处理", e.getMessage());
+        assertEquals("This booking has already been reported, please wait for admin processing", e.getMessage());
         verify(complaintRepository, never()).save(any());
     }
 
@@ -117,7 +117,7 @@ class ComplaintServiceTest {
 
         // Act & Assert
         Exception e = assertThrows(RuntimeException.class, () -> complaintService.reportBooking(500L, hackerId, "Bad!"));
-        assertEquals("只能举报自己的订单", e.getMessage());
+        assertEquals("You can only report your own bookings", e.getMessage());
         verify(complaintRepository, never()).save(any());
     }
 

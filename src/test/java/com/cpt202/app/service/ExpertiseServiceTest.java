@@ -91,7 +91,7 @@ class ExpertiseServiceTest {
 
         // Act & Assert
         Exception e = assertThrows(RuntimeException.class, () -> expertiseService.addExpertise(invalidCategory));
-        assertEquals("专业名称不能为空", e.getMessage());
+        assertEquals("Expertise name cannot be empty", e.getMessage());
         verify(expertiseRepository, never()).save(any());
     }
 
@@ -105,7 +105,7 @@ class ExpertiseServiceTest {
 
         // Act & Assert
         Exception e = assertThrows(RuntimeException.class, () -> expertiseService.addExpertise(duplicateCategory));
-        assertTrue(e.getMessage().contains("已存在"));
+        assertTrue(e.getMessage().contains("already exists"));
         verify(expertiseRepository, never()).save(any());
     }
 
@@ -141,7 +141,7 @@ class ExpertiseServiceTest {
 
         // Act & Assert
         Exception e = assertThrows(RuntimeException.class, () -> expertiseService.deleteExpertise(1L));
-        assertTrue(e.getMessage().contains("正在被某些专家使用，无法删除"));
+        assertTrue(e.getMessage().contains("is currently being used by specialists and cannot be deleted"));
         verify(expertiseRepository, never()).deleteById(anyLong());
     }
 
@@ -180,7 +180,7 @@ class ExpertiseServiceTest {
 
         // Act & Assert
         Exception e = assertThrows(RuntimeException.class, () -> expertiseService.updateExpertise(1L, updateData));
-        assertTrue(e.getMessage().contains("已存在"));
+        assertTrue(e.getMessage().contains("already exists"));
         verify(expertiseRepository, never()).save(any());
     }
 }

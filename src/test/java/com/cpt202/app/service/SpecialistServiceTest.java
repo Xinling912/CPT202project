@@ -95,7 +95,7 @@ class SpecialistServiceTest {
         Exception e = assertThrows(RuntimeException.class, () -> {
             specialistService.submitProfileApplication(testUser.getUsername(), request);
         });
-        assertTrue(e.getMessage().contains("已有待审核的专家申请"));
+        assertTrue(e.getMessage().contains("You already have a specialist application pending review"));
     }
 
     // ==========================================
@@ -141,7 +141,7 @@ class SpecialistServiceTest {
         Exception e = assertThrows(RuntimeException.class, () -> {
             specialistService.submitProfileApplication(testUser.getUsername(), request);
         });
-        assertTrue(e.getMessage().contains("已有待审核的修改申请"));
+        assertTrue(e.getMessage().contains("You already have a modification request pending review"));
     }
 
     // ==========================================
@@ -179,7 +179,7 @@ class SpecialistServiceTest {
         Exception e = assertThrows(RuntimeException.class, () -> {
             specialistService.getTotalEarnings("customer1");
         });
-        assertEquals("只有专家可以查看收入", e.getMessage());
+        assertEquals("Only specialists can view earnings", e.getMessage());
     }
 
     // ==========================================

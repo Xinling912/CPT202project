@@ -15,13 +15,13 @@ import java.util.Optional;
 
 @Repository
 public interface SpecialistProfileRepository extends JpaRepository<SpecialistProfile, Long>, JpaSpecificationExecutor<SpecialistProfile> {
-    // 查找处于某种专家状态的专家名片
+    // Find specialist profiles by a specific specialist status
     Page<SpecialistProfile> findByStatus(SpecialistStatus status, Pageable pageable);
     List<SpecialistProfile> findByStatus(SpecialistStatus status);
-    // 根据 User 表的userid查对应专家档案的方法
+    // Find the corresponding specialist profile by userId from the User table
     Optional<SpecialistProfile> findByUserId(Long userId);
-     //通过关联的 User 对象查找名片
+    // Find profile by associated User object
     Optional<SpecialistProfile> findByUser(User user);
-    // 通过Token中获取的username查找对应SpecialistProfile
+    // Find corresponding SpecialistProfile by username obtained from Token
     Optional<SpecialistProfile> findByUserUsername(String username);
 }

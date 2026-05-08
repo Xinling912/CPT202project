@@ -10,7 +10,7 @@ public class SpecialistProfileEditRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String newRealName; // 申请修改后的真实姓名
+    private String newRealName; // Requested new real name
 
     @Enumerated(EnumType.STRING)
     @Column(name = "level", nullable = false)
@@ -18,7 +18,7 @@ public class SpecialistProfileEditRequest {
 
     @ManyToOne
     @JoinColumn(name = "profile_id", nullable = false)
-    private SpecialistProfile specialistProfile; // 关联原档案
+    private SpecialistProfile specialistProfile; // Associated original profile
 
     private BigDecimal newHourlyFee;
     private String newResume;
@@ -30,7 +30,7 @@ public class SpecialistProfileEditRequest {
     private String newProposedExpertiseName;
 
     @Enumerated(EnumType.STRING)
-    private SpecialistProfileEditStatus status = SpecialistProfileEditStatus.PENDING; // 审批状态
+    private SpecialistProfileEditStatus status = SpecialistProfileEditStatus.PENDING; // Approval status
 
     private LocalDateTime submitTime = LocalDateTime.now();
 

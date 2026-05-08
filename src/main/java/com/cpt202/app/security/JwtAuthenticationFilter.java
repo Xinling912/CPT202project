@@ -28,7 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // 遇到这些静态资源和所有的 HTML 页面，JWT 过滤器直接放行，不查 Token
+        // When encountering these static resources and all HTML pages, the JWT filter passes them directly without checking the Token
         return path.startsWith("/css/") ||
                 path.startsWith("/js/") ||
                 path.startsWith("/images/") ||
@@ -43,8 +43,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getServletPath();
-        // 登录、注册等接口直接放行，还有忘记密码
-        if (path.contains("/login") || path.contains("/register") || path.contains("/verify-code") || path.contains("/forgot-password")) { // 👈 在这里加上了 forgot-password
+        // Interfaces such as login and registration are allowed directly, as well as forgot-password
+        if (path.contains("/login") || path.contains("/register") || path.contains("/verify-code") || path.contains("/forgot-password")) { // 👈 forgot-password added here
             filterChain.doFilter(request, response);
             return;
         }
@@ -55,7 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
                 String token = headerAuth.substring(7);
 
-                // 将 validate 逻辑拆解，以便捕获token不合法的具体原因
+                // Deconstruct validate logic to capture the specific reason for an invalid token
                 if (jwtUtils.validateJwtToken(token)) {
                     String username = jwtUtils.getUserNameFromJwtToken(token);
 
@@ -65,33 +65,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authentication);
-                        System.out.println("DEBUG: 用户 [" + username + "] 已登录，权限为: " + authentication.getAuthorities());
+                        System.out.println("DEBUG: User [" + username + "] logged in, authorities: " + authentication.getAuthorities());
                     }
                 } else {
-                    // 如果 validateJwtToken 返回 false，说明 Token 签名不对或格式错误
-                    sendErrorResponse(response, "无效的 Token (Invalid Signature or Format)");
+                    // If validateJwtToken returns false, it means the Token signature is wrong or the format is incorrect
+                    sendErrorResponse(response, "Invalid Token (Invalid Signature or Format)");
                     return;
                 }
             } else if (headerAuth == null) {
-                // 如果你希望没有 Token 时也报错，可以取消下面这行的注释
-                sendErrorResponse(response, "缺少 Authorization Header (Missing Token)");
+                // If you want to report an error when there is no Token, you can uncomment the line below
+                sendErrorResponse(response, "Missing Authorization Header (Missing Token)");
                 return;
             }
         } catch (io.jsonwebtoken.ExpiredJwtException e) {
-            sendErrorResponse(response, "Token 已过期 (Token Expired)");
+            sendErrorResponse(response, "Token Expired");
             return;
         } catch (io.jsonwebtoken.MalformedJwtException e) {
-            sendErrorResponse(response, "Token 格式畸形 (Malformed Token)");
+            sendErrorResponse(response, "Malformed Token");
             return;
         } catch (Exception e) {
-            sendErrorResponse(response, "Token 解析异常: " + e.getMessage());
+            sendErrorResponse(response, "Token parsing exception: " + e.getMessage());
             return;
         }
 
         filterChain.doFilter(request, response);
     }
     /**
-     * 💥 新增辅助方法：直接向前端输出 JSON 错误信息
+     * 💥 New auxiliary method: directly output JSON error messages to the frontend
      */
     private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401

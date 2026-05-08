@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SpecialistProfileEditRequestRepository extends JpaRepository<SpecialistProfileEditRequest, Long> {
-    // 查找某种特定专家文档修改状态（如 PENDING）的修改申请
+    // Find modification requests by a specific edit status (e.g., PENDING)
     List<SpecialistProfileEditRequest> findByStatus(SpecialistProfileEditStatus status);
-    // 检查某个专家是否已有 PENDING 状态的申请
+    // Check if a specialist already has a request with PENDING status
     boolean existsBySpecialistProfileAndStatus(SpecialistProfile specialistProfile, SpecialistProfileEditStatus status);
-    // 按专家查询查最新的一条修改申请
+    // Find the latest edit request for a specialist
     Optional<SpecialistProfileEditRequest> findTopBySpecialistProfileOrderBySubmitTimeDesc(SpecialistProfile profile);
 }

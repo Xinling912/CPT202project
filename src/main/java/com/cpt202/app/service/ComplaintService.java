@@ -26,36 +26,36 @@ public class ComplaintService {
     }
 
     /**
-     * 用户举报订单
+     * User reports a booking
      */
     public Complaint reportBooking(Long bookingId, Long reporterId, String reason) {
-        // 1. 检查订单是否存在
+        // 1. Check if the booking exists
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("订单不存在"));
+                .orElseThrow(() -> new RuntimeException("Booking does not exist"));
 
-        // 2. 检查订单状态是否为 COMPLETED
+        // 2. Check if the booking status is COMPLETED
         if (booking.getStatus() != BookingStatus.COMPLETED) {
-            throw new RuntimeException("只有已完成的服务才能进行举报");
+            throw new RuntimeException("Only completed services can be reported");
         }
 
-        // 3. 检查是否已经举报过
+        // 3. Check if it has already been reported
         if (complaintRepository.existsByBookingId(bookingId)) {
-            throw new RuntimeException("该订单已被举报过，请等待管理员处理");
+            throw new RuntimeException("This booking has already been reported, please wait for admin processing");
         }
 
-        // 4. 获取举报人
+        // 4. Get the reporter
         User reporter = booking.getCustomer();
         if (!reporter.getId().equals(reporterId)) {
-            throw new RuntimeException("只能举报自己的订单");
+            throw new RuntimeException("You can only report your own bookings");
         }
 
-        // 5. 创建举报记录
+        // 5. Create the complaint record
         Complaint complaint = new Complaint(booking, reporter, reason);
         return complaintRepository.save(complaint);
     }
 
     /**
-     * 获取某个用户的所有举报记录(user)
+     * Get all complaint records for a specific user (customer)
      */
     public List<Complaint> getComplaintsByReporterId(Long reporterId) {
         return complaintRepository.findByReporterId(reporterId);
@@ -63,42 +63,42 @@ public class ComplaintService {
 
 
     /**
-     * 获取所有待处理的举报（admin）
+     * Get all pending complaints (admin)
      */
     public List<Complaint> getPendingComplaints() {
         return complaintRepository.findByStatus(ComplaintStatus.PENDING);
     }
 
     /**
-     * 获取所有举报（管理员用）
+     * Get all complaints (for admin use)
      */
     public List<Complaint> getAllComplaints() {
         return complaintRepository.findAll();
     }
 
     /**
-     * 处理举报：驳回（不封禁）
+     * Handle complaint: Dismiss (no ban)
      */
     public void dismissComplaint(Long complaintId) {
         Complaint complaint = complaintRepository.findById(complaintId)
-                .orElseThrow(() -> new RuntimeException("举报记录不存在"));
+                .orElseThrow(() -> new RuntimeException("Complaint record does not exist"));
         complaint.setStatus(ComplaintStatus.DISMISSED);
         complaintRepository.save(complaint);
     }
 
     /**
-     * 处理举报：封禁专家
+     * Handle complaint: Ban the specialist
      */
     public void banSpecialistByComplaint(Long complaintId) {
         Complaint complaint = complaintRepository.findById(complaintId)
-                .orElseThrow(() -> new RuntimeException("举报记录不存在"));
+                .orElseThrow(() -> new RuntimeException("Complaint record does not exist"));
 
-        // 获取被举报的专家
+        // Get the reported specialist
         SpecialistProfile specialist = complaint.getBooking().getSpecialist();
         specialist.setStatus(SpecialistStatus.INACTIVE);
         specialistProfileRepository.save(specialist);
 
-        // 更新举报状态
+        // Update complaint status
         complaint.setStatus(ComplaintStatus.BANNED);
         complaintRepository.save(complaint);
     }

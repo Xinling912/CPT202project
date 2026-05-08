@@ -22,23 +22,23 @@ public class BookingController {
 
 
 
-    // 采用构造器注入，保证依赖清晰
+    // Using constructor injection to ensure clear dependencies
     public BookingController(BookingService bookingService
-                           ) {
+    ) {
         this.bookingService = bookingService;
 
 
     }
 
     /**
-     * 【下单：核心预约逻辑】
+     * [Place Order: Core Booking Logic]
      */
     @PostMapping("/create")
     public ResponseEntity<?> createBooking(@RequestBody BookingRequest request, Principal principal) {
         try {
-            // 【修改前】Booking newOrder = bookingService.createBooking(...);
+            // [Before modification] Booking newOrder = bookingService.createBooking(...);
 
-            // 【修改后】：变量类型要与 Service 的返回值类型完全一致
+            // [After modification]: The variable type must exactly match the return type of the Service
             BookingService.BookingResponse response = bookingService.createBooking(
                     principal.getName(),
                     request.specialistId(),
@@ -59,7 +59,7 @@ public class BookingController {
     }
 
     /**
-     * 【取消订单】用户/专家均可操作
+     * [Cancel Order] Both users and specialists can operate
      */
     @PostMapping("/cancel/{orderId}")
     public ResponseEntity<?> cancelOrder(@PathVariable Long orderId, @RequestParam String reason, Principal principal) {
@@ -77,7 +77,7 @@ public class BookingController {
     }
 
     /**
-     * 【专家确认订单】
+     * [Specialist Confirm Order]
      */
     @PostMapping("/confirm/{orderId}")
     public ResponseEntity<?> confirmOrder(@PathVariable Long orderId, Principal principal) {
@@ -90,7 +90,7 @@ public class BookingController {
     }
 
     /**
-     * 【完成订单】
+     * [Complete Order]
      */
     @PostMapping("/complete/{orderId}")
     public ResponseEntity<?> completeOrder(@PathVariable Long orderId, Principal principal) {
@@ -103,13 +103,13 @@ public class BookingController {
     }
 
     /**
-     * 【查询: 我的预约历史 (顾客视角)】
+     * [Query: My booking history (Customer perspective)]
 
      */
     @GetMapping("/myOrders")
     public ResponseEntity<?> getMyOrders(Principal principal) {
         try {
-            // Service 已经搞定了一切，Controller 只需要“指挥”
+            // Service has handled everything, the Controller only needs to "direct"
             List<BookingService.BookingResponse> response = bookingService.getOrdersByCustomerResponse(principal.getName());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -118,23 +118,23 @@ public class BookingController {
     }
 
     /**
-     * 【查询: 专家收到的预约 (专家视角)】
+     * [Query: Bookings received by specialist (Specialist perspective)]
 
      */
     @GetMapping("/specialist/my-bookings")
     public ResponseEntity<?> getSpecialistOrders(Principal principal) {
         try {
-            // 这一行搞定所有事：业务逻辑、校验、转换数据
+            // This line handles everything: business logic, validation, data conversion
             List<BookingService.BookingResponse> response = bookingService.getSpecialistOrders(principal.getName());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            // 如果是权限不足，这里捕获异常并返回 403
+            // If there is insufficient permission, catch the exception here and return 403
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
         }
     }
 
 
-    // 统一的异常处理器
+    // Unified exception handler
     private ResponseEntity<?> handleException(Exception e) {
         if (e instanceof IllegalStateException) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
@@ -143,7 +143,7 @@ public class BookingController {
     }
 
     /**
-     * 前端请求的 DTO
+     * DTO for frontend request
      */
     public record BookingRequest(
             Long specialistId,

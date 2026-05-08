@@ -22,7 +22,7 @@ public class JwtUtils {
     @Value("${app.jwt.expiration-ms}")
     private long jwtExpirationMs;
 
-    // 生成 Token 时，把username 塞进 Claims 里
+    // When generating a Token, put the username into the Claims
     public String generateToken(String username) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);

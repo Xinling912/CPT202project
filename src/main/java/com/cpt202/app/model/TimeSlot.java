@@ -15,24 +15,24 @@ public class TimeSlot {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 谁的排班？关联到专家名片
-    @JsonIgnoreProperties({"user", "expertise", "level"}) // 建议加上，防止返回数据太臃肿
+    // Whose schedule? Associated with the specialist profile
+    @JsonIgnoreProperties({"user", "expertise", "level"}) // Recommended to add, prevents returned data from being too bloated
     @ManyToOne
     @JoinColumn(name = "specialist_id", referencedColumnName = "id", nullable = false)
     private SpecialistProfile specialist;
 
     @Column(name = "slot_date", nullable = false)
-    private LocalDate slotDate; // 日期：如 2026-03-30
+    private LocalDate slotDate; // Date: e.g., 2026-03-30
 
     @Column(name = "start_time", nullable = false)
-    private LocalTime startTime; // 开始时间：如 14:00
+    private LocalTime startTime; // Start time: e.g., 14:00
 
     @Column(name = "end_time", nullable = false)
-    private LocalTime endTime; // 结束时间：如 15:00
+    private LocalTime endTime; // End time: e.g., 15:00
 
-    @Enumerated(EnumType.STRING) // 必加：这样数据库里存的是 "BOOKED" 字符串而不是数字 1
+    @Enumerated(EnumType.STRING) // Required: so the database stores the "BOOKED" string instead of the number 1
     @Column(name = "status", nullable = false, length = 20)
-    private TimeSlotStatus status = TimeSlotStatus.AVAILABLE; // 默认值改为枚举常量
+    private TimeSlotStatus status = TimeSlotStatus.AVAILABLE; // Default value changed to enum constant
 
 
 

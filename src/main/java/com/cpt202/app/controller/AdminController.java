@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/admin")
 @CrossOrigin
-@PreAuthorize("hasRole('ADMIN')") // 💡 严格保安：只有管理员能访问这些接口
+@PreAuthorize("hasRole('ADMIN')") // 💡 Strict security: Only administrators can access these endpoints
 public class AdminController {
 
     @Autowired
@@ -31,92 +31,92 @@ public class AdminController {
 
 
     // ==========================================
-    // 1. 列表渲染接口 (供管理员 Dashboard 呈现表格用)
+    // 1. List rendering endpoints (for presenting tables on the Admin Dashboard)
     // ==========================================
 
     /**
-     * 获取所有【待审核的新专家申请】
+     * Get all [Pending New Specialist Applications]
      */
     @GetMapping("/applications/pending")
     public ResponseEntity<?> getPendingApplications() {
-        // 查主表里状态为 PENDING 的记录
+        // Query the main table for records with PENDING status
         List<SpecialistProfile> pendingProfiles = profileRepository.findByStatus(SpecialistStatus.PENDING);
         return ResponseEntity.ok(Map.of("data", pendingProfiles));
     }
 
     /**
-     * 获取所有【待审核的老专家修改申请】
+     * Get all [Pending Edit Requests from Existing Specialists]
      */
     @GetMapping("/edits/pending")
     public ResponseEntity<?> getPendingEdits() {
-        // 查影子表里状态为 PENDING 的记录
+        // Query the shadow table for records with PENDING status
         List<SpecialistProfileEditRequest> pendingEdits = editRequestRepository.findByStatus(SpecialistProfileEditStatus.PENDING);
         return ResponseEntity.ok(Map.of("data", pendingEdits));
     }
 
 
     // ==========================================
-    // 2. 审批操作接口 (同意 / 拒绝)
+    // 2. Approval operation endpoints (Approve / Reject)
     // ==========================================
 
     /**
-     * 同意【新专家入驻申请】
+     * Approve [New Specialist Onboarding Application]
      */
     @PostMapping("/applications/{profileId}/approve")
     public ResponseEntity<?> approveApplication(@PathVariable Long profileId) {
         try {
             adminService.approveNewSpecialist(profileId);
-            return ResponseEntity.ok(Map.of("message", "新专家入驻审核已通过！"));
+            return ResponseEntity.ok(Map.of("message", "New specialist onboarding application approved!"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     /**
-     * 拒绝【新专家入驻申请】
+     * Reject [New Specialist Onboarding Application]
      */
     @PostMapping("/applications/{profileId}/reject")
     public ResponseEntity<?> rejectApplication(@PathVariable Long profileId) {
         try {
             adminService.rejectNewSpecialist(profileId);
-            return ResponseEntity.ok(Map.of("message", "已驳回该专家的入驻申请！"));
+            return ResponseEntity.ok(Map.of("message", "The specialist's onboarding application has been rejected!"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     /**
-     * 同意【老专家资料修改】
+     * Approve [Existing Specialist Profile Edit]
      */
     @PostMapping("/edits/{requestId}/approve")
     public ResponseEntity<?> approveEditRequest(@PathVariable Long requestId) {
         try {
             adminService.approveEditRequest(requestId);
-            return ResponseEntity.ok(Map.of("message", "专家资料修改已通过，并同步至大厅！"));
+            return ResponseEntity.ok(Map.of("message", "Specialist profile edit approved and synchronized to the hall!"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     /**
-     * 拒绝【老专家资料修改】
+     * Reject [Existing Specialist Profile Edit]
      */
     @PostMapping("/edits/{requestId}/reject")
     public ResponseEntity<?> rejectEditRequest(@PathVariable Long requestId) {
         try {
             adminService.rejectEditRequest(requestId);
-            return ResponseEntity.ok(Map.of("message", "已驳回该专家的修改申请，其原资料保持不变。"));
+            return ResponseEntity.ok(Map.of("message", "The specialist's edit request has been rejected, their original profile remains unchanged."));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
     // ==========================================
-    // 3. 专家账号管理接口 (封停 / 激活)
+    // 3. Specialist account management endpoints (Suspend / Activate)
     // ==========================================
 
     /**
-     * 获取所有【已通过审核的专家】（包含 ACTIVE 和 INACTIVE），用于在调整页面
-     * 展示支持：搜索（用户名/真实姓名/专业名）+ 专业筛选 + 等级筛选
+     * Get all [Approved Specialists] (including ACTIVE and INACTIVE), used for display on the adjustment page
+     * Supports: Search (Username/Real Name/Expertise Name) + Expertise Filter + Level Filter
      */
     @GetMapping("/specialists")
     public ResponseEntity<?> getAllExistingSpecialists(
@@ -124,37 +124,37 @@ public class AdminController {
             @RequestParam(required = false) Long expertiseId,
             @RequestParam(required = false) SpecialistLevel level) {
 
-        // 获取所有专家，但过滤掉还在审核中(PENDING)或被拒绝的，只留正式专家
+        // Get all specialists, but filter out those still under review (PENDING) or rejected, keeping only official specialists
         List<SpecialistProfile> existingProfiles = profileRepository.findAll().stream()
                 .filter(p -> p.getStatus() == SpecialistStatus.ACTIVE || p.getStatus() == SpecialistStatus.INACTIVE)
                 .collect(Collectors.toList());
 
-        // 1. 按专业筛选
+        // 1. Filter by expertise
         if (expertiseId != null) {
             existingProfiles = existingProfiles.stream()
                     .filter(p -> p.getExpertise() != null && p.getExpertise().getId().equals(expertiseId))
                     .collect(Collectors.toList());
         }
 
-        // 2. 按等级筛选
+        // 2. Filter by level
         if (level != null) {
             existingProfiles = existingProfiles.stream()
                     .filter(p -> p.getLevel() == level)
                     .collect(Collectors.toList());
         }
 
-        // 3. 按关键词搜索（用户名 / 真实姓名 / 专业名）
+        // 3. Search by keyword (Username / Real Name / Expertise Name)
         if (keyword != null && !keyword.isBlank()) {
             String lowerKeyword = keyword.toLowerCase().trim();
             existingProfiles = existingProfiles.stream()
                     .filter(p ->
-                            // 按用户名搜索
+                            // Search by username
                             (p.getUser().getUsername() != null &&
                                     p.getUser().getUsername().toLowerCase().contains(lowerKeyword)) ||
-                                    // 按真实姓名搜索
+                                    // Search by real name
                                     (p.getRealName() != null &&
                                             p.getRealName().toLowerCase().contains(lowerKeyword)) ||
-                                    // 按专业名称搜索
+                                    // Search by expertise name
                                     (p.getExpertise() != null &&
                                             p.getExpertise().getName().toLowerCase().contains(lowerKeyword))
                     )
@@ -165,36 +165,36 @@ public class AdminController {
     }
 
     /**
-     * 封停专家 (Suspend) -> 状态改为 INACTIVE
+     * Suspend specialist -> Status changed to INACTIVE
      */
     @PostMapping("/specialists/{id}/suspend")
     public ResponseEntity<?> suspendSpecialist(@PathVariable Long id) {
         try {
             SpecialistProfile profile = profileRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("找不到该专家档案"));
+                    .orElseThrow(() -> new IllegalArgumentException("Specialist profile not found"));
 
             profile.setStatus(SpecialistStatus.INACTIVE);
             profileRepository.save(profile);
 
-            return ResponseEntity.ok(Map.of("message", "专家已被成功封停！"));
+            return ResponseEntity.ok(Map.of("message", "Specialist has been successfully suspended!"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     /**
-     * 激活专家 (Activate) -> 状态改为 ACTIVE
+     * Activate specialist -> Status changed to ACTIVE
      */
     @PostMapping("/specialists/{id}/activate")
     public ResponseEntity<?> activateSpecialist(@PathVariable Long id) {
         try {
             SpecialistProfile profile = profileRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("找不到该专家档案"));
+                    .orElseThrow(() -> new IllegalArgumentException("Specialist profile not found"));
 
             profile.setStatus(SpecialistStatus.ACTIVE);
             profileRepository.save(profile);
 
-            return ResponseEntity.ok(Map.of("message", "专家已被重新激活！"));
+            return ResponseEntity.ok(Map.of("message", "Specialist has been successfully reactivated!"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

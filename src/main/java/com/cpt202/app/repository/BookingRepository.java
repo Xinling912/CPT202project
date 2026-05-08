@@ -13,20 +13,20 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-//JpaRepository<Booking, Long>：第一个参数实体类名，第二个参数主键的数据类型
+// JpaRepository<Booking, Long>: The first parameter is the entity class name, the second parameter is the data type of the primary key
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    // 查询该顾客是否在这个时间段有过特定状态的订单（用于查 CANCELLED 拦截刷单）
+    // Query whether the customer has had a booking with a specific status in this time slot (used to check for CANCELLED to intercept spamming)
     boolean existsByCustomerIdAndTimeSlotIdAndStatus(Long customerId, Long timeSlotId, BookingStatus status);
     List<Booking> findByStatus(BookingStatus status);
 
-    // 按照用户ID查询
+    // Query by customer ID
     List<Booking> findByCustomerId(Long customerId);
 
-    // 按照专家ID查询
+    // Query by specialist ID
     List<Booking> findBySpecialistId(Long specialistId);
 
-    // 检查用户在特定时间段是否已有有效预约
+    // Check if the user already has a valid booking in a specific time slot
     boolean existsByCustomerIdAndTimeSlotIdAndStatusIn(
             Long customerId,
             Long timeSlotId,
@@ -39,10 +39,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             BookingStatus status,
             LocalDateTime date);
 
-    // 根据专家的 ID 和 订单状态 查询所有有效订单
+    // Query all valid bookings based on the specialist's ID and booking status
     List<Booking> findBySpecialistIdAndStatusIn(Long specialistId, List<BookingStatus> statuses);
 
-    // 累加专家已完成订单的总金额
+    // Accumulate the total amount of completed bookings for the specialist
     @Query("SELECT COALESCE(SUM(b.totalAmount), 0) FROM Booking b " +
             "WHERE b.specialist.id = :specialistId AND b.status = :status")
     BigDecimal sumTotalAmountBySpecialistIdAndStatus(

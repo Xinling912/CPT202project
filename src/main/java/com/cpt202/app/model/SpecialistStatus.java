@@ -1,8 +1,8 @@
 package com.cpt202.app.model;
 
 public enum SpecialistStatus {
-    ACTIVE,   // 接单中：前端会展示在搜索列表中
-    INACTIVE,  // 封禁中：前端不展示，或者显示“暂不接单”
-    PENDING,  // 刚申请或修改资料后，等待管理员审批
-    REJECTED  // 专家申请审核未通过
+    ACTIVE,   // Taking orders: Will be displayed in the search list on the frontend
+    INACTIVE,  // Suspended: Not displayed on the frontend, or displayed as "Temporarily not taking orders"
+    PENDING,  // Just applied or modified profile, waiting for admin approval
+    REJECTED  // Specialist application failed review
 }

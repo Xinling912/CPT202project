@@ -61,8 +61,8 @@ public class BookingRulesAcceptanceTest extends BaseAcceptanceTest {
         // Create a new slot that starts in only 5 hours
         TimeSlot urgentSlot = new TimeSlot();
         urgentSlot.setSpecialist(specialist);
-        urgentSlot.setSlotDate(LocalDate.now().plusDays(1)); // 改为明天
-        urgentSlot.setStartTime(LocalTime.now()); // 如果现在是10:00，这时段就是明天10:00
+        urgentSlot.setSlotDate(LocalDate.now().plusDays(1));
+        urgentSlot.setStartTime(LocalTime.now());
         urgentSlot.setEndTime(LocalTime.now().plusHours(1));
         urgentSlot.setStatus(TimeSlotStatus.AVAILABLE);
         timeSlotRepository.save(urgentSlot);

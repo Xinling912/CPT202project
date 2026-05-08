@@ -56,13 +56,13 @@ public class SpecialistController {
     }
 
     /**
-     * 专家大厅列表接口（支持搜索 + 筛选 + 分页）
-     * 功能：
-     * 1) keyword：按专家用户名模糊搜索（如 lisa -> 名字包含 lisa 的专家）
-     * 2) expertiseId：按专业筛选
-     * 3) level：按等级筛选（JUNIOR/SENIOR/EXPERT）
-     * 4) date：按日期筛选“当天仍有 AVAILABLE 时段”的专家
-     * 5) 多筛选条件可叠加，最终结果是“同时满足所有条件”的交集
+     * Specialist hall list interface (supports search + filter + pagination)
+     * Features:
+     * 1) keyword: Fuzzy search by specialist username (e.g., lisa -> specialists whose name contains lisa)
+     * 2) expertiseId: Filter by expertise
+     * 3) level: Filter by level (JUNIOR/SENIOR/EXPERT)
+     * 4) date: Filter specialists who still have "AVAILABLE time slots on the current day"
+     * 5) Multiple filter conditions can be stacked, the final result is the intersection of "satisfying all conditions simultaneously"
      */
     @GetMapping
     public ResponseEntity<?> getSpecialists(
@@ -81,13 +81,13 @@ public class SpecialistController {
                 parsedDate = LocalDate.parse(date);
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "日期格式不正确，请输入 yyyy-MM-dd"));
+            return ResponseEntity.badRequest().body(Map.of("error", "Incorrect date format, please enter yyyy-MM-dd"));
         }
 
-        // 定义一个 final 变量给 Lambda 使用
+        // Define a final variable for Lambda use
         final LocalDate finalTargetDate = parsedDate;
 
-        // 只显示 ACTIVE 的专家
+        // Only show ACTIVE specialists
         Specification<SpecialistProfile> spec = (root, query, cb) -> cb.equal(root.get("status"), SpecialistStatus.ACTIVE);
 
         if (keyword != null && !keyword.isBlank()) {
@@ -102,7 +102,7 @@ public class SpecialistController {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("level"), level));
         }
         if (finalTargetDate != null) {
-            // availability 条件：子查询 time_slot 表，要求该专家在指定日期有可预约时段
+            // availability condition: subquery the time_slot table, requiring the specialist to have available time slots on the specified date
             spec = spec.and((root, query, cb) -> {
                 var subquery = query.subquery(Long.class);
                 var timeSlotRoot = subquery.from(TimeSlot.class);
@@ -117,7 +117,7 @@ public class SpecialistController {
         }
 
         Page<SpecialistProfile> specialistPage = specialistRepository.findAll(spec, pageable);
-        // 组装返回数据...
+        // Assemble return data...
         response.put("content", specialistPage.getContent());
         response.put("totalElements", specialistPage.getTotalElements());
         response.put("totalPages", specialistPage.getTotalPages());
@@ -128,20 +128,20 @@ public class SpecialistController {
     }
 
     /**
-     * 获取单个专家详情
-     * 功能：前端点击某个专家卡片后，进入详情页时拉取该专家完整资料。
+     * Get details of a single specialist
+     * Feature: When the frontend clicks on a specialist card, it fetches the complete profile of the specialist upon entering the detail page.
      */
     @GetMapping("/{id}")
     public SpecialistProfile getSpecialistDetail(@PathVariable("id") Long id) {
         return specialistRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "ID为 " + id + " 的专家档案不存在"
+                        HttpStatus.NOT_FOUND, "Specialist profile with ID " + id + " does not exist"
                 ));
     }
 
     /**
-     * 获取筛选项字典
-     * 功能：给前端 filter 下拉框提供“专业列表 + 等级列表”。
+     * Get filter options dictionary
+     * Feature: Provide "expertise list + level list" for the frontend filter dropdowns.
      */
     @GetMapping("/filters")
     public Map<String, Object> getFilterOptions() {
@@ -166,39 +166,39 @@ public class SpecialistController {
     @PostMapping("/apply")
     public ResponseEntity<?> submitProfile(@RequestBody SpecialistApplyRequest request, Authentication auth) {
         try {
-            // 校验一下真实姓名不能为空
+            // Check that real name cannot be empty
             if (request.realName() == null || request.realName().isBlank()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "真实姓名不能为空"));
+                return ResponseEntity.badRequest().body(Map.of("error", "Real name cannot be empty"));
             }
 
             specialistService.submitProfileApplication(auth.getName(), request);
 
-            // 返回 JSON 格式
-            return ResponseEntity.ok(Map.of("message", "个人信息已成功提交，请等待管理员审核。"));
+            // Return in JSON format
+            return ResponseEntity.ok(Map.of("message", "Personal information submitted successfully, please wait for admin approval."));
         } catch (Exception e) {
-            // 返回 JSON 格式的错误信息
-            return ResponseEntity.badRequest().body(Map.of("error", "提交失败: " + e.getMessage()));
+            // Return error message in JSON format
+            return ResponseEntity.badRequest().body(Map.of("error", "Submission failed: " + e.getMessage()));
         }
     }
 
     /**
-     * 获取专家累计总收入
+     * Get total accumulated earnings of a specialist
      */
     @GetMapping("/earnings")
     public ResponseEntity<Map<String, Object>> getTotalEarnings(Authentication auth) {
         try {
             String username = auth.getName();
 
-            // 1. 获取用户信息并校验角色
+            // 1. Get user information and verify role
             User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("用户不存在"));
+                    .orElseThrow(() -> new RuntimeException("User does not exist"));
 
             if (user.getRole() != UserRole.SPECIALIST) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "只有专家可以查看收入"));
+                        .body(Map.of("error", "Only specialists can view earnings"));
             }
 
-            // 2. 获取收入
+            // 2. Get earnings
             BigDecimal earnings = specialistService.getTotalEarnings(username);
 
             return ResponseEntity.ok(Map.of(
@@ -211,25 +211,25 @@ public class SpecialistController {
     }
 
     /**
-     * 获取当前登录专家的个人信息（用于专家端“我的资料”页面）
+     * Get personal information of the currently logged-in specialist (used for the "My Profile" page on the specialist side)
      */
     @GetMapping("/profile")
     public ResponseEntity<?> getMyProfile(Authentication authentication) {
         try {
             String username = authentication.getName();
 
-            // 1. 获取用户信息并校验角色
+            // 1. Get user information and verify role
             User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("用户不存在"));
+                    .orElseThrow(() -> new RuntimeException("User does not exist"));
 
             if (user.getRole() != UserRole.SPECIALIST) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "只有专家可以查看自己的资料"));
+                        .body(Map.of("error", "Only specialists can view their own profile"));
             }
 
-            // 2. 获取专家档案
+            // 2. Get specialist profile
             SpecialistProfile profile = specialistRepository.findByUser(user)
-                    .orElseThrow(() -> new RuntimeException("未找到专家档案，请先提交专家申请"));
+                    .orElseThrow(() -> new RuntimeException("Specialist profile not found, please submit a specialist application first"));
 
             return ResponseEntity.ok(Map.of("data", profile));
 
@@ -254,19 +254,19 @@ public class SpecialistController {
     private String getStatusMessage(ApplicationStatus status) {
         switch (status) {
             case NONE:
-                return "您尚未申请成为专家";
+                return "You have not applied to be a specialist yet";
             case APPLY_PENDING:
-                return "专家申请审核中，请耐心等待";
+                return "Specialist application is under review, please wait patiently";
             case APPLY_REJECTED:
-                return "专家申请被驳回，您可以修改后重新提交";
+                return "Specialist application rejected, you can modify and resubmit";
             case IS_ACTIVE_SPECIALIST:
-                return "您已是正式专家";
+                return "You are already an official specialist";
             case EDIT_PENDING:
-                return "资料修改申请审核中";
+                return "Profile modification application is under review";
             case EDIT_APPROVED:
-                return "资料修改已通过";
+                return "Profile modification approved";
             case EDIT_REJECTED:
-                return "资料修改被驳回，可重新提交";
+                return "Profile modification rejected, can be resubmitted";
             default:
                 return "";
         }

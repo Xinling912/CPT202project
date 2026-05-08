@@ -111,7 +111,7 @@ class UserServiceTest {
         Exception e = assertThrows(IllegalArgumentException.class, () -> {
             userService.register(testUsername, validPassword, testEmail, UserRole.CUSTOMER, "123456");
         });
-        assertEquals("用户名已存在", e.getMessage());
+        assertEquals("Username already exists", e.getMessage());
     }
 
     @Test
@@ -121,7 +121,7 @@ class UserServiceTest {
             // Password missing letters
             userService.register(testUsername, "12345678", testEmail, UserRole.CUSTOMER, "123456");
         });
-        assertTrue(e.getMessage().contains("密码格式不合法"));
+        assertTrue(e.getMessage().contains("Invalid password format"));
     }
 
 
@@ -166,7 +166,7 @@ class UserServiceTest {
         Exception e = assertThrows(IllegalArgumentException.class, () -> {
             userService.changePassword(testUsername, "WrongOldPass1", "NewPassword456");
         });
-        assertEquals("旧密码错误", e.getMessage());
+        assertEquals("Incorrect old password", e.getMessage());
     }
 
 

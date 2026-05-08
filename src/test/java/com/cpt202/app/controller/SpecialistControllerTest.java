@@ -71,11 +71,9 @@ class SpecialistControllerTest {
     // ==========================================
     @Test
     void getSpecialists_HappyPath_ShouldReturnPageData() throws Exception {
-        // Arrange: Mock a paged result from the database
         Page<SpecialistProfile> mockPage = new PageImpl<>(List.of(testProfile));
         when(specialistRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(mockPage);
 
-        // Act & Assert: Simulate GET request with search parameters
         mockMvc.perform(get("/api/specialists")
                         .param("page", "0")
                         .param("size", "10")
@@ -89,11 +87,11 @@ class SpecialistControllerTest {
 
     @Test
     void getSpecialists_InvalidDate_ShouldReturnBadRequest() throws Exception {
-        // Act & Assert: Simulate an invalid date format
+        // Corrected expectation to match actual: "Incorrect date format..."
         mockMvc.perform(get("/api/specialists")
                         .param("date", "invalid-date"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("日期格式不正确，请输入 yyyy-MM-dd"));
+                .andExpect(jsonPath("$.error").value("Incorrect date format, please enter yyyy-MM-dd"));
     }
 
     // ==========================================
@@ -141,13 +139,13 @@ class SpecialistControllerTest {
 
         doNothing().when(specialistService).submitProfileApplication(anyString(), any());
 
+        // Corrected expectation to match actual: "...wait for admin approval."
         mockMvc.perform(post("/api/specialists/apply")
-                        // 修正点：使用真正的 Authentication Token
                         .principal(new UsernamePasswordAuthenticationToken("testSpecialist", null, Collections.emptyList()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("个人信息已成功提交，请等待管理员审核。"));
+                .andExpect(jsonPath("$.message").value("Personal information submitted successfully, please wait for admin approval."));
     }
 
     @Test
@@ -155,12 +153,11 @@ class SpecialistControllerTest {
         String requestJson = "{\"realName\":\" \",\"level\":\"EXPERT\"}";
 
         mockMvc.perform(post("/api/specialists/apply")
-                        // 修正点：同步修改
                         .principal(new UsernamePasswordAuthenticationToken("testSpecialist", null, Collections.emptyList()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("真实姓名不能为空"));
+                .andExpect(jsonPath("$.error").value("Real name cannot be empty"));
     }
 
     // ==========================================
@@ -172,7 +169,6 @@ class SpecialistControllerTest {
         when(specialistService.getTotalEarnings("testSpecialist")).thenReturn(new BigDecimal("998.50"));
 
         mockMvc.perform(get("/api/specialists/earnings")
-                        // 使用真实的 Token 对象替换之前的 Lambda
                         .principal(new UsernamePasswordAuthenticationToken("testSpecialist", null, Collections.emptyList())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalEarnings").value(998.50));
@@ -189,11 +185,11 @@ class SpecialistControllerTest {
 
         when(userRepository.findByUsername("normalUser")).thenReturn(Optional.of(customer));
 
+        // Corrected expectation to match actual: "...their own profile" (singular)
         mockMvc.perform(get("/api/specialists/profile")
-                        // 同样替换这里的 Token
                         .principal(new UsernamePasswordAuthenticationToken("normalUser", null, Collections.emptyList())))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("只有专家可以查看自己的资料"));
+                .andExpect(jsonPath("$.error").value("Only specialists can view their own profile"));
     }
 
     // ==========================================
@@ -205,7 +201,6 @@ class SpecialistControllerTest {
         when(specialistService.getCurrentApplicationStatus(testUser)).thenReturn(ApplicationStatus.APPLY_PENDING);
 
         mockMvc.perform(get("/api/specialists/apply-status")
-                        // 修正点：同步修改
                         .principal(new UsernamePasswordAuthenticationToken("testSpecialist", null, Collections.emptyList())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APPLY_PENDING"));

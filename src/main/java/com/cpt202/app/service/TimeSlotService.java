@@ -8,7 +8,7 @@ import com.cpt202.app.repository.SpecialistProfileRepository;
 import com.cpt202.app.repository.TimeSlotRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // 新增事务注解
+import org.springframework.transaction.annotation.Transactional; // Added transaction annotation
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -43,14 +43,14 @@ public class TimeSlotService {
     private SpecialistProfileRepository specialistRepository;
 
     /**
-     * 获取未来两周内专家的可用日期
+     * Get available dates for a specialist within the next two weeks
      */
     public List<LocalDate> getAvailableDatesForSpecialist(Long specialistId) {
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusWeeks(2);
-        
+
         List<TimeSlot> allSlots = timeSlotRepository.findBySpecialistId(specialistId);
-        
+
         return allSlots.stream()
                 .filter(slot -> slot.getStatus() == TimeSlotStatus.AVAILABLE)
                 .filter(slot -> !slot.getSlotDate().isBefore(startDate) && !slot.getSlotDate().isAfter(endDate))
@@ -60,12 +60,12 @@ public class TimeSlotService {
                 .collect(Collectors.toList());
     }
 
-    /**获取特定日期的专家可用时段
+    /**
      * Get available time slots for a specialist on a specific date
      */
     public List<TimeSlot> getAvailableTimeSlotsForDate(Long specialistId, LocalDate date) {
         List<TimeSlot> allSlots = timeSlotRepository.findBySpecialistId(specialistId);
-        
+
         return allSlots.stream()
                 .filter(slot -> slot.getStatus() == TimeSlotStatus.AVAILABLE)
                 .filter(slot -> slot.getSlotDate().equals(date))
@@ -73,15 +73,15 @@ public class TimeSlotService {
                 .collect(Collectors.toList());
     }
 
-    /**获取本周和下周专家的所有时间段
+    /**
      * Get all time slots for a specialist within current week and next week
      */
     public List<TimeSlot> getAllTimeSlotsForSpecialistSchedule(Long specialistId) {
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusWeeks(2);
-        
+
         List<TimeSlot> allSlots = timeSlotRepository.findBySpecialistId(specialistId);
-        
+
         return allSlots.stream()
                 .filter(slot -> !slot.getSlotDate().isBefore(startDate) && !slot.getSlotDate().isAfter(endDate))
                 .sorted((a, b) -> {
@@ -92,37 +92,37 @@ public class TimeSlotService {
                 .collect(Collectors.toList());
     }
 
-    /**获取本周或目标周内专家的所有日期和时间段
+    /**
      * Get all dates with time slots for a specialist within current week or target week
      */
     public List<TimeSlot> getSpecialistScheduleByDateRange(Long specialistId, LocalDate startDate, LocalDate endDate) {
-        // 调用底层 Repository 去查这 7 天内的数据，并按日期和时间排序
+        // Call the underlying Repository to query data within these 7 days, sorted by date and time
         return timeSlotRepository.findBySpecialistIdAndSlotDateBetweenOrderBySlotDateAscStartTimeAsc(specialistId, startDate, endDate);
     }
 
 
 
     /**
-     * 批量发布排班（前端传来一周的勾选数据）
+     * Batch publish schedules (selected weekly data from the frontend)
      */
     public void batchCreateSlots(String username, TimeSlotBatchRequest request) {
         SpecialistProfile profile = specialistRepository.findByUserUsername(username)
-                .orElseThrow(() -> new RuntimeException("专家档案不存在"));
+                .orElseThrow(() -> new RuntimeException("Specialist profile does not exist"));
 
         Long specId = profile.getId();
         List<TimeSlot> slotsToSave = new ArrayList<>();
 
         for (DailySlot dailySlot : request.slots()) {
             if (dailySlot.date().isBefore(LocalDate.now())) {
-                throw new RuntimeException("不能发布过去的排班：" + dailySlot.date());
+                throw new RuntimeException("Cannot publish past schedules: " + dailySlot.date());
             }
 
-            // 防重叠校验（需在 Repository 中添加 existOverlappingSlot 方法）
+            // Overlap validation (requires existOverlappingSlot method in Repository)
             boolean isOverlapping = timeSlotRepository.existsOverlappingSlot(
                     specId, dailySlot.date(), dailySlot.startTime(), dailySlot.endTime());
 
             if (isOverlapping) {
-                throw new RuntimeException("时间段发生重叠，请检查：" + dailySlot.date() + " " + dailySlot.startTime());
+                throw new RuntimeException("Time slots overlap, please check: " + dailySlot.date() + " " + dailySlot.startTime());
             }
 
             TimeSlot timeSlot = new TimeSlot();
@@ -139,20 +139,20 @@ public class TimeSlotService {
     }
 
     /**
-     * 专家管理：删除某个未被预约的排班
+     * Specialist management: Delete a time slot that hasn't been booked
      */
     public void deleteTimeSlot(String username, Long slotId) {
         TimeSlot slot = timeSlotRepository.findById(slotId)
-                .orElseThrow(() -> new RuntimeException("排班不存在"));
+                .orElseThrow(() -> new RuntimeException("Time slot does not exist"));
 
-        // 安全校验：确认是本人的排班
+        // Security check: Confirm the schedule belongs to the current user
         if (!slot.getSpecialist().getUser().getUsername().equals(username)) {
-            throw new RuntimeException("无权操作他人的排班");
+            throw new RuntimeException("Unauthorized to operate on others' schedules");
         }
 
-        // 业务规则：只能删除 AVAILABLE（未被预约）的排班
+        // Business rule: Only AVAILABLE (unbooked) time slots can be deleted
         if (slot.getStatus() != TimeSlotStatus.AVAILABLE) {
-            throw new RuntimeException("该时间段已被预约或锁定，无法删除！请先联系客户取消订单。");
+            throw new RuntimeException("This time slot has been booked or locked and cannot be deleted! Please contact the customer to cancel the booking first.");
         }
 
         timeSlotRepository.delete(slot);

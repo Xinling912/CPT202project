@@ -10,12 +10,12 @@ import java.util.List;
 @Repository
 public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
-    // 检查订单是否已被举报
+    // Check if the booking has already been reported
     boolean existsByBookingId(Long bookingId);
 
-    // 按状态查询举报
+    // Find complaints by status
     List<Complaint> findByStatus(ComplaintStatus status);
 
-    // 根据举报人 ID 查询该用户所有举报
+    // Find all complaints by reporter ID
     List<Complaint> findByReporterId(Long reporterId);
 }

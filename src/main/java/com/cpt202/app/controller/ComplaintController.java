@@ -28,7 +28,7 @@ public class ComplaintController {
     }
 
     /**
-     * 获取当前登录用户的 ID
+     * Get the ID of the currently logged-in user
      */
     private Long getCurrentUserId(Authentication authentication) {
         String currentUsername = authentication.getName();
@@ -37,7 +37,7 @@ public class ComplaintController {
     }
 
     /**
-     * 用户举报订单
+     * User reports a booking
      */
     @PostMapping("/report")
     public ResponseEntity<?> reportBooking(
@@ -49,7 +49,7 @@ public class ComplaintController {
             Long userId = getCurrentUserId(authentication);
             Complaint complaint = complaintService.reportBooking(bookingId, userId, reason);
             return ResponseEntity.ok(Map.of(
-                    "message", "举报已提交，管理员会尽快处理",
+                    "message", "Report submitted, an administrator will process it as soon as possible",
                     "complaintId", complaint.getId()
             ));
         } catch (Exception e) {
@@ -58,7 +58,7 @@ public class ComplaintController {
     }
 
     /**
-     * 用户：获取自己的举报记录（分页）
+     * User: Get own complaint records (paginated)
      */
     @GetMapping("/my")
     public ResponseEntity<?> getMyComplaints(Authentication authentication) {
@@ -72,7 +72,7 @@ public class ComplaintController {
     }
 
     /**
-     * 管理员：获取所有待处理举报
+     * Admin: Get all pending complaints
      */
     @GetMapping("/pending")
     @PreAuthorize("hasRole('ADMIN')")
@@ -82,7 +82,7 @@ public class ComplaintController {
     }
 
     /**
-     * 管理员：获取所有举报
+     * Admin: Get all complaints
      */
     @GetMapping("/all")
     @PreAuthorize("hasRole('ADMIN')")
@@ -92,28 +92,28 @@ public class ComplaintController {
     }
 
     /**
-     * 管理员：驳回举报
+     * Admin: Dismiss complaint
      */
     @PostMapping("/{complaintId}/dismiss")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> dismissComplaint(@PathVariable Long complaintId) {
         try {
             complaintService.dismissComplaint(complaintId);
-            return ResponseEntity.ok(Map.of("message", "已驳回该举报"));
+            return ResponseEntity.ok(Map.of("message", "Complaint dismissed"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     /**
-     * 管理员：封禁专家（通过举报）
+     * Admin: Ban specialist (via complaint)
      */
     @PostMapping("/{complaintId}/ban")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> banSpecialist(@PathVariable Long complaintId) {
         try {
             complaintService.banSpecialistByComplaint(complaintId);
-            return ResponseEntity.ok(Map.of("message", "已封禁该专家，举报已处理"));
+            return ResponseEntity.ok(Map.of("message", "Specialist banned, complaint processed"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

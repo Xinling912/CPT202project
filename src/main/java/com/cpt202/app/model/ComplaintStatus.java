@@ -1,9 +1,9 @@
 package com.cpt202.app.model;
 
 public enum ComplaintStatus {
-    PENDING("待处理"),
-    DISMISSED("已驳回"),
-    BANNED("已封禁");
+    PENDING("Pending"),
+    DISMISSED("Dismissed"),
+    BANNED("Banned");
 
     private final String description;
 

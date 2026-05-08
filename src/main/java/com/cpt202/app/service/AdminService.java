@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional // 保证审批过程中的多步数据库操作要么全成功，要么全回滚
+@Transactional // Ensures that multi-step database operations during the approval process either all succeed or all roll back
 public class AdminService {
 
     private final SpecialistProfileRepository profileRepository;
@@ -14,7 +14,7 @@ public class AdminService {
     private final UserRepository userRepository;
     private final ExpertiseCategoryRepository expertiseRepository;
 
-    // 构造器注入
+    // Constructor Injection
     public AdminService(SpecialistProfileRepository profileRepository,
                         SpecialistProfileEditRequestRepository editRequestRepository,
                         UserRepository userRepository,
@@ -26,42 +26,43 @@ public class AdminService {
     }
 
     // ==========================================
-    // 模块一：新专家首次申请审批
+    // Module 1: Approval of First-time Specialist Applications
     // ==========================================
 
     public void approveNewSpecialist(Long profileId) {
         SpecialistProfile profile = profileRepository.findById(profileId)
-                .orElseThrow(() -> new RuntimeException("找不到该申请记录"));
+                .orElseThrow(() -> new RuntimeException("Application record not found"));
 
-        // 1. 处理自定义专业入库逻辑 ( 修复版：防止重名报错) 修改杜姐姐的原有代码 不然一直报什么Duplicate entry 报错
+        // 1. Handle custom expertise storage logic (Fixed version: prevents duplicate name errors)
+        // Modified original code to prevent "Duplicate entry" errors
         if (profile.getProposedExpertiseName() != null) {
             String expName = profile.getProposedExpertiseName();
 
-            // 去数据库里查一查，是不是已经有这个专业了？
+            // Check the database to see if this expertise already exists
             ExpertiseCategory existingCategory = expertiseRepository.findAll().stream()
                     .filter(e -> e.getName().equalsIgnoreCase(expName))
                     .findFirst()
                     .orElse(null);
 
             if (existingCategory != null) {
-                // 如果有，直接绑定旧的，千万别再 insert 了
+                // If it exists, bind directly to the existing one; do not insert again
                 profile.setExpertise(existingCategory);
             } else {
-                // 如果真没有，才去创建并保存
+                // If it truly does not exist, create and save it
                 ExpertiseCategory newCategory = new ExpertiseCategory();
                 newCategory.setName(expName);
-                newCategory.setDescription("用户自定义新专业，待管理员确认");
+                newCategory.setDescription("User-defined new expertise, pending administrator confirmation");
                 expertiseRepository.save(newCategory);
                 profile.setExpertise(newCategory);
             }
 
-            profile.setProposedExpertiseName(null); // 清空临时占位字段
+            profile.setProposedExpertiseName(null); // Clear the temporary placeholder field
         }
 
-        // 2. 更新专家名片状态为接单中
+        // 2. Update specialist profile status to ACTIVE
         profile.setStatus(SpecialistStatus.ACTIVE);
 
-        // 3. 关键：提升用户权限角色
+        // 3. Crucial: Elevate user permission role
         User user = profile.getUser();
         user.setRole(UserRole.SPECIALIST);
 
@@ -71,25 +72,25 @@ public class AdminService {
 
     public void rejectNewSpecialist(Long profileId) {
         SpecialistProfile profile = profileRepository.findById(profileId)
-                .orElseThrow(() -> new RuntimeException("找不到该申请记录"));
+                .orElseThrow(() -> new RuntimeException("Application record not found"));
 
-        // 拒绝申请，状态改为 REJECTED，用户角色保持 CUSTOMER 不变
+        // Reject application, status changed to REJECTED, user role remains CUSTOMER
         profile.setStatus(SpecialistStatus.REJECTED);
         profileRepository.save(profile);
     }
 
 
     // ==========================================
-    // 模块二：老专家修改资料审批
+    // Module 2: Approval of Existing Specialist Profile Edits
     // ==========================================
 
     public void approveEditRequest(Long requestId) {
         SpecialistProfileEditRequest editReq = editRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("找不到该修改申请"));
+                .orElseThrow(() -> new RuntimeException("Edit request not found"));
 
         SpecialistProfile profile = editReq.getSpecialistProfile();
 
-        // 1. 将影子表的新数据覆盖到主表
+        // 1. Overwrite the main table with new data from the shadow table
         if (editReq.getNewRealName() != null && !editReq.getNewRealName().isBlank()) {
             profile.setRealName(editReq.getNewRealName());
         }
@@ -97,30 +98,30 @@ public class AdminService {
         profile.setHourlyFee(editReq.getNewHourlyFee());
         profile.setResume(editReq.getNewResume());
 
-        // 2. 处理修改时的专业变更逻辑 (防止 Duplicate entry 报错)
+        // 2. Handle expertise change logic during editing (prevent Duplicate entry error)
         if (editReq.getNewProposedExpertiseName() != null) {
             String expName = editReq.getNewProposedExpertiseName();
 
-            // 安全检查：防止重复插入
+            // Safety check: prevent duplicate insertion
             ExpertiseCategory existingCategory = expertiseRepository.findAll().stream()
                     .filter(e -> e.getName().equalsIgnoreCase(expName))
                     .findFirst()
                     .orElse(null);
 
             if (existingCategory != null) {
-                profile.setExpertise(existingCategory); // 已存在，直接绑定
+                profile.setExpertise(existingCategory); // Exists, bind directly
             } else {
                 ExpertiseCategory newCategory = new ExpertiseCategory();
                 newCategory.setName(expName);
-                expertiseRepository.save(newCategory); // 真不存在才入库
+                expertiseRepository.save(newCategory); // Truly does not exist, then save
                 profile.setExpertise(newCategory);
             }
         } else if (editReq.getNewExpertise() != null) {
-            // 他选择了下拉框里的其他官方专业
+            // User selected another official expertise from the dropdown
             profile.setExpertise(editReq.getNewExpertise());
         }
 
-        // 3. 状态流转：影子表改为 APPROVED，主表依然保持 ACTIVE
+        // 3. Status transition: Shadow table becomes APPROVED, main table remains ACTIVE
         editReq.setStatus(SpecialistProfileEditStatus.APPROVED);
 
         profileRepository.save(profile);
@@ -129,9 +130,9 @@ public class AdminService {
 
     public void rejectEditRequest(Long requestId) {
         SpecialistProfileEditRequest editReq = editRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("找不到该修改申请"));
+                .orElseThrow(() -> new RuntimeException("Edit request not found"));
 
-        // 拒绝修改，只改变修改单的状态，主表名片丝毫不受影响
+        // Reject edit, only change the status of the request; main profile remains unaffected
         editReq.setStatus(SpecialistProfileEditStatus.REJECTED);
         editRequestRepository.save(editReq);
     }

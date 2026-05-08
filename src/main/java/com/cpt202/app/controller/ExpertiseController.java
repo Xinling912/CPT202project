@@ -21,7 +21,7 @@ public class ExpertiseController {
     }
 
     /**
-     * 获取所有专业列表（所有人可访问）
+     * Get all expertise list (accessible to everyone)
      */
     @GetMapping("/list")
     public ResponseEntity<?> listAllExpertise() {
@@ -30,7 +30,7 @@ public class ExpertiseController {
     }
 
     /**
-     * 添加专业（仅限管理员）
+     * Add expertise (Admin only)
      */
     @PostMapping("/add")
     @PreAuthorize("hasRole('ADMIN')")
@@ -38,7 +38,7 @@ public class ExpertiseController {
         try {
             ExpertiseCategory saved = expertiseService.addExpertise(category);
             return ResponseEntity.ok(Map.of(
-                    "message", "专业【" + saved.getName() + "】添加成功",
+                    "message", "Expertise [" + saved.getName() + "] added successfully",
                     "data", saved
             ));
         } catch (Exception e) {
@@ -47,22 +47,22 @@ public class ExpertiseController {
     }
 
     /**
-     * 删除专业（仅限管理员）
+     * Delete expertise (Admin only)
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteExpertise(@PathVariable Long id) {
         try {
             expertiseService.deleteExpertise(id);
-            return ResponseEntity.ok(Map.of("message", "专业已删除"));
+            return ResponseEntity.ok(Map.of("message", "Expertise deleted"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     /**
-     * 修改专业（仅限管理员）
-     * 对应前端的 PUT http://localhost:8080/api/expertise/{id}
+     * Update expertise (Admin only)
+     * Corresponds to frontend PUT http://localhost:8080/api/expertise/{id}
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -70,11 +70,11 @@ public class ExpertiseController {
         try {
             ExpertiseCategory updated = expertiseService.updateExpertise(id, category);
             return ResponseEntity.ok(Map.of(
-                    "message", "专业信息修改成功",
+                    "message", "Expertise information updated successfully",
                     "data", updated
             ));
         } catch (Exception e) {
-            // 这里的报错会被我们前端的 showToast 完美捕捉！
+            // The error here will be perfectly caught by our frontend's showToast!
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }

@@ -50,17 +50,17 @@ public class UserService {
     @Transactional
     public User register(String username, String rawPassword, String email, UserRole role, String verifyCode) {
         if (isBlank(username) || isBlank(rawPassword) || isBlank(email)) {
-            throw new IllegalArgumentException("用户名、密码、邮箱不能为空");
+            throw new IllegalArgumentException("Username, password, and email cannot be empty");
         }
         String normalizedUsername = username.trim();
         String normalizedEmail = email.trim().toLowerCase();
         validateRegistrationFormat(normalizedUsername, rawPassword, normalizedEmail);
 
         if (userRepository.existsByUsername(normalizedUsername)) {
-            throw new IllegalArgumentException("用户名已存在");
+            throw new IllegalArgumentException("Username already exists");
         }
         if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new IllegalArgumentException("邮箱已被注册");
+            throw new IllegalArgumentException("Email is already registered");
         }
         validateVerifyCode(normalizedEmail, verifyCode);
 
@@ -75,46 +75,46 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    //旧login逻辑，现已遗弃，使用Spring Security 无状态认证
-    /* 1. 拦截接管：登录请求已交由 Controller 层的 AuthenticationManager.authenticate() 接管。
-     * 2. 自动查档：底层会自动调用我们自定义的 CustomUserDetailsService 去数据库查询用户信息（含 BCrypt 密文）。
-     * 3. 自动比对：底层会自动调用 BCryptPasswordEncoder.matches() 完成明文与密文的安全比对。*/
+    // Legacy login logic, now deprecated, using Spring Security stateless authentication
+    /* 1. Interception: Login requests are handled by AuthenticationManager.authenticate() in the Controller layer.
+     * 2. Automatic Lookup: The underlying system automatically calls our CustomUserDetailsService to query user info (with BCrypt hash).
+     * 3. Automatic Comparison: The underlying system automatically calls BCryptPasswordEncoder.matches() for secure comparison between plaintext and hash. */
 //    public User login(String usernameOrEmail, String rawPassword) {
 //        if (isBlank(usernameOrEmail) || isBlank(rawPassword)) {
-//            throw new IllegalArgumentException("账号和密码不能为空");
+//            throw new IllegalArgumentException("Account and password cannot be empty");
 //        }
 //        String key = usernameOrEmail.trim();
 //        Optional<User> maybeUser = key.contains("@")
 //                ? userRepository.findByEmail(key.toLowerCase())
 //                : userRepository.findByUsername(key);
 //
-//        User user = maybeUser.orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+//        User user = maybeUser.orElseThrow(() -> new IllegalArgumentException("User not found"));
 //        if (!user.getPassword().equals(encodePassword(rawPassword))) {
-//            throw new IllegalArgumentException("密码错误");
+//            throw new IllegalArgumentException("Incorrect password");
 //        }
 //        return user;
 //    }
 
     public User getByUsername(String username) {
         if (isBlank(username)) {
-            throw new IllegalArgumentException("用户名不能为空");
+            throw new IllegalArgumentException("Username cannot be empty");
         }
         return userRepository.findByUsername(username.trim())
-                .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
     public User getByEmail(String email) {
         if (isBlank(email)) {
-            throw new IllegalArgumentException("邮箱不能为空");
+            throw new IllegalArgumentException("Email cannot be empty");
         }
         return userRepository.findByEmail(email.trim().toLowerCase())
-                .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
 
     public void sendVerifyCode(String email) {
         if (isBlank(email)) {
-            throw new IllegalArgumentException("邮箱不能为空");
+            throw new IllegalArgumentException("Email cannot be empty");
         }
         String normalizedEmail = email.trim().toLowerCase();
         validateEmailFormat(normalizedEmail);
@@ -130,28 +130,28 @@ public class UserService {
             mailSender.send(message);
         } catch (MailException e) {
             verifyCodeStore.remove(normalizedEmail);
-            throw new IllegalStateException("验证码发送失败，请稍后重试", e);
+            throw new IllegalStateException("Failed to send verification code, please try again later", e);
         }
     }
 
     @Transactional
     public void changePassword(String currentUsername, String oldPassword, String newPassword) {
-        // 1. 基础校验
+        // 1. Basic validation
         if (isBlank(currentUsername) || isBlank(oldPassword) || isBlank(newPassword)) {
-            throw new IllegalArgumentException("参数不能为空");
+            throw new IllegalArgumentException("Parameters cannot be empty");
         }
         validatePasswordFormat(newPassword);
 
-        // 2. 直接根据系统上下文中获取的用户名查出用户
+        // 2. Query user directly based on the username obtained from the system context
         User user = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new IllegalArgumentException("用户状态异常，请重新登录"));
+                .orElseThrow(() -> new IllegalArgumentException("Abnormal user status, please log in again"));
 
-        // 3. 安全比对旧密码
+        // 3. Securely compare the old password
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new IllegalArgumentException("旧密码错误");
+            throw new IllegalArgumentException("Incorrect old password");
         }
 
-        // 4. 加密并保存新密码
+        // 4. Encrypt and save the new password
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
@@ -159,7 +159,7 @@ public class UserService {
     @Transactional
     public void forgotPassword(String email, String verifyCode, String newPassword) {
         if (isBlank(email) || isBlank(newPassword)) {
-            throw new IllegalArgumentException("邮箱和新密码不能为空");
+            throw new IllegalArgumentException("Email and new password cannot be empty");
         }
         String normalizedEmail = email.trim().toLowerCase();
         validateEmailFormat(normalizedEmail);
@@ -167,7 +167,7 @@ public class UserService {
         validateVerifyCode(normalizedEmail, verifyCode);
 
         User user = userRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
@@ -182,21 +182,21 @@ public class UserService {
 
     private void validateVerifyCode(String email, String code) {
         if (isBlank(code)) {
-            throw new IllegalArgumentException("验证码不能为空");
+            throw new IllegalArgumentException("Verification code cannot be empty");
         }
         VerifyCodeInfo info = verifyCodeStore.get(email.trim().toLowerCase());
         if (info == null) {
-            throw new IllegalArgumentException("请先发送验证码");
+            throw new IllegalArgumentException("Please send a verification code first");
         }
         if (LocalDateTime.now().isAfter(info.expireAt())) {
             verifyCodeStore.remove(email.trim().toLowerCase());
-            throw new IllegalArgumentException("验证码已过期");
+            throw new IllegalArgumentException("Verification code has expired");
         }
         if (!info.code().equals(code.trim())) {
-            throw new IllegalArgumentException("验证码错误");
+            throw new IllegalArgumentException("Incorrect verification code");
         }
     }
-// 旧加密方式SHA-256，现已经遗弃，使用Security中的BCrypt加密
+// Legacy encryption method SHA-256, now deprecated, using BCrypt in Security
 //    private String encodePassword(String rawPassword) {
 //        try {
 //            MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -207,7 +207,7 @@ public class UserService {
 //            }
 //            return sb.toString();
 //        } catch (NoSuchAlgorithmException e) {
-//            throw new IllegalStateException("密码加密失败", e);
+//            throw new IllegalStateException("Password encryption failed", e);
 //        }
 //    }
 
@@ -223,25 +223,25 @@ public class UserService {
 
     private void validateUsernameFormat(String username) {
         if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("用户名不能为空");
+            throw new IllegalArgumentException("Username cannot be empty");
         }
         if (username.length() > 10) {
-            throw new IllegalArgumentException("用户名不能超过10个字符");
+            throw new IllegalArgumentException("Username cannot exceed 10 characters");
         }
         if (!USERNAME_PATTERN.matcher(username).matches()) {
-            throw new IllegalArgumentException("用户名格式不合法：只能包含中英文、数字、下划线");
+            throw new IllegalArgumentException("Invalid username format: only Chinese/English letters, numbers, and underscores are allowed");
         }
     }
 
     private void validatePasswordFormat(String password) {
         if (!PASSWORD_PATTERN.matcher(password).matches()) {
-            throw new IllegalArgumentException("密码格式不合法：需为8-32位，且至少包含字母和数字");
+            throw new IllegalArgumentException("Invalid password format: must be 8-32 characters and contain at least letters and numbers");
         }
     }
 
     private void validateEmailFormat(String email) {
         if (!EMAIL_PATTERN.matcher(email).matches()) {
-            throw new IllegalArgumentException("邮箱格式不合法");
+            throw new IllegalArgumentException("Invalid email format");
         }
     }
 

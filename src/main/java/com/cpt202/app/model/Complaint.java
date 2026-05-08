@@ -32,7 +32,7 @@ public class Complaint {
     @Column(name = "handled_at")
     private LocalDateTime handledAt;
 
-    // 构造函数
+    // Constructor
     public Complaint() {}
 
     public Complaint(Booking booking, User reporter, String reason) {
@@ -41,7 +41,7 @@ public class Complaint {
         this.reason = reason;
     }
 
-    // Getter / Setter
+    // Getters / Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

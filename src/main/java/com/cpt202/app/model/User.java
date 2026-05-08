@@ -23,7 +23,7 @@ public class User {
     private String email;
 
     @Enumerated(EnumType.STRING)
-    // 必须加这个，否则数据库存的是数字 0,1,2，看不懂
+    // Must be added, otherwise the database stores numbers 0, 1, 2, which are unreadable
     @Column(length = 20, nullable = false)
     private UserRole role; // ADMIN, CUSTOMER, SPECIALIST
 
@@ -41,11 +41,11 @@ public class User {
     }
 
     @JsonIgnore
-    //防止密码返回给前端的 JSON 数据包里
-    //如果不加 @JsonIgnore
-    //前端发来一个请求：GET /api/users/1（查询 ID 为 1 的顾客信息）。
-    //Spring Boot 后端查到了这个 User 对象，准备把它打包发给前端
-    //底层的 Jackson 翻译官开始工作了，它会把所有的 Getter 方法都调用一遍，拼成一个 JSON发给前端
+    // Prevent the password from being returned in the JSON payload to the frontend
+    // If @JsonIgnore is not added
+    // The frontend sends a request: GET /api/users/1 (query customer info with ID 1).
+    // The Spring Boot backend finds this User object and prepares to pack and send it to the frontend
+    // The underlying Jackson translator starts working; it will call all Getter methods, assemble a JSON, and send it to the frontend
     public String getPassword() {
         return password;
     }

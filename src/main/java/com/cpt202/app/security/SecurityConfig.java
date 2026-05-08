@@ -32,7 +32,7 @@ public class SecurityConfig {
     }
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        // 让 Spring Security 彻底忽略静态资源，绝不进入任何 Filter（包括 JWT）
+        // Let Spring Security completely ignore static resources, ensuring they never enter any Filter (including JWT)
         return (web) -> web.ignoring().requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico");
     }
 
@@ -40,7 +40,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults()) // 允许跨域请求通过 Security 防火墙
+                .cors(Customizer.withDefaults()) // Allow cross-origin requests to pass through the Security firewall
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/css/**", "/js/**", "/images/**","/*.html", "/").permitAll()
@@ -69,7 +69,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // 直接使用 Spring 自带的最高级加密器
+        return new BCryptPasswordEncoder(); // Use Spring's built-in advanced encoder directly
     }
 
     @Bean

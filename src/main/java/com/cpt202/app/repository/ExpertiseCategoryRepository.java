@@ -9,12 +9,12 @@ import java.util.Optional;
 @Repository
 public interface ExpertiseCategoryRepository extends JpaRepository<ExpertiseCategory, Long> {
 
-    // 根据专业名称查找，且忽略大小写
+    // Find by name, ignoring case
     Optional<ExpertiseCategory> findByNameIgnoreCase(String name);
 
-    // 检查专业名称是否已存在（忽略大小写）
+    // Check if name already exists, ignoring case
     boolean existsByNameIgnoreCase(String name);
 
-    // 根据名称删除专业
+    // Delete expertise by name
     void deleteByName(String name);
 }

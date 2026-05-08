@@ -31,7 +31,7 @@ public class SpecialistProfile {
     private SpecialistStatus status;
 
 
-    @Column(columnDefinition = "TEXT") // 指定为 TEXT 类型，匹配数据库
+    @Column(columnDefinition = "TEXT") // Specified as TEXT type to match the database
     private String resume;
 
 
