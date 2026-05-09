@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional // Ensures that multi-step database operations during the approval process either all succeed or all roll back
+@Transactional
 public class AdminService {
 
     private final SpecialistProfileRepository profileRepository;
@@ -25,9 +25,8 @@ public class AdminService {
         this.expertiseRepository = expertiseRepository;
     }
 
-    // ==========================================
-    // Module 1: Approval of First-time Specialist Applications
-    // ==========================================
+
+    //Approval of First-time Specialist Applications
 
     public void approveNewSpecialist(Long profileId) {
         SpecialistProfile profile = profileRepository.findById(profileId)
@@ -80,9 +79,8 @@ public class AdminService {
     }
 
 
-    // ==========================================
-    // Module 2: Approval of Existing Specialist Profile Edits
-    // ==========================================
+
+    // Approval of Existing Specialist Profile Edits
 
     public void approveEditRequest(Long requestId) {
         SpecialistProfileEditRequest editReq = editRequestRepository.findById(requestId)

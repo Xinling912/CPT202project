@@ -26,9 +26,6 @@ public class Booking {
     @JoinColumn(name = "specialist_id", referencedColumnName = "id", nullable = false)
     private SpecialistProfile specialist;
 
-    // Which time slot was booked?
-    // Core concurrency prevention design: Use @OneToOne with unique = true
-    // The database guarantees at the physical level: The same TimeSlot can absolutely not appear in two bookings!
     @OneToOne
     @JoinColumn(name = "time_slot_id", referencedColumnName = "id", nullable = false, unique = true)
     private TimeSlot timeSlot;
@@ -46,11 +43,11 @@ public class Booking {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt; // Booking creation time
 
-    // TODO: Please generate Getters and Setters
+
     public Long getId() {
         return id;
     }
-    // id setter is only used for testing
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -74,15 +71,11 @@ public class Booking {
     public TimeSlot getTimeSlot() {
         return timeSlot;
     }
-    // Normally, manual modification or passing in the booking time is not allowed
+
     public void setTimeSlot(TimeSlot timeSlot) {
         this.timeSlot = timeSlot;
     }
-    // The role of PrePersist is to listen to the lifecycle of this object.
-    // When Hibernate prepares to save this object to the database, it will automatically trigger this method marked with @PrePersist.
-    // There is no need (and you shouldn't) to manually write booking.setCreatedAt(LocalDateTime.now())
-    // When calling bookingRepository.save(booking), the framework will automatically execute the onCreate() method for you a millisecond before generating the SQL
-    // And "quietly" inject the current precise time into the createdAt property
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

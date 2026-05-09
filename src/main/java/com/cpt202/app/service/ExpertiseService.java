@@ -22,16 +22,12 @@ public class ExpertiseService {
         this.profileRepository = profileRepository;
     }
 
-    /**
-     * Get all expertise categories
-     */
+    /**Get all expertise categories*/
     public List<ExpertiseCategory> getAllExpertise() {
         return expertiseRepository.findAll();
     }
 
-    /**
-     * Add a new expertise (duplicates not allowed)
-     */
+    /**Add a new expertise (duplicates not allowed) */
     public ExpertiseCategory addExpertise(ExpertiseCategory category) {
         if (category == null || category.getName() == null || category.getName().isBlank()) {
             throw new RuntimeException("Expertise name cannot be empty");
@@ -49,9 +45,7 @@ public class ExpertiseService {
         return expertiseRepository.save(newCategory);
     }
 
-    /**
-     * Delete expertise (only when not in use by any specialist)
-     */
+    /**Delete expertise (only when not in use by any specialist)*/
     public void deleteExpertise(Long id) {
         ExpertiseCategory category = expertiseRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Expertise does not exist"));

@@ -46,10 +46,7 @@ public class TimeSlotController {
     @Autowired
     private UserService userService;
 
-    /**
-     * [Requirement 1: User Perspective]
-     * 1. Get a list of dates with available time slots for the specialist in the next two weeks (used to highlight the calendar)
-     */
+    /**Get a list of dates with available time slots for the specialist in the next two weeks (used to highlight the calendar*/
     @GetMapping("/specialist/{specialistId}/available-dates")
     public Map<String, Object> getAvailableDates(@PathVariable Long specialistId) {
         Map<String, Object> response = new HashMap<>();
@@ -58,10 +55,7 @@ public class TimeSlotController {
         return response;
     }
 
-    /**
-     * [Requirement 1: User Perspective]
-     * 2. When a user clicks on a specific day, get all available time slots for that specialist on that day (used to display specific selectable times)
-     */
+    /**get all available time slots for that specialist on that day*/
     @GetMapping("/specialist/{specialistId}/available-times")
     public Map<String, Object> getAvailableTimeSlots(
             @PathVariable Long specialistId,
@@ -73,10 +67,7 @@ public class TimeSlotController {
         return response;
     }
 
-    /**
-     * [Requirement 2: Specialist Perspective]
-     * 3. Specialist views the schedule for a specified week (or current week by default) (including available time slots and detailed information of existing bookings)
-     */
+    /**get the schedule for a specified week of the specialist including available time slots and detailed information of existing bookings*/
     @GetMapping("/my-schedule")
     public Map<String, Object> getMySchedule(
             Authentication authentication,
@@ -140,10 +131,7 @@ public class TimeSlotController {
         return response;
     }
 
-    /**
-     * [Specialist Dashboard]
-     * 4. Get global data statistics of specialist schedules and bookings (can be used for frontend dashboard display)
-     */
+    /**Get global data statistics of specialist schedules and bookings*/
     @GetMapping("/my-schedule-summary")
     public Map<String, Object> getMyScheduleSummary(
             Authentication authentication,
@@ -186,11 +174,7 @@ public class TimeSlotController {
 
         return response;
     }
-    /**
-     * [Requirement 3: Specialist Perspective]
-     * 5. Specialist publishes/adds schedules (supports batch and single addition)
-     * Endpoint path: POST /api/timeslots/publish
-     */
+    /**Specialist publishes/adds schedules (supports batch and single addition)*/
     @PostMapping("/publish")
     @PreAuthorize("hasRole('SPECIALIST')")
     public ResponseEntity<?> publishSchedule(@RequestBody TimeSlotBatchRequest request, Authentication auth) {
@@ -204,11 +188,7 @@ public class TimeSlotController {
         }
     }
 
-    /**
-     * [Requirement 3: Specialist Perspective]
-     * 6. Specialist deletes unbooked time slots
-     * Endpoint path: DELETE /api/timeslots/{slotId}
-     */
+    /**Specialist deletes unbooked time slots*/
     @DeleteMapping("/{slotId}")
     @PreAuthorize("hasRole('SPECIALIST')")
     public ResponseEntity<?> deleteTimeSlot(@PathVariable Long slotId, Authentication auth) {
@@ -221,9 +201,7 @@ public class TimeSlotController {
             return ResponseEntity.internalServerError().body(Map.of("error", "A server error occurred, please try again later"));
         }
     }
-    /**
-     * Internal core security method: Extract identity from JWT, verify specialist role, and find the real Profile ID
-     */
+    /**Extract identity from JWT, verify specialist role, and find the real Profile ID*/
     private Long getAuthenticatedSpecialistId(Authentication authentication) {
         String currentUsername = authentication.getName();
         User currentUser = userService.getByUsername(currentUsername);

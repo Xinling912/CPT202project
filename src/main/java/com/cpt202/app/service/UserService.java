@@ -75,10 +75,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    // Legacy login logic, now deprecated, using Spring Security stateless authentication
-    /* 1. Interception: Login requests are handled by AuthenticationManager.authenticate() in the Controller layer.
-     * 2. Automatic Lookup: The underlying system automatically calls our CustomUserDetailsService to query user info (with BCrypt hash).
-     * 3. Automatic Comparison: The underlying system automatically calls BCryptPasswordEncoder.matches() for secure comparison between plaintext and hash. */
+    /**Legacy login logic, now deprecated, using Spring Security stateless authentication */
 //    public User login(String usernameOrEmail, String rawPassword) {
 //        if (isBlank(usernameOrEmail) || isBlank(rawPassword)) {
 //            throw new IllegalArgumentException("Account and password cannot be empty");
@@ -196,7 +193,8 @@ public class UserService {
             throw new IllegalArgumentException("Incorrect verification code");
         }
     }
-// Legacy encryption method SHA-256, now deprecated, using BCrypt in Security
+
+    /** Legacy encryption method SHA-256, now deprecated, using BCrypt in Security*/
 //    private String encodePassword(String rawPassword) {
 //        try {
 //            MessageDigest digest = MessageDigest.getInstance("SHA-256");

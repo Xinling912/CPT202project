@@ -2,14 +2,14 @@
 SAS (Specialist Administration System) Test Accounts
 Unified Test Password: Yasuo123..
 
-👑 【Category 1: Admins】
+【Category 1: Admins】
 (Permissions: Approve specialist applications, approve profile edits, handle reports, ban accounts, manage expertise categories)
 
 Username: God
 Email: admin@qq.com
 Role: ADMIN
 
-🎓 【Category 2: Specialists】
+【Category 2: Specialists】
 (Permissions: Publish schedules, edit professional resumes, accept orders, manage bookings)
 
 1. Username: Wanfeng

@@ -27,18 +27,14 @@ public class ComplaintController {
         this.userService = userService;
     }
 
-    /**
-     * Get the ID of the currently logged-in user
-     */
+    /**Get the ID of the currently logged-in user*/
     private Long getCurrentUserId(Authentication authentication) {
         String currentUsername = authentication.getName();
         User currentUser = userService.getByUsername(currentUsername);
         return currentUser.getId();
     }
 
-    /**
-     * User reports a booking
-     */
+    /**User reports a booking*/
     @PostMapping("/report")
     public ResponseEntity<?> reportBooking(
             Authentication authentication,
@@ -57,9 +53,7 @@ public class ComplaintController {
         }
     }
 
-    /**
-     * User: Get own complaint records (paginated)
-     */
+    /**User: Get own complaint records (paginated)*/
     @GetMapping("/my")
     public ResponseEntity<?> getMyComplaints(Authentication authentication) {
         try {
@@ -71,9 +65,7 @@ public class ComplaintController {
         }
     }
 
-    /**
-     * Admin: Get all pending complaints
-     */
+    /**Admin: Get all pending complaints*/
     @GetMapping("/pending")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getPendingComplaints() {
@@ -81,9 +73,7 @@ public class ComplaintController {
         return ResponseEntity.ok(Map.of("data", complaints));
     }
 
-    /**
-     * Admin: Get all complaints
-     */
+    /**Admin: Get all complaints*/
     @GetMapping("/all")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getAllComplaints() {
@@ -91,9 +81,7 @@ public class ComplaintController {
         return ResponseEntity.ok(Map.of("data", complaints));
     }
 
-    /**
-     * Admin: Dismiss complaint
-     */
+    /**Admin: Dismiss complaint*/
     @PostMapping("/{complaintId}/dismiss")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> dismissComplaint(@PathVariable Long complaintId) {
@@ -105,9 +93,7 @@ public class ComplaintController {
         }
     }
 
-    /**
-     * Admin: Ban specialist (via complaint)
-     */
+    /**Admin: Ban specialist (via complaint)*/
     @PostMapping("/{complaintId}/ban")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> banSpecialist(@PathVariable Long complaintId) {

@@ -43,7 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getServletPath();
-        // Interfaces such as login and registration are allowed directly, as well as forgot-password
+        // Define the Interfaces which are allowed directly
         if (path.contains("/login") || path.contains("/register") || path.contains("/verify-code") || path.contains("/forgot-password")) { // 👈 forgot-password added here
             filterChain.doFilter(request, response);
             return;
@@ -68,12 +68,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         System.out.println("DEBUG: User [" + username + "] logged in, authorities: " + authentication.getAuthorities());
                     }
                 } else {
-                    // If validateJwtToken returns false, it means the Token signature is wrong or the format is incorrect
+                    // Token signature is wrong or the format is incorrect
                     sendErrorResponse(response, "Invalid Token (Invalid Signature or Format)");
                     return;
                 }
             } else if (headerAuth == null) {
-                // If you want to report an error when there is no Token, you can uncomment the line below
                 sendErrorResponse(response, "Missing Authorization Header (Missing Token)");
                 return;
             }
@@ -90,9 +89,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-    /**
-     * 💥 New auxiliary method: directly output JSON error messages to the frontend
-     */
+    /**directly output JSON error messages to the frontend*/
     private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
         response.setContentType("application/json;charset=UTF-8");

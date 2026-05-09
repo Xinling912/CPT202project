@@ -56,8 +56,8 @@ public class SpecialistController {
     }
 
     /**
-     * Specialist hall list interface (supports search + filter + pagination)
-     * Features:
+     * Specialist hall list interface supports search + filter + pagination
+     * Functions:
      * 1) keyword: Fuzzy search by specialist username (e.g., lisa -> specialists whose name contains lisa)
      * 2) expertiseId: Filter by expertise
      * 3) level: Filter by level (JUNIOR/SENIOR/EXPERT)
@@ -117,7 +117,6 @@ public class SpecialistController {
         }
 
         Page<SpecialistProfile> specialistPage = specialistRepository.findAll(spec, pageable);
-        // Assemble return data...
         response.put("content", specialistPage.getContent());
         response.put("totalElements", specialistPage.getTotalElements());
         response.put("totalPages", specialistPage.getTotalPages());
@@ -127,10 +126,7 @@ public class SpecialistController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get details of a single specialist
-     * Feature: When the frontend clicks on a specialist card, it fetches the complete profile of the specialist upon entering the detail page.
-     */
+    /**Get details of a single specialist*/
     @GetMapping("/{id}")
     public SpecialistProfile getSpecialistDetail(@PathVariable("id") Long id) {
         return specialistRepository.findById(id)
@@ -139,10 +135,7 @@ public class SpecialistController {
                 ));
     }
 
-    /**
-     * Get filter options dictionary
-     * Feature: Provide "expertise list + level list" for the frontend filter dropdowns.
-     */
+    /** Get filter options dictionary Provide "expertise list + level list" for the frontend filter dropdowns.*/
     @GetMapping("/filters")
     public Map<String, Object> getFilterOptions() {
         Map<String, Object> response = new HashMap<>();
@@ -181,9 +174,7 @@ public class SpecialistController {
         }
     }
 
-    /**
-     * Get total accumulated earnings of a specialist
-     */
+    /**Get total accumulated earnings of a specialist*/
     @GetMapping("/earnings")
     public ResponseEntity<Map<String, Object>> getTotalEarnings(Authentication auth) {
         try {
@@ -210,9 +201,7 @@ public class SpecialistController {
         }
     }
 
-    /**
-     * Get personal information of the currently logged-in specialist (used for the "My Profile" page on the specialist side)
-     */
+    /**Get personal information of the currently logged-in specialist (used for the "My Profile" page on the specialist side)*/
     @GetMapping("/profile")
     public ResponseEntity<?> getMyProfile(Authentication authentication) {
         try {

@@ -15,24 +15,24 @@ public class TimeSlot {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Whose schedule? Associated with the specialist profile
-    @JsonIgnoreProperties({"user", "expertise", "level"}) // Recommended to add, prevents returned data from being too bloated
+
+    @JsonIgnoreProperties({"user", "expertise", "level"})
     @ManyToOne
     @JoinColumn(name = "specialist_id", referencedColumnName = "id", nullable = false)
     private SpecialistProfile specialist;
 
     @Column(name = "slot_date", nullable = false)
-    private LocalDate slotDate; // Date: e.g., 2026-03-30
+    private LocalDate slotDate;
 
     @Column(name = "start_time", nullable = false)
-    private LocalTime startTime; // Start time: e.g., 14:00
+    private LocalTime startTime;
 
     @Column(name = "end_time", nullable = false)
-    private LocalTime endTime; // End time: e.g., 15:00
+    private LocalTime endTime;
 
-    @Enumerated(EnumType.STRING) // Required: so the database stores the "BOOKED" string instead of the number 1
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private TimeSlotStatus status = TimeSlotStatus.AVAILABLE; // Default value changed to enum constant
+    private TimeSlotStatus status = TimeSlotStatus.AVAILABLE;
 
 
 

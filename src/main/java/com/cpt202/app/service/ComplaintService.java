@@ -54,31 +54,23 @@ public class ComplaintService {
         return complaintRepository.save(complaint);
     }
 
-    /**
-     * Get all complaint records for a specific user (customer)
-     */
+    /**Get all complaint records for a specific user (customer)*/
     public List<Complaint> getComplaintsByReporterId(Long reporterId) {
         return complaintRepository.findByReporterId(reporterId);
     }
 
 
-    /**
-     * Get all pending complaints (admin)
-     */
+    /**Get all pending complaints (admin)*/
     public List<Complaint> getPendingComplaints() {
         return complaintRepository.findByStatus(ComplaintStatus.PENDING);
     }
 
-    /**
-     * Get all complaints (for admin use)
-     */
+    /**Get all complaints (for admin use)*/
     public List<Complaint> getAllComplaints() {
         return complaintRepository.findAll();
     }
 
-    /**
-     * Handle complaint: Dismiss (no ban)
-     */
+    /**Handle complaint: Dismiss*/
     public void dismissComplaint(Long complaintId) {
         Complaint complaint = complaintRepository.findById(complaintId)
                 .orElseThrow(() -> new RuntimeException("Complaint record does not exist"));
@@ -86,9 +78,7 @@ public class ComplaintService {
         complaintRepository.save(complaint);
     }
 
-    /**
-     * Handle complaint: Ban the specialist
-     */
+    /**Handle complaint: Ban the specialist*/
     public void banSpecialistByComplaint(Long complaintId) {
         Complaint complaint = complaintRepository.findById(complaintId)
                 .orElseThrow(() -> new RuntimeException("Complaint record does not exist"));

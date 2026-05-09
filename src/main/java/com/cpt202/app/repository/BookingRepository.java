@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-// JpaRepository<Booking, Long>: The first parameter is the entity class name, the second parameter is the data type of the primary key
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     // Query whether the customer has had a booking with a specific status in this time slot (used to check for CANCELLED to intercept spamming)

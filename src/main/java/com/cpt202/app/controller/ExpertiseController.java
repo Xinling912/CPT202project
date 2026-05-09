@@ -20,18 +20,14 @@ public class ExpertiseController {
         this.expertiseService = expertiseService;
     }
 
-    /**
-     * Get all expertise list (accessible to everyone)
-     */
+    /**Get all expertise list (accessible to everyone)*/
     @GetMapping("/list")
     public ResponseEntity<?> listAllExpertise() {
         List<ExpertiseCategory> categories = expertiseService.getAllExpertise();
         return ResponseEntity.ok(Map.of("data", categories));
     }
 
-    /**
-     * Add expertise (Admin only)
-     */
+    /**Add expertise (Admin only)*/
     @PostMapping("/add")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> addExpertise(@RequestBody ExpertiseCategory category) {
@@ -46,9 +42,7 @@ public class ExpertiseController {
         }
     }
 
-    /**
-     * Delete expertise (Admin only)
-     */
+    /**Delete expertise (Admin only)*/
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteExpertise(@PathVariable Long id) {
@@ -60,10 +54,7 @@ public class ExpertiseController {
         }
     }
 
-    /**
-     * Update expertise (Admin only)
-     * Corresponds to frontend PUT http://localhost:8080/api/expertise/{id}
-     */
+    /**Update expertise (Admin only)*/
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateExpertise(@PathVariable Long id, @RequestBody ExpertiseCategory category) {
@@ -74,7 +65,6 @@ public class ExpertiseController {
                     "data", updated
             ));
         } catch (Exception e) {
-            // The error here will be perfectly caught by our frontend's showToast!
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }

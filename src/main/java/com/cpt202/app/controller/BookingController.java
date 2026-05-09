@@ -30,9 +30,7 @@ public class BookingController {
 
     }
 
-    /**
-     * [Place Order: Core Booking Logic]
-     */
+    /**Place Order: Core Booking Logic*/
     @PostMapping("/create")
     public ResponseEntity<?> createBooking(@RequestBody BookingRequest request, Principal principal) {
         try {
@@ -58,9 +56,7 @@ public class BookingController {
         }
     }
 
-    /**
-     * [Cancel Order] Both users and specialists can operate
-     */
+    /**Cancel Order Both users and specialists can operate*/
     @PostMapping("/cancel/{orderId}")
     public ResponseEntity<?> cancelOrder(@PathVariable Long orderId, @RequestParam String reason, Principal principal) {
         try {
@@ -76,9 +72,7 @@ public class BookingController {
         }
     }
 
-    /**
-     * [Specialist Confirm Order]
-     */
+    /**Specialist Confirm Order*/
     @PostMapping("/confirm/{orderId}")
     public ResponseEntity<?> confirmOrder(@PathVariable Long orderId, Principal principal) {
         try {
@@ -89,9 +83,7 @@ public class BookingController {
         }
     }
 
-    /**
-     * [Complete Order]
-     */
+    /**Complete Order*/
     @PostMapping("/complete/{orderId}")
     public ResponseEntity<?> completeOrder(@PathVariable Long orderId, Principal principal) {
         try {
@@ -102,10 +94,7 @@ public class BookingController {
         }
     }
 
-    /**
-     * [Query: My booking history (Customer perspective)]
-
-     */
+    /**Query: My booking history (Customer perspective)*/
     @GetMapping("/myOrders")
     public ResponseEntity<?> getMyOrders(Principal principal) {
         try {
@@ -117,10 +106,7 @@ public class BookingController {
         }
     }
 
-    /**
-     * [Query: Bookings received by specialist (Specialist perspective)]
-
-     */
+    /**Bookings received by specialist (Specialist perspective)*/
     @GetMapping("/specialist/my-bookings")
     public ResponseEntity<?> getSpecialistOrders(Principal principal) {
         try {
@@ -142,9 +128,7 @@ public class BookingController {
         return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
     }
 
-    /**
-     * DTO for frontend request
-     */
+
     public record BookingRequest(
             Long specialistId,
             Long slotId,

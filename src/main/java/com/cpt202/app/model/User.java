@@ -42,10 +42,6 @@ public class User {
 
     @JsonIgnore
     // Prevent the password from being returned in the JSON payload to the frontend
-    // If @JsonIgnore is not added
-    // The frontend sends a request: GET /api/users/1 (query customer info with ID 1).
-    // The Spring Boot backend finds this User object and prepares to pack and send it to the frontend
-    // The underlying Jackson translator starts working; it will call all Getter methods, assemble a JSON, and send it to the frontend
     public String getPassword() {
         return password;
     }

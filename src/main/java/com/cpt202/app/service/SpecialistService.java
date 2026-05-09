@@ -45,7 +45,7 @@ public class SpecialistService {
 
         // Logic branching:
         if (existingProfile.isEmpty() || existingProfile.get().getStatus() != SpecialistStatus.ACTIVE) {
-            // [Scenario A] New specialist application (or re-submission after failed review): Direct operation on the main table SpecialistProfile
+            // Scenario A:New specialist application (or re-submission after failed review): Direct operation on the main table SpecialistProfile
 
             // If a profile already exists, check if re-application is allowed
             if (existingProfile.isPresent()) {
@@ -78,7 +78,7 @@ public class SpecialistService {
             profileRepository.save(profile);
 
         } else {
-            // [Scenario B] Existing specialist modifying profile: Operation on the shadow table EditRequest
+            // Scenario B: Existing specialist modifying profile: Operation on the shadow table EditRequest
 
             // Check if there is already a pending modification request
             SpecialistProfile activeProfile = existingProfile.get();
@@ -145,12 +145,8 @@ public class SpecialistService {
 
         }
     }
-    // ========== Get Specialist Cumulative Total Earnings ==========
-    /**
-     * Get specialist cumulative total earnings (sum of all completed booking amounts)
-     * @param username The username of the specialist account
-     * @return Cumulative total earnings, rounded to two decimal places
-     */
+
+    /**Get specialist cumulative total earnings (sum of all completed booking amounts)*/
     public BigDecimal getTotalEarnings(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User does not exist"));
@@ -174,7 +170,7 @@ public class SpecialistService {
     public ApplicationStatus getCurrentApplicationStatus(User user) {
         Optional<SpecialistProfile> profileOpt = specialistProfileRepository.findByUser(user);
 
-        // ========== 1. General User (or application stage) ==========
+        // 1. General User (or application stage)
         if (profileOpt.isPresent()) {
             SpecialistProfile profile = profileOpt.get();
             SpecialistStatus status = profile.getStatus();
@@ -191,7 +187,7 @@ public class SpecialistService {
             }
         }
 
-        // ========== 2. Never applied ==========
+        // 2. Never applied
         return ApplicationStatus.NONE;
     }
 

@@ -42,9 +42,7 @@ public class TimeSlotService {
     @Autowired
     private SpecialistProfileRepository specialistRepository;
 
-    /**
-     * Get available dates for a specialist within the next two weeks
-     */
+    /**Get available dates for a specialist within the next two weeks*/
     public List<LocalDate> getAvailableDatesForSpecialist(Long specialistId) {
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusWeeks(2);
@@ -60,9 +58,7 @@ public class TimeSlotService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get available time slots for a specialist on a specific date
-     */
+    /**Get available time slots for a specialist on a specific date*/
     public List<TimeSlot> getAvailableTimeSlotsForDate(Long specialistId, LocalDate date) {
         List<TimeSlot> allSlots = timeSlotRepository.findBySpecialistId(specialistId);
 
@@ -73,9 +69,7 @@ public class TimeSlotService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get all time slots for a specialist within current week and next week
-     */
+    /**Get all time slots for a specialist within current week and next week*/
     public List<TimeSlot> getAllTimeSlotsForSpecialistSchedule(Long specialistId) {
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusWeeks(2);
@@ -92,9 +86,7 @@ public class TimeSlotService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get all dates with time slots for a specialist within current week or target week
-     */
+    /**Get all dates with time slots for a specialist within current week or target week */
     public List<TimeSlot> getSpecialistScheduleByDateRange(Long specialistId, LocalDate startDate, LocalDate endDate) {
         // Call the underlying Repository to query data within these 7 days, sorted by date and time
         return timeSlotRepository.findBySpecialistIdAndSlotDateBetweenOrderBySlotDateAscStartTimeAsc(specialistId, startDate, endDate);
@@ -102,9 +94,7 @@ public class TimeSlotService {
 
 
 
-    /**
-     * Batch publish schedules (selected weekly data from the frontend)
-     */
+    /**Batch publish schedules (selected weekly data from the frontend)*/
     public void batchCreateSlots(String username, TimeSlotBatchRequest request) {
         SpecialistProfile profile = specialistRepository.findByUserUsername(username)
                 .orElseThrow(() -> new RuntimeException("Specialist profile does not exist"));
@@ -138,9 +128,7 @@ public class TimeSlotService {
         timeSlotRepository.saveAll(slotsToSave);
     }
 
-    /**
-     * Specialist management: Delete a time slot that hasn't been booked
-     */
+    /**Specialist management: Delete a time slot that hasn't been booked*/
     public void deleteTimeSlot(String username, Long slotId) {
         TimeSlot slot = timeSlotRepository.findById(slotId)
                 .orElseThrow(() -> new RuntimeException("Time slot does not exist"));

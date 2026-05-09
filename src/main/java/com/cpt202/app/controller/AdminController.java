@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/admin")
 @CrossOrigin
-@PreAuthorize("hasRole('ADMIN')") // 💡 Strict security: Only administrators can access these endpoints
+@PreAuthorize("hasRole('ADMIN')") // Only administrators can access
 public class AdminController {
 
     @Autowired
@@ -30,13 +30,10 @@ public class AdminController {
     private SpecialistProfileEditRequestRepository editRequestRepository;
 
 
-    // ==========================================
-    // 1. List rendering endpoints (for presenting tables on the Admin Dashboard)
-    // ==========================================
 
-    /**
-     * Get all [Pending New Specialist Applications]
-     */
+    // 1. List rendering endpoints (for presenting tables on the Admin Dashboard)
+
+    /**Get all Pending New Specialist Applications*/
     @GetMapping("/applications/pending")
     public ResponseEntity<?> getPendingApplications() {
         // Query the main table for records with PENDING status
@@ -44,9 +41,7 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("data", pendingProfiles));
     }
 
-    /**
-     * Get all [Pending Edit Requests from Existing Specialists]
-     */
+    /**Get all Pending Edit Requests from Existing Specialists*/
     @GetMapping("/edits/pending")
     public ResponseEntity<?> getPendingEdits() {
         // Query the shadow table for records with PENDING status
@@ -55,13 +50,10 @@ public class AdminController {
     }
 
 
-    // ==========================================
-    // 2. Approval operation endpoints (Approve / Reject)
-    // ==========================================
 
-    /**
-     * Approve [New Specialist Onboarding Application]
-     */
+    // 2. Approval operation (Approve / Reject)
+
+    /** Approve New Specialist Onboarding Application*/
     @PostMapping("/applications/{profileId}/approve")
     public ResponseEntity<?> approveApplication(@PathVariable Long profileId) {
         try {
@@ -72,9 +64,7 @@ public class AdminController {
         }
     }
 
-    /**
-     * Reject [New Specialist Onboarding Application]
-     */
+    /**Reject New Specialist Onboarding Application*/
     @PostMapping("/applications/{profileId}/reject")
     public ResponseEntity<?> rejectApplication(@PathVariable Long profileId) {
         try {
@@ -85,9 +75,7 @@ public class AdminController {
         }
     }
 
-    /**
-     * Approve [Existing Specialist Profile Edit]
-     */
+    /**Approve Existing Specialist Profile Edit*/
     @PostMapping("/edits/{requestId}/approve")
     public ResponseEntity<?> approveEditRequest(@PathVariable Long requestId) {
         try {
@@ -98,9 +86,7 @@ public class AdminController {
         }
     }
 
-    /**
-     * Reject [Existing Specialist Profile Edit]
-     */
+    /**Reject Existing Specialist Profile Edit*/
     @PostMapping("/edits/{requestId}/reject")
     public ResponseEntity<?> rejectEditRequest(@PathVariable Long requestId) {
         try {
@@ -110,14 +96,12 @@ public class AdminController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-    // ==========================================
-    // 3. Specialist account management endpoints (Suspend / Activate)
-    // ==========================================
 
-    /**
-     * Get all [Approved Specialists] (including ACTIVE and INACTIVE), used for display on the adjustment page
-     * Supports: Search (Username/Real Name/Expertise Name) + Expertise Filter + Level Filter
-     */
+    // 3. Specialist account management endpoints (Suspend / Activate)
+
+
+    /**Get all Approved Specialists (including ACTIVE and INACTIVE), used for display on the adjustment page
+     * Supports: Search (Username/Real Name/Expertise Name) + Expertise Filter + Level Filter*/
     @GetMapping("/specialists")
     public ResponseEntity<?> getAllExistingSpecialists(
             @RequestParam(required = false) String keyword,
@@ -164,9 +148,7 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("data", existingProfiles));
     }
 
-    /**
-     * Suspend specialist -> Status changed to INACTIVE
-     */
+    /**Suspend specialist -> Status changed to INACTIVE*/
     @PostMapping("/specialists/{id}/suspend")
     public ResponseEntity<?> suspendSpecialist(@PathVariable Long id) {
         try {
@@ -182,9 +164,7 @@ public class AdminController {
         }
     }
 
-    /**
-     * Activate specialist -> Status changed to ACTIVE
-     */
+    /**Activate specialist -> Status changed to ACTIVE*/
     @PostMapping("/specialists/{id}/activate")
     public ResponseEntity<?> activateSpecialist(@PathVariable Long id) {
         try {

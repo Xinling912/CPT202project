@@ -10,7 +10,7 @@ public class SpecialistProfileEditRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String newRealName; // Requested new real name
+    private String newRealName;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "level", nullable = false)
@@ -18,7 +18,7 @@ public class SpecialistProfileEditRequest {
 
     @ManyToOne
     @JoinColumn(name = "profile_id", nullable = false)
-    private SpecialistProfile specialistProfile; // Associated original profile
+    private SpecialistProfile specialistProfile;
 
     private BigDecimal newHourlyFee;
     private String newResume;
