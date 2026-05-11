@@ -1,5 +1,6 @@
 package com.cpt202.app.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,19 +13,19 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 谁买的？关联顾客 (User)
+    // Who bought it? Associated customer (User)
+    // Optimization: In the booking, we only need the customer's id and username, ignoring unimportant information like registration time, role, etc.
+    @JsonIgnoreProperties({"createdAt", "role", "password", "email"})
     @ManyToOne
     @JoinColumn(name = "customer_id", referencedColumnName = "id", nullable = false)
     private User customer;
 
-    // 买了哪个专家？关联专家名片 (保留这个冗余字段，以后查订单速度起飞)
+    // Which specialist was booked? Associated specialist profile
+    @JsonIgnoreProperties({"expertise", "hourlyFee"})
     @ManyToOne
     @JoinColumn(name = "specialist_id", referencedColumnName = "id", nullable = false)
     private SpecialistProfile specialist;
 
-    // 买了哪个时间段？
-    // 🚀 核心防并发设计：用 @OneToOne 加上 unique = true
-    // 数据库在物理层面保证：同一个 TimeSlot 绝对不可能出现在两个订单里！
     @OneToOne
     @JoinColumn(name = "time_slot_id", referencedColumnName = "id", nullable = false, unique = true)
     private TimeSlot timeSlot;
@@ -37,16 +38,16 @@ public class Booking {
     private BigDecimal totalAmount;
 
     @Column(columnDefinition = "TEXT")
-    private String notes; // 顾客的留言/诉求
+    private String notes; // Customer's notes/requests
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt; // 下单时间
+    private LocalDateTime createdAt; // Booking creation time
 
-    // TODO: 请生成 Getter 和 Setter
+
     public Long getId() {
         return id;
     }
-    //id set仅用于测试
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -70,15 +71,11 @@ public class Booking {
     public TimeSlot getTimeSlot() {
         return timeSlot;
     }
-    //正常情况不会允许手动改动或传入下单时间
+
     public void setTimeSlot(TimeSlot timeSlot) {
         this.timeSlot = timeSlot;
     }
-    //PrePersist作用是监听这个对象的一生。
-    //当 Hibernate 准备把这个对象存入数据库时，会自动触发这个被 @PrePersist 标记的方法。
-    //不需要（也不应该）手动去写 booking.setCreatedAt(LocalDateTime.now())
-    //当调用 bookingRepository.save(booking)时，框架在生成 SQL 的前一毫秒，自动帮你执行 onCreate() 方法
-    // 把当前的精准时间“悄悄”塞进 createdAt 属性里
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

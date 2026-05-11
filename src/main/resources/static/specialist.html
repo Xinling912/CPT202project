@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Specialist Workspace | SAS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/specialist.css">
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+    <button id="toggle-sidebar" class="btn-toggle-custom" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+    <div class="mb-5 px-2 logo-area">
+        <h4 class="fw-800 text-primary mb-0 logo-text">
+            <i class="bi bi-intersect me-2"></i><span>SAS</span>
+        </h4>
+    </div>
+    <nav class="nav flex-column gap-1">
+        <button class="nav-link" onclick="switchTab('all-bookings', this); loadSpecialistOrders();">
+            <i class="bi bi-list-check"></i><span>All Bookings</span>
+        </button>
+
+        <button class="nav-link active" onclick="switchTab('workbench', this)">
+            <i class="bi bi-cpu"></i><span>Workbench</span>
+        </button>
+        <button class="nav-link" onclick="switchTab('profile', this)">
+            <i class="bi bi-person-vcard"></i><span>Professional Profile</span>
+        </button>
+        <button class="nav-link" onclick="switchTab('earnings', this)">
+            <i class="bi bi-wallet2"></i><span>Earnings</span>
+        </button>
+    </nav>
+</aside>
+
+<main class="main-content">
+    <header class="top-header">
+        <div class="header-left">
+            <h2 class="fw-800 mb-1">Hello, <span id="header-user-name">User</span>!</h2>
+            <p class="text-muted small mb-0">Manage your professional services and performance.</p>
+        </div>
+
+        <div class="user-menu-wrapper">
+            <div class="d-flex align-items-center gap-3 cursor-pointer">
+                <div class="text-end d-none d-sm-block">
+                    <div class="fw-bold mb-0" id="nav-user-name">User</div>
+                    <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1" style="font-size: 0.65rem;">Verified Specialist</span>
+                </div>
+                <img id="header-avatar" src="images/beauty.png" class="rounded-circle shadow-sm" width="48" height="48" style="object-fit: cover; border: 2px solid var(--brand);">
+            </div>
+
+            <div class="custom-dropdown-menu">
+                <a class="dropdown-item" onclick="switchTab('profile')">
+                    <i class="bi bi-person me-3 fs-5"></i>Personal Profile
+                </a>
+                <a class="dropdown-item" onclick="openChangePasswordModal()">
+                    <i class="bi bi-shield-lock me-3 fs-5"></i>Security Settings
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item text-danger" onclick="logout()">
+                    <i class="bi bi-box-arrow-right me-3 fs-5"></i>Logout
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section id="all-bookings" class="tab-content">
+        <div class="stat-card">
+            <h4 class="fw-800 mb-4">My Customers & Orders</h4>
+            <div id="specialist-orders-list"></div>
+        </div>
+    </section>
+
+    <section id="workbench" class="tab-content active-tab">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-800 mb-1">Specialist Weekly Dashboard</h4>
+                    <p class="text-muted small mb-0" id="wb-status">Manage your appointments and availability.</p>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="btn-group p-1 bg-light rounded-pill" id="wb-week-toggle">
+                        <button class="btn btn-sm btn-primary text-white rounded-pill px-4">This Week</button>
+                        <button class="btn btn-sm rounded-pill px-4">Next Week</button>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold ms-2" id="start-manage">Manage Schedule</button>
+                    <button class="btn btn-primary btn-sm rounded-pill px-4 fw-bold d-none" id="save-all">Save Changes</button>
+                    <button class="btn btn-light btn-sm rounded-pill px-4 border d-none" id="cancel-manage">Cancel</button>
+                </div>
+            </div>
+
+            <div class="workbench-calendar border rounded-4 overflow-hidden" id="wb-calendar-root">
+                <div class="calendar-header bg-light d-flex border-bottom text-center fw-800 text-muted small py-3">
+                    <div style="width: 70px;">Time</div>
+                    <div class="flex-grow-1">MON</div><div class="flex-grow-1">TUE</div><div class="flex-grow-1">WED</div>
+                    <div class="flex-grow-1">THU</div><div class="flex-grow-1">FRI</div><div class="flex-grow-1">SAT</div><div class="flex-grow-1">SUN</div>
+                </div>
+                <div class="calendar-body d-flex position-relative">
+                    <div class="time-axis bg-light text-center text-muted small fw-bold" style="width: 70px;" id="wb-time-axis"></div>
+                    <div class="day-columns-container d-flex flex-grow-1 position-relative" id="wb-day-columns">
+                        <div class="day-column" data-day="mon"></div>
+                        <div class="day-column" data-day="tue"></div>
+                        <div class="day-column" data-day="wed"></div>
+                        <div class="day-column" data-day="thu"></div>
+                        <div class="day-column" data-day="fri"></div>
+                        <div class="day-column" data-day="sat"></div>
+                        <div class="day-column" data-day="sun"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="workbench-calendar border rounded-4 overflow-hidden d-none" id="drag-calendar-root">
+                <div class="calendar-header bg-light d-flex border-bottom text-center fw-800 text-muted small py-3">
+                    <div style="width: 70px;">Time</div>
+                    <div class="flex-grow-1">MON</div><div class="flex-grow-1">TUE</div><div class="flex-grow-1">WED</div>
+                    <div class="flex-grow-1">THU</div><div class="flex-grow-1">FRI</div><div class="flex-grow-1">SAT</div><div class="flex-grow-1">SUN</div>
+                </div>
+                <div class="calendar-body d-flex position-relative">
+                    <div class="time-axis bg-light text-center text-muted small fw-bold" style="width: 70px;" id="drag-time-axis"></div>
+                    <div class="day-columns-container d-flex flex-grow-1 position-relative" id="drag-day-columns">
+                        <div class="drag-col" data-day="mon"></div><div class="drag-col" data-day="tue"></div>
+                        <div class="drag-col" data-day="wed"></div><div class="drag-col" data-day="thu"></div>
+                        <div class="drag-col" data-day="fri"></div><div class="drag-col" data-day="sat"></div>
+                        <div class="drag-col" data-day="sun"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="profile" class="tab-content">
+        <div class="bg-white rounded-4 shadow-sm p-5 w-100 mb-5">
+            <h3 class="fw-900 mb-4 pb-3 border-bottom text-dark">Professional Profile</h3>
+            <div id="pending-alert" class="alert alert-warning d-flex align-items-center d-none rounded-3 mb-4 border-warning">
+                <i class="bi bi-hourglass-split fs-4 me-3"></i>
+                <div>
+                    <h6 class="fw-bold mb-1">Update Under Review</h6>
+                    <p class="mb-0 small">Your recent profile update request is currently being reviewed by the administrator.</p>
+                </div>
+            </div>
+
+            <div id="profile-display-mode">
+                <div class="d-flex flex-column flex-md-row align-items-md-center gap-5 mb-5 mt-4">
+                    <div class="text-center">
+                        <img id="display-photo" src="images/beauty.png" class="rounded-circle shadow profile-display-photo" width="160" height="160" alt="Avatar">
+                    </div>
+                    <div>
+                        <h1 class="fw-900 mb-2 text-dark" id="display-name" style="font-size: 2.5rem;">Shaohui Shen</h1>
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-bold mb-3 fs-6">Verified Specialist</span>
+                        <p class="text-muted fs-5 mb-0"><i class="bi bi-tag-fill me-2"></i><span id="display-category">Financial planning</span></p>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <h5 class="fw-bold text-muted mb-3"><i class="bi bi-person-lines-fill me-2"></i>About Me</h5>
+                    <div class="p-4 bg-light rounded-4">
+                        <p id="display-resume" class="text-dark fs-5 mb-0 profile-resume-text">
+                            Hi there.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mb-5 d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="fw-bold text-muted mb-2"><i class="bi bi-cash-coin me-2"></i>Hourly Rate</h5>
+                        <p class="text-primary fw-900 mb-0" style="font-size: 2.5rem;"><span id="display-fee">0.00</span> <span class="fs-5 fw-normal text-muted">Yuan / hour</span></p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-outline-primary btn-lg rounded-pill px-5 fw-bold" onclick="toggleProfileEdit()">
+                            <i class="bi bi-pencil-square me-2"></i>Change Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="profile-edit-mode" class="d-none">
+                <form id="profile-form">
+                    <div class="d-flex align-items-center gap-4 mb-4 pb-4 border-bottom">
+                        <div class="position-relative profile-photo-wrapper cursor-pointer shadow-sm" id="profile-photo-btn">
+                            <img src="images/beauty.png" id="profile-photo-preview" alt="Profile" class="edit-photo-preview">
+                            <div class="photo-overlay rounded-circle"><i class="bi bi-camera-fill fs-3 text-white"></i></div>
+                            <input type="file" id="profile-photo-input" class="d-none" accept="image/*">
+                        </div>
+                        <div>
+                            <h5 class="fw-800 mb-1">Profile Photo</h5>
+                            <p class="text-muted mb-0">Click the image to upload a new professional headshot.</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4 g-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold fs-5">Full Name</label>
+                            <input type="text" class="form-control form-control-lg bg-light" id="edit-name" >
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold fs-5">Hourly Rate (Yuan)</label>
+                            <input type="number" class="form-control form-control-lg bg-light" id="edit-fee" placeholder="0.00">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold fs-5">Professional Level</label>
+                            <select class="form-select form-select-lg bg-light fw-bold text-secondary" id="edit-level">
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold fs-5">Expertise Category</label>
+                            <select class="form-select form-select-lg bg-light fw-bold text-secondary" id="edit-category">
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="form-label fw-bold fs-5">About Me</label>
+                        <textarea class="form-control bg-light fs-5 profile-resume-text" id="edit-resume" rows="6" placeholder="Please update your about me..."></textarea>
+                    </div>
+-
+                    **
+                    <div class="d-flex justify-content-end gap-3 mt-4">
+                        <button type="button" class="btn btn-light btn-lg rounded-pill px-5 fw-bold border" onclick="toggleProfileEdit()">Cancel</button>
+                        <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold" id="save-profile-btn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-4 shadow-sm p-4 w-100 mt-4 d-none">
+                <h5 class="fw-800 mb-4 text-dark"><i class="bi bi-clock-history me-2" ></i>Update History</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                        <tr><th class="text-muted fw-bold">Date & Time</th><th class="text-muted fw-bold">Request Type</th><th class="text-muted fw-bold">Status</th><th class="text-muted fw-bold text-center">Action</th></tr>
+                        </thead>
+                        <tbody id="history-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="earnings" class="tab-content">
+        <div class="stat-card bg-primary text-white border-0" style="background: linear-gradient(135deg, #0062ff 0%, #003ebd 100%);">
+            <h6 class="opacity-75 mb-3 fw-bold"><i class="bi bi-wallet2 me-2"></i>Available Balance</h6>
+            <h1 class="fw-900 mb-1" id="total-earnings-display">Loading...</h1>
+            <p class="opacity-75 small text-uppercase fw-bold" id="currency-display">Loading Currency...</p>
+        </div>
+    </section>
+</main>
+
+
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/specialist.js"></script>
+
+</body>
+</html>

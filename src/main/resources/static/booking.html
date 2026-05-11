@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpertConnect | Specialist Booking</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/booking.css">
+</head>
+<body>
+
+<nav class="navbar sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-800 d-flex align-items-center" href="javascript:void(0)" onclick="showPage('list-page')" style="color: var(--brand); font-size: 1.75rem; letter-spacing: 0.5px;">
+            <i class="bi bi-intersect me-2" style="font-size: 2rem; margin-top: -2px;"></i>SAS
+        </a>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold" onclick="handleProtectedView('user-orders-page')">My Bookings</button>
+            <button class="btn btn-outline-join btn-sm rounded-pill px-3" onclick="showJoinUs()">Join Us</button>
+            <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold" onclick="showPage('list-page')">Expert Hall</button>
+
+            <div class="user-profile-dropdown ms-2">
+                <div class="profile-trigger d-flex align-items-center gap-2">
+                    <span class="fw-bold small d-none d-md-block" id="current-user-display" style="color: var(--dark);">User</span>
+                    <img id="nav-user-avatar" src="images/carrot.png" class="header-avatar">
+                </div>
+                <div class="dropdown-menu-custom">
+                    <a href="javascript:void(0)" class="dropdown-item-custom" onclick="openChangePasswordModal()">
+                        <i class="bi bi-key"></i> Change Password
+                    </a>
+                    <hr class="my-2 opacity-50">
+                    <a href="javascript:void(0)" class="dropdown-item-custom text-danger" onclick="logout()">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="content-wrapper">
+    <div id="list-page" class="page-view page-active">
+        <div class="container">
+            <div class="row g-5">
+                <aside class="col-lg-3">
+                    <div class="p-4 bg-white rounded-5 border shadow-sm position-sticky" style="top: 100px;">
+                        <span class="fw-bold d-block mb-4 fs-5"><i class="bi bi-funnel-fill me-2 text-primary"></i>Quick Filter</span>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Keyword</label>
+                            <input type="text" id="search-input" class="form-control rounded-4 bg-light border-0 p-3 shadow-none" placeholder="Search by name..." onkeypress="if(event.keyCode==13) handleSearch()">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Category</label>
+                            <select id="search-category" class="form-select rounded-4 bg-light border-0 p-3 shadow-none fw-bold text-secondary">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Expert Level</label>
+                            <select id="search-level" class="form-select rounded-4 bg-light border-0 p-3 shadow-none fw-bold text-secondary">
+                                <option value="">All Levels</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm" onclick="handleSearch()">Search & Filter</button>
+                    </div>
+                </aside>
+                <main class="col-lg-9">
+                    <h1 class="fw-800 display-5 mb-5">Top Specialists</h1>
+                    <div class="row g-4" id="expert-grid"></div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-page" class="page-view">
+        <div class="container">
+            <button class="btn rounded-pill mb-4 px-4 fw-bold shadow-sm" style="background-color: var(--brand-light); color: var(--brand); border: 2px solid var(--brand);" onclick="showPage('list-page')">
+                <i class="bi bi-arrow-left"></i> Back to Search
+            </button>
+            <div class="row g-5">
+                <div class="col-lg-8">
+                    <div class="bg-white p-5 rounded-5 border shadow-sm mb-4">
+                        <div class="d-flex align-items-center gap-4 mb-4">
+                            <img id="pAvatar" src="" class="rounded-circle shadow-sm" width="120" height="120" style="object-fit: cover; border: 4px solid #f8f9fa;">
+                            <div>
+                                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 mb-2 fw-bold" id="pLevel">--</span>
+                                <h1 class="fw-800 display-5 mb-1" id="pName">--</h1>
+                                <h4 class="text-muted fw-bold mb-0" id="pExpertise">--</h4>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <h4 class="fw-800 mb-3">About Me</h4>
+                        <p class="text-muted mb-4" style="line-height: 1.8; font-size: 1.1rem;" id="pBio">Loading...</p>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="bg-white p-4 rounded-5 border shadow-sm position-sticky" style="top: 100px;">
+                        <h4 class="fw-800 mb-2">Consultation Fee</h4>
+                        <div class="d-flex align-baseline mb-4">
+                            <h2 class="fw-900 text-primary mb-0 me-1" id="pRate">$0</h2>
+                            <span class="text-muted fw-bold"></span>
+                        </div>
+                        <button class="btn btn-dark w-100 rounded-pill py-3 fw-bold fs-5 shadow-sm" onclick="goToCalendar()">
+                            Secure Booking
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="calendar-page" class="page-view">
+        <div class="container text-center">
+            <button class="btn btn-outline-primary fw-bolder rounded-pill px-4 py-2 shadow-sm mb-4 mt-2"
+                    onclick="showPage('profile-page')"
+                    style="transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                <i class="bi bi-arrow-left-circle-fill me-2 fs-5 align-middle"></i>
+                <span class="align-middle" style="letter-spacing: 0.5px;">BACK TO BIO</span>
+            </button>
+            <div class="calendar-card shadow-sm p-4 bg-white rounded-5 border">
+                <h4 class="fw-800 mb-4">Select Date</h4>
+                <div class="calendar-grid" id="calendar-body"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="timeslot-page" class="page-view">
+        <div class="container text-center">
+            <button class="btn btn-outline-primary fw-bolder rounded-pill px-4 py-2 shadow-sm mb-4 mt-2"
+                    onclick="showPage('calendar-page')"
+                    style="transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                <i class="bi bi-arrow-left-circle-fill me-2 fs-5 align-middle"></i>
+                <span class="align-middle" style="letter-spacing: 0.5px;">BACK TO CALENDAR</span>
+            </button>
+            <h2 class="fw-800 mb-5">Slots for <span id="display-date" class="text-primary">--</span></h2>
+            <div class="time-grid" id="slot-list"></div>
+            <button class="btn btn-dark rounded-pill px-5 py-3 mt-5 fw-bold" id="confirm-btn" style="display:none;">Confirm Reservation</button>
+        </div>
+    </div>
+
+    <div id="user-orders-page" class="page-view">
+        <div class="container">
+            <h2 class="fw-800 mb-5">My Booking History</h2>
+            <div id="orders-list"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="customerConfirmModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 p-4 shadow-lg" style="background: #ffffff; box-shadow: 0 25px 50px rgba(0,98,255,0.1) !important;">
+
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                <h4 class="fw-800 text-primary mb-0">Appointment Details</h4>
+                <button type="button" class="btn btn-light btn-sm rounded-circle px-2" data-bs-dismiss="modal" title="Back">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="d-flex align-items-center gap-4 mb-4">
+                <img id="confirm-avatar" src="" width="80" height="80" class="rounded-4 shadow-sm" style="object-fit: cover;">
+                <div>
+                    <h6 class="fw-bold mb-2">Specialist Name: <span id="confirm-spec-name" class="text-dark fw-900"></span></h6>
+                    <small class="text-muted d-block mb-1">Profession: <span id="confirm-spec-prof" class="text-dark fw-bold"></span></small>
+                    <small class="text-muted d-block mb-1">Date: <span id="confirm-date" class="text-dark fw-bold"></span></small>
+                    <small class="text-muted d-block">Time: <span id="confirm-time" class="text-dark fw-bold"></span></small>
+                </div>
+            </div>
+
+            <div class="form-floating mb-4">
+                <textarea class="form-control bg-light border-0 rounded-3" id="booking-notes" style="height: 80px" placeholder="Leave a note..."></textarea>
+                <label class="text-muted"><i class="bi bi-pencil-square me-1"></i>Notes for the specialist</label>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-end mt-2 pt-3 border-top">
+                <div>
+                    <div class="text-muted small mb-1">Consulting fee (/hour): <span id="confirm-fee-rate"></span></div>
+                    <div class="text-danger">
+                        <span class="fw-bold small">Payment Amount: </span>
+                        <span class="fw-900 fs-5" id="confirm-total-fee"></span>
+                    </div>
+                </div>
+                <button class="btn text-white rounded-pill px-4 py-2 fw-bold shadow-sm" id="final-submit-booking-btn" style="background-color: #f97316; border: none;">
+                    Confirm Booking
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 p-4 shadow-lg">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                <h4 class="fw-800 text-danger mb-0"><i class="bi bi-shield-exclamation me-2"></i>Report Specialist</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="bg-light p-3 rounded-3 mb-4">
+                <p class="mb-1 small text-muted">Order ID: <span id="report-order-id" class="text-dark fw-bold">#--</span></p>
+                <p class="mb-0 small text-muted">Specialist: <span id="report-spec-name" class="text-dark fw-bold">--</span></p>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold small text-muted"><i class="bi bi-pencil-square me-1"></i>Reason for reporting</label>
+                <textarea class="form-control border-0 bg-light rounded-3" id="report-reason" rows="4" placeholder="Please describe the issue in detail..."></textarea>
+            </div>
+
+            <div class="d-flex gap-3">
+                <button class="btn btn-light flex-grow-1 rounded-pill fw-bold" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-danger flex-grow-1 rounded-pill fw-bold shadow-sm" id="submit-report-btn" onclick="submitFinalReport()">
+                    Submit Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 p-4 shadow-lg">
+
+            <!-- Modal Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                <h4 class="fw-800 text-primary mb-0"><i class="bi bi-receipt me-2"></i>Order Details</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Order ID and Status -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted small">Order ID: <span id="detail-order-id" class="text-dark fw-bold"></span></span>
+                <span id="detail-status" class="badge rounded-pill px-3 py-2 fw-bold shadow-sm"></span>
+            </div>
+
+            <!-- Specialist Info Card -->
+            <div class="bg-light p-3 rounded-3 mb-4 d-flex align-items-center gap-3 border">
+                <img id="detail-avatar" src="" width="60" height="60" class="rounded-circle shadow-sm" style="object-fit: cover; border: 2px solid #0d6efd;">
+                <div>
+                    <h6 id="detail-spec-name" class="fw-800 mb-1 text-dark">--</h6>
+                    <div id="detail-spec-prof" class="text-muted small">Expert Service</div>
+                </div>
+            </div>
+
+            <!-- Time and Fee Details -->
+            <div class="mb-4 px-2">
+                <div class="d-flex justify-content-between mb-2 small">
+                    <span class="text-muted"><i class="bi bi-calendar-event me-2"></i>Date</span>
+                    <span id="detail-date" class="fw-bold text-dark">--</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2 small">
+                    <span class="text-muted"><i class="bi bi-clock me-2"></i>Time</span>
+                    <span id="detail-time" class="fw-bold text-dark">--</span>
+                </div>
+                <div class="d-flex justify-content-between pt-3 mt-3 border-top">
+                    <span class="text-muted fw-bold">Total Fee</span>
+                    <span id="detail-total-fee" class="fw-900 text-primary fs-5">--</span>
+                </div>
+            </div>
+
+            <!-- User Notes -->
+            <div class="mb-4">
+                <label class="form-label fw-bold small text-muted"><i class="bi bi-chat-left-text me-1"></i>Your Notes</label>
+                <div id="detail-notes" class="p-3 bg-light rounded-3 text-secondary small fst-italic border" style="min-height: 80px;"></div>
+            </div>
+
+            <!-- Footer Close Button -->
+            <button class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow-sm" data-bs-dismiss="modal">Close</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/booking.js"></script>
+
+</body>
+</html>

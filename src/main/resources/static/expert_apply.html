@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expert Booking System - Expert Apply</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/expert_apply.css">
+</head>
+<body style="background: white;">
+
+<div id="app">
+    <div class="expert-bg-frame"></div>
+
+    <div class="expert-page-wrapper fade-in">
+        <button id="go-back" class="back-btn"><span style="margin-right: 4px;">←</span> Back</button>
+
+        <div class="expert-card">
+
+            <h2 style="font-size: 1.25rem; font-weight: bold; color: #1f2937; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6;">Entry of specialist information</h2>
+
+            <div id="status-banner" style="display: none; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; font-size: 0.9rem;"></div>
+            <form id="expertForm">
+                <div class="form-group">
+                    <label class="form-label-left">Name <span class="req-star">*</span></label>
+                    <input type="text" id="exp-name" class="figma-input" placeholder="Please enter the name of the specialist." required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label-left">Profession field <span class="req-star">*</span></label>
+                    <select id="exp-domain-select" class="figma-input" style="color: #6b7280; background: white;" required>
+                        <option value="" disabled selected>Loading professional fields...</option>
+                        <option value="other">Other (自定义新专业)...</option>
+                    </select>
+                    <input type="text" id="exp-domain-input" class="figma-input" style="display: none; margin-top: 0.5rem;" placeholder="Please specify your profession field">
+                </div>
+                <div class="form-group">
+                    <label class="form-label-left">Experience/Level <span class="req-star">*</span></label>
+                    <select id="exp-level" class="figma-input" style="color: #6b7280; background: white;" required>
+                        <option value="" disabled selected>Please select your level.</option>
+                        <option value="JUNIOR" style="color: #1f2937;">JUNIOR</option>
+                        <option value="SENIOR" style="color: #1f2937;">SENIOR</option>
+                        <option value="EXPERT" style="color: #1f2937;">EXPERT</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label-left">Consulting fee (yuan/hour) <span class="req-star">*</span></label>
+                    <input type="number" id="exp-fee" class="figma-input" placeholder="Please enter the consultation fee." required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label-left">Individual resume <span class="req-star">*</span></label>
+                    <textarea id="exp-resume" rows="4" class="figma-input" style="resize: none;" placeholder="Please provide the personal profile of the expert..." required></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: center; padding-top: 1.5rem;">
+                    <button type="submit" id="applyBtn" class="submit-btn" style="width: auto; padding: 0.5rem 2rem;">
+                        Come up for review
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/expert_apply.js"></script>
+</body>
+</html>

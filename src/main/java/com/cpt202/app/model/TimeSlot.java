@@ -1,5 +1,8 @@
 package com.cpt202.app.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -12,24 +15,28 @@ public class TimeSlot {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 谁的排班？关联到专家名片
+
+    @JsonIgnoreProperties({"user", "expertise", "level"})
     @ManyToOne
     @JoinColumn(name = "specialist_id", referencedColumnName = "id", nullable = false)
     private SpecialistProfile specialist;
 
     @Column(name = "slot_date", nullable = false)
-    private LocalDate slotDate; // 日期：如 2026-03-30
+    private LocalDate slotDate;
 
     @Column(name = "start_time", nullable = false)
-    private LocalTime startTime; // 开始时间：如 14:00
+    private LocalTime startTime;
 
     @Column(name = "end_time", nullable = false)
-    private LocalTime endTime; // 结束时间：如 15:00
+    private LocalTime endTime;
 
-    @Column(name = "is_booked", nullable = false)
-    private Boolean isBooked = false; // 默认是 false (未被预订)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private TimeSlotStatus status = TimeSlotStatus.AVAILABLE;
 
-    // TODO: 请生成 Getter 和 Setter
+
+
+
     public Long getId() {
         return id;
     }
@@ -70,11 +77,11 @@ public class TimeSlot {
         this.endTime = endTime;
     }
 
-    public Boolean getBooked() {
-        return isBooked;
+    public TimeSlotStatus getStatus() {
+        return status;
     }
 
-    public void setBooked(Boolean booked) {
-        isBooked = booked;
+    public void setStatus(TimeSlotStatus status) {
+        this.status = status;
     }
 }

@@ -11,29 +11,54 @@ public class SpecialistProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 与 User 的一对一关系：保证一个账号只能有一张名片
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
     private User user;
 
-    // 与专业分类的多对一关系：多个专家可以属于同一个专业
     @ManyToOne
-    @JoinColumn(name = "expertise_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "expertise_id", referencedColumnName = "id", nullable = true)
     private ExpertiseCategory expertise;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 50, nullable = false)
-    private SpecialistLevel level; // JUNIOR, SENIOR, EXPERT
+    private SpecialistLevel level;
 
-    // 💡 CTO小贴士：在 Java 里算钱，绝对不能用 Double，必须用 BigDecimal 防止精度丢失！
     @Column(name = "hourly_fee", precision = 10, scale = 2, nullable = false)
     private BigDecimal hourlyFee;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private SpecialistStatus status; // ACTIVE (接单中), INACTIVE (休息中)
+    private SpecialistStatus status;
 
-    // TODO: 请使用 IDE 生成 Getter 和 Setter (或添加 Lombok 的 @Data 注解)
+
+    @Column(columnDefinition = "TEXT") // Specified as TEXT type to match the database
+    private String resume;
+
+
+    @Column(name = "real_name", length = 100)
+    private String realName;
+
+
+    @Column(name = "proposed_expertise_name", length = 100)
+    private String proposedExpertiseName;
+
+
+
+    public String getRealName() {
+        return realName;
+    }
+
+    public void setRealName(String realName) {
+        this.realName = realName;
+    }
+
+    public String getProposedExpertiseName() {
+        return proposedExpertiseName;
+    }
+
+    public void setProposedExpertiseName(String proposedExpertiseName) {
+        this.proposedExpertiseName = proposedExpertiseName;
+    }
     public Long getId() {
         return id;
     }
@@ -80,5 +105,13 @@ public class SpecialistProfile {
 
     public void setStatus(SpecialistStatus status) {
         this.status = status;
+    }
+
+    public String getResume() {
+        return resume;
+    }
+
+    public void setResume(String resume) {
+        this.resume = resume;
     }
 }
